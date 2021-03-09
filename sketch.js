@@ -1,22 +1,21 @@
 /*
-  Platformer 1.18
+  Platformer 1.19
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-12-2021
   
   Changes Made:
-  - levelData[] renamed to levels[].
-  - Now tutorialLevels[] stores the tutorial levels separate from normal levels.
-  - level .txt files now start at 1 instead of 0
-  - the tutorial levels have been renamed from level_#.txt to Tlevel_#.txt
-    - The original test level (now level_1.txt) remains with the level_#.txt format
-  - Loading levels through loadNextLevel() and buildLevel() now uses a new variable (currentLevelSet) equal-to the level set being run. This variable is set when a game-start button is pressed
-  - currentLevelIndex is now used to refer to the current level in the currentLevelSet[] array, while currentLevel is now used for the level # display in the level UI
-  - New game button added to main menu, which leads to full-game levels
-  - Removed some functions that were no longer used or implemented
-  - Removed some variables that were no longer used
+  - Created new levels 1-10
+    - the original level_1.txt (test level) was changed to level_6.txt
+    - Levels 1-5 and 7-8 are new creations
+    - Levels 9 and 10 are placeholders for new levels
+  - Player's starting velocity is now straight down rather than diagonal
+  - Player's starting velocity is now stored in initialVelocity variable. This is referenced whenever Player respawns
   
   Ideas:
+  - Death animation for the player where they explode into multiple particles
+  - Change collision rules with certain blocks
+    - When touching a Blue Bounce BLock, the player will bounce if barely touching on the left but won't when on the right. This is because the order the blocks are checked for collision. I need to either A) always check Bounce Blocks First, B) Check for Bounce Blocks Last, or C) acitvate Bounc Block when a certain overlap is acheived. Any of these will make Bounce Block interactions more consistent
   - When the level is built, have rows and groups of blocks be "merged" to become one larger rectangle. This will improve performance as less blocks would need to be compared.
   - Add mroe block types, like:
     - 
@@ -31,6 +30,11 @@
     Helpful link for inheritance: https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Objects/Inheritance
     InstanceOf: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof
     Object Collision: https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
+    
+    
+     TOD TODO TDOODT DTDO DTODO(*&^%$#@#$%^&*&^%$#$%^&)
+    This might help with making movement/jumping consistent even during lag:
+    https://www.reddit.com/r/gamemaker/comments/6ffh0k/inconsistent_jump_height_using_delta_timing/
     
 */
 
@@ -57,7 +61,7 @@ function preload()
   }
   
   //Regular Levels
-  numLevels = 1; //number of level files to load
+  numLevels = 10; //number of level files to load
   for (let i = 0; i < numLevels; i++)
   {
   levels.push(loadStrings('assets/level_' + (i+1) + '.txt'));
@@ -86,6 +90,7 @@ function setup() {
   currentLevel = 1;
   //loadNextLevel();
   buildMainMenu();
+  //buildLevel(0, levels);
 }
 
 function draw() {

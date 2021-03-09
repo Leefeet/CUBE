@@ -221,7 +221,8 @@ function Player(x, y, w, h) {
 
   this.spawnPosition = createVector(x, y);
 
-  this.velocity = createVector(0.1 * w / scaler, 0.1 * w / scaler);
+  this.velocity = createVector(0.0 * w / scaler, 0.1 * w / scaler);
+  this.initialVelocity = this.velocity.copy();
   this.forces = createVector(0.0, 0.0);
   this.gravity = 0.01 * w / scaler;
   this.maxFallSpeed = 0.50 * w / scaler;
@@ -281,7 +282,7 @@ function Player(x, y, w, h) {
       this.setPosition(this.spawnPosition.copy());
 
       //reset velocity
-      this.velocity = createVector(0.1 * w / scaler, 0.1 * w / scaler);
+      this.velocity = this.initialVelocity.copy();
     }
 
     //updating variables
@@ -459,7 +460,7 @@ function Player(x, y, w, h) {
           //print(this.position);
 
           //reset velocity
-          this.velocity = createVector(0.1 * w / scaler, 0.1 * w / scaler);
+          this.velocity = this.initialVelocity.copy();
         }
         //check if end block
         if (allBlocks[i].getBlockType() == BlockType.end) {
