@@ -1,11 +1,18 @@
 /*
-  Platformer 1.7
+  Platformer 1.8
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 2-5-2021
+  Edited: 2-9-2021
   
   Changes Made:
-  - None
+  - implementing read-in data from text files
+  - implementing level loading from txt files
+    - a tile-like layout. letters inputted in a txt file are read as types of blocks and placed on the screen to create a level. This makes levels very easy to create and edit
+  - levelData[] stores information on level layouts
+  - preload() function ensures level files are loaded before they are used
+  - Level loading detects the width and height of the level. According to the game screen, it will size the blocks to best fit the screen
+  - player is built at 90% of the block width to help prevent getting stuck between two blocks
+
 */
 
 /*
@@ -19,6 +26,16 @@ let player;
 
 let mouseBlock;
 
+let levelData;
+
+//runs actions that may be required before anything it setup() or draw()
+function preload()
+{
+  levelData = []; //an array of all the Levels
+  
+  levelData.push(loadStrings('assets/level_0.txt'));
+}
+
 function setup() {
   createCanvas(sketchWidth, sketchHeight);
   
@@ -29,25 +46,17 @@ function setup() {
   allObjects = [];
   allBlocks = [];
   backgroundColor = color(120, 120, 120, 255);
-    
-  player = new Player(100, 250, 25, 25);
-  player.fillColor = color(255, 255, 0);
-  allObjects.push(player);
+        
+  //buildLevel1();
   
-  mouseBlock = new Block(0,0,50,50);
-  allObjects.push(mouseBlock);
-  allBlocks.push(mouseBlock);
-  
-  buildLevel1();
+  buildLevel(0);
 }
 
 function draw() {
   background(backgroundColor);
 
   fill(255);
-  
-  mouseBlock.setPosition(createVector(mouseX-mouseBlock.getWidth()/2, mouseY-mouseBlock.getHeight()/2));
-  
+    
   
   //print("blocks: " + allBlocks.length);
   //updating GameObjects
@@ -63,6 +72,68 @@ function draw() {
   
   //resetting Key Pressed Booleans
   spaceWasPressed = false;
+}
+
+function buildLevelFromFile(fileName)
+{
+  
+}
+
+//builds a specific level from the levelData[] array
+function buildLevel(levelNum)
+{
+  let level = levelData[levelNum];
+  
+  //prints contents of level
+  print(levelData[levelNum]);
+  
+  //determining level block row and column number
+  let rows = level.length;
+  let cols = level[0].length;
+  
+  print("rows: " + rows + " | columns: " + cols);
+  
+  //we can determine block widths based on sketch size
+  //determine whether the level is wider or taller
+  let testWidth = width/cols;
+  let testHeight = height/rows;
+  
+  let blockWidth;
+  
+  if (testWidth < testHeight) {blockWidth = testWidth;}
+  else {blockWidth = testHeight;}
+  
+  //constructing level
+  for (let i = 0; i < cols; i++) {
+      for (let j = 0; j < rows; j++) {
+        let c = level[j][i]; //block data on txt
+          
+        if (c == '.') // air space, so skip
+          {continue;}
+        else if (c == 'B') //normal block
+          {
+            let x = blockWidth*i;
+            let y = blockWidth*j;
+            let w = blockWidth;
+            
+            let b = new Block(x,y,w,w);
+            allObjects.push(b);
+            allBlocks.push(b);
+          }
+        else if (c == 'P') // player
+          {
+            let x = blockWidth*i;
+            let y = blockWidth*j;
+            let w = blockWidth * 0.90;
+            
+            let p = new Player(x,y,w,w);
+            allObjects.push(p);
+            
+            p.fillColor = color(255, 255, 0); //yellow
+          }
+      }
+  }
+  
 }
 
 function buildLevel1()
