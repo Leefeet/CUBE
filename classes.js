@@ -105,7 +105,7 @@ function GameObject(x, y, w, h) {
   this.getWidth = function() {return this.width;}
   this.getHeight = function() {return this.height;}
   
-  this.setPosition = function(position) {this.position = position.copy();}
+  this.setPosition = function(position) {this.position = position;}
   this.setX = function(x) {this.position.x = x;}
   this.setY = function(y) {this.position.y = y;}
   this.setWidth = function(w) {this.width = w;}
@@ -113,12 +113,14 @@ function GameObject(x, y, w, h) {
   
 }
 
+
 //ENUM for block type
 const BlockType = Object.freeze(
   {
     "normal":1, "kill":2, "end":3, "player":4
   }
 );
+
 
 //Object: Block
 //Function: draws a block to the screen
@@ -131,7 +133,7 @@ function Block(x,y,w,h)
   this.strokeWeight = 1 * progScale; //The width of the block border. Set to <= 0 to have no stroke
   //IDEA: implement strokes as overallping rectangles, so that strokes will be inside block rather than outside
   
-  this.blockType = BlockType.normal;
+  this.blockType = BlockType.normal; //defaults to normal
   
   this.update = function() {} //nothing to update
   
@@ -170,7 +172,7 @@ function Player(x,y,w,h)
   
   this.spawnPosition = createVector(x,y);
   
-  this.velocity = createVector(0.1,0.1);
+  this.velocity = createVector(0.1 * w/scaler,0.1 * w/scaler);
   this.forces = createVector(0.0,0.0);
   this.gravity = 0.01 * w/scaler; 
   this.maxFallSpeed = 0.50 * w/scaler;
@@ -223,6 +225,15 @@ function Player(x,y,w,h)
     this.testBlockCollision(pos); //testing if hit something and position/velocity needs adjustment
     
     this.setPosition(pos); //applying new position to player
+    
+    //if player is below screen, reset position
+    if (this.position.y > height + 10)
+      {
+        this.setPosition(this.spawnPosition.copy());
+        
+        //reset velocity
+        this.velocity = createVector(0.1 * w/scaler,0.1 * w/scaler);
+      }
     
     //updating variables
     this.prevIsGrounded = this.isGrounded;
@@ -328,14 +339,21 @@ function Player(x,y,w,h)
         if (this.collidesWithAdjacent(allBlocks[i]))
           {
             //there's a collision
-            //is it a bad block?
+            
+            //check if kill block
             if (allBlocks[i].getBlockType() == BlockType.kill)
               {
-                //teleport player back to spawn point
-                //pos.x += 1;
-
-                //stop checking collision
-                break;
+                //print(this.spawnPosition);
+                
+                //teleport player back to spawn
+                this.setX(this.spawnPosition.x);
+                this.setY(this.spawnPosition.y);
+                pos = this.spawnPosition.copy();
+                
+                //print(this.position);
+                
+                //reset velocity
+                this.velocity = createVector(0.1 * w/scaler,0.1 * w/scaler);
               }
             
             //test which side and the depth

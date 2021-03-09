@@ -1,17 +1,17 @@
 /*
-  Platformer 1.10
+  Platformer 1.10 Fix
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-9-2021
   
   Changes Made:
-  - BlockType Enum created to track different kinds of blocks
-    - Block Object now has a variable for BlockType, along with a getter and setter
-  - Player now remembers spawn coordinates
-  - Created Kill blocks, which should "kill" the player and return them back to their spawnpoint
-    - adjusted test level to include a kill block
-    - function buildLevel() can now place Kill blocks if a 'K' is found
-  - Player's collision system seems off, like wall sliding not working well. Will fix in next version
+  - Player no longer uses "break" when a Kill block is found, as this could ignore some collision in very specific cases
+  - GameObject no longer return a .copy() of its position vector, which was changed in the previous 1.10 as a potential cause for the issue
+  - Edited Test level to include more Kill Blocks
+  - Player's starting velocity now scales with its size
+  - Touching a Kill block now sets the player's position back to the spawnpoint
+    - grabs a .copy() of the spanwPosition vector, as otherwise the player's current position would become the spawnPosition (shallow copy), which isn't the desired effect
+  - The physics now function as they did before
   
 */
 
