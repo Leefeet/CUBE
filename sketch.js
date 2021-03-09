@@ -1,17 +1,17 @@
 /*
-  Platformer 1.10 Fix
+  Platformer 1.11
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-9-2021
   
   Changes Made:
-  - Player no longer uses "break" when a Kill block is found, as this could ignore some collision in very specific cases
-  - GameObject no longer return a .copy() of its position vector, which was changed in the previous 1.10 as a potential cause for the issue
-  - Edited Test level to include more Kill Blocks
-  - Player's starting velocity now scales with its size
-  - Touching a Kill block now sets the player's position back to the spawnpoint
-    - grabs a .copy() of the spanwPosition vector, as otherwise the player's current position would become the spawnPosition (shallow copy), which isn't the desired effect
-  - The physics now function as they did before
+  - deltaTime now has a frame cap to prevent Lag Spikes from causing strange effects, like the player teleporting from speed gain
+    - All uses of deltaTime now use capDeltaTime
+    - New global variables for capDeltaTime and the max number of milliseconds between frames (the cap)
+  - Slightly adjusted the layout of the test level to make some parts easier and prevent a wall-jump exploit
+    - Also added some 'E' for a future End Block
+
+  
   
 */
 
@@ -56,7 +56,13 @@ function draw() {
   background(backgroundColor);
 
   fill(255);
-    
+  
+  //adjusting deltaTime
+  capDeltaTime = deltaTime;
+  if(deltaTime > maxTime) {
+    capDeltaTime = maxTime;
+    //print("capped");
+    }
   
   //print("blocks: " + allBlocks.length);
   //updating GameObjects

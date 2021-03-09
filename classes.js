@@ -216,7 +216,7 @@ function Player(x,y,w,h)
     //print("onLeft: " + this.isOnLeftWall);
     //print("onRight: " + this.isOnRightWall);
     
-    vel.mult(deltaTime); //as unit of deltaTime
+    vel.mult(capDeltaTime); //as unit of deltaTime
     
     pos.add(vel); //moving player pos based on Velocity
     

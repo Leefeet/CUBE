@@ -19,3 +19,11 @@ let allObjects; //a collection of all existing GameObjects
 let allBlocks; //a collection of all existing Blocks
 
 let spaceWasPressed = false; //whether the SpaceBar was pressed down
+
+
+let capDeltaTime; //deltaTime that's been frame capped.
+let maxTime = 33; //max time for deltaTime, 33 milliseconds
+
+
+
+
