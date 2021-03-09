@@ -1,14 +1,18 @@
 /*
-  Platformer 1.47
+  Platformer 1.48
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-27-2021
   
   Changes Made:
-  - Modified previous changes to Player's bounceBlock collision to cancel a jump on the same frame. Each side of a bounce block will now independently cancel out that form of jump.
-    - Top side of bounce block cancels normal jump
-    - Right side of Bounce Block cancels right wall jump
-    - Left side of Bounce Block cancels left wall jump
+  - Adding visual indicator that Pausing the game is possible
+  - Removed line of code that was used for a demonstration
+  - Changed Level UI to include a small statement about pressing ESC or Enter to pause the game.
+    - Moved the level Number and Level Set Name over slightly to accommodate the new text
+  - The Tutorial Screen now explains how to pause the game
+    - Slightly moved the Wall-Jump explanation to make room
+  - The Tutorial Screen now has text above the start button that tells the player to click it (some people didn't notice it was a button)
+  - Starting the Tutorial Levels from the Tutorial Screen will now reset any deaths the player took while on the practice screen.
   
 
   Ideas:
@@ -140,15 +144,13 @@ function setup() {
   //creating timer for timing levels
   gameTimer = new Timer(0, 0, 0, 0);
   
-  gameTimer.displayText
-
   //creating gameObjects for main menu
-  buildMainMenu();
+  //buildMainMenu();
 
   //DEBUG, load project starting with specific level. Or load a specific screen
   //buildLevel("number of level", "Level Set");
   //buildLevel(1, normalLevels);
-  //buildTutorialScreen();
+  buildTutorialScreen();
   //buildPauseMenu();
 }
 
@@ -497,11 +499,20 @@ function buildTutorialScreen() {
 
   //Wall Jumping
   x = width / 1.33;
-  y = 450 * progScale;
+  y = 400 * progScale;
   s = "You can wall-jump\nby pressing jump\nwhile on a wall";
   let textWallJump = new DisplayText(x, y, 0, 0, s);
   textWallJump.textSize = 30 * progScale;
   allObjects.push(textWallJump);
+  
+  //Pause message
+  x = width / 1.33;
+  y = 525 * progScale;
+  s = "Press ESC or ENTER\nto Pause the game";
+  let pauseMessage = new DisplayText(x, y, 0, 0, s);
+  pauseMessage.textSize = 25 * progScale;
+  pauseMessage.textAlignH = CENTER;
+  allObjects.push(pauseMessage);
 
 
   //Player and Blocks display
@@ -533,6 +544,16 @@ function buildTutorialScreen() {
   p.spawnFillColor = color(255, 190, 0, 0); //Orange with transparency
   p.setStrokeWeight(0);
 
+  
+  //Continue message
+  x = width/2;
+  y = 775 * progScale;
+  s = "Click this Button to continue";
+  let continueMessage = new DisplayText(x, y, 0, 0, s);
+  continueMessage.textSize = 25 * progScale;
+  continueMessage.textAlignH = CENTER;
+  allObjects.push(continueMessage);
+  
   //tutorial button
   w = 400 * progScale;
   h = 75 * progScale;
@@ -544,6 +565,7 @@ function buildTutorialScreen() {
     currentLevelSetName = "Tutorial"; //setting name of level set
     currentLevel = 1; //for display
     currentLevelIndex = 0; //for level indexing
+    numberOfDeaths = 0; //so practice deaths don't count
     gameTimer.reset(); //reseting current time on timer
     buildLevel(currentLevelIndex, currentLevelSet); //starting level
   };
@@ -901,21 +923,30 @@ function buildLevel(levelIndex, levelSet) {
 }
 
 function buildLevelUI(levelIndex, uiHeight) {
-  //Level Number
-  let x = uiHeight / 4;
+  //Pause message
+  let x = uiHeight / 7;
   let y = uiHeight / 2;
-  let s = "Level " + (levelIndex + 1);
+  let s = "Press ESC\nor ENTER\nto Pause";
+  let pauseMessage = new DisplayText(x, y, 0, 0, s);
+  pauseMessage.textSize = 20 * progScale;
+  pauseMessage.textAlignH = LEFT;
+  allObjects.push(pauseMessage);
+  
+  //Level Number
+  x = width / 7;
+  y = uiHeight / 2;
+  s = "Level " + (levelIndex + 1);
   let title = new DisplayText(x, y, 0, 0, s);
-  title.textSize = 50 * progScale;
+  title.textSize = 40 * progScale;
   title.textAlignH = LEFT;
   allObjects.push(title);
 
-  //Level Number
-  x = width / 2;
+  //Level Set Name
+  x = width / 1.9;
   y = uiHeight / 2;
   s = currentLevelSetName;
   let setName = new DisplayText(x, y, 0, 0, s);
-  setName.textSize = 50 * progScale;
+  setName.textSize = 40 * progScale;
   setName.textAlignH = CENTER;
   allObjects.push(setName);
 
@@ -924,7 +955,7 @@ function buildLevelUI(levelIndex, uiHeight) {
   y = uiHeight / 2;
   gameTimer.setX(x);
   gameTimer.setY(y);
-  gameTimer.textSize = 50 * progScale;
+  gameTimer.textSize = 40 * progScale;
   gameTimer.textAlignH = LEFT;
   gameTimer.start();
   allObjects.push(gameTimer);
