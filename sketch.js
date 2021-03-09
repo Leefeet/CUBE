@@ -1,18 +1,16 @@
 /*
-  Platformer 1.48
+  Platformer 1.49
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-27-2021
   
   Changes Made:
-  - Adding visual indicator that Pausing the game is possible
-  - Removed line of code that was used for a demonstration
-  - Changed Level UI to include a small statement about pressing ESC or Enter to pause the game.
-    - Moved the level Number and Level Set Name over slightly to accommodate the new text
-  - The Tutorial Screen now explains how to pause the game
-    - Slightly moved the Wall-Jump explanation to make room
-  - The Tutorial Screen now has text above the start button that tells the player to click it (some people didn't notice it was a button)
-  - Starting the Tutorial Levels from the Tutorial Screen will now reset any deaths the player took while on the practice screen.
+  - Adding a "Restart Level" button to the pause menu to allow the player to retry, either because they're stuck or made a mistake. This will increment the death counter.
+  - the existing "player" variable is now actually linked with the player created during a level load
+  - Added a new "Respawn" button to the pause screen, functions as the "Restart Level" button
+    - Respawn button will be disabled if the player is currently dead or no player exists
+    - Respawning will instantly kill the player and respawn them
+    - Added message above respawn button informing player that it will count as a death
   
 
   Ideas:
@@ -145,12 +143,12 @@ function setup() {
   gameTimer = new Timer(0, 0, 0, 0);
   
   //creating gameObjects for main menu
-  //buildMainMenu();
+  buildMainMenu();
 
   //DEBUG, load project starting with specific level. Or load a specific screen
   //buildLevel("number of level", "Level Set");
   //buildLevel(1, normalLevels);
-  buildTutorialScreen();
+  //buildTutorialScreen();
   //buildPauseMenu();
 }
 
@@ -595,7 +593,7 @@ function buildPauseMenu() {
   //Title: Game Paused
   //Info: Level Set + Level #
   //Data: Current Time + Death Count
-  //Buttons: Quit Game + Resume Game
+  //Buttons: Quit Game + Resume Game + Respawn
   //Extra: Background half-transparent rectangle to cover level
 
   //we use allPauseObjects[] to store the pause menu items
@@ -646,6 +644,34 @@ function buildPauseMenu() {
 
   //Buttons
   let buffer = 100 * progScale;
+  
+  //Respawn (Retry) button
+  w = 400 * progScale;
+  h = 75 * progScale;
+  x = (width / 2) - w/2;
+  y = 650 * progScale;
+  let respawnPlayer = function() {
+    player.death(); //this will reset the player, at the cost of a death
+    unpauseGame(); //resume the game
+  };
+  let btnRespawnPlayer = new Button(x, y, w, h, respawnPlayer);
+  btnRespawnPlayer.displayText = "Respawn";
+  btnRespawnPlayer.strokeWeight = 0;
+  btnRespawnPlayer.fillColor = color(255, 255, 0); //yellow
+  btnRespawnPlayer.hoverColor = color(255 / 2, 255/2, 0); //darker
+  btnRespawnPlayer.textSize = 45 * progScale;
+  btnRespawnPlayer.textColor = color(0, 0, 0);
+  allPauseObjects.push(btnRespawnPlayer);
+  //if player is currently dead (or doesn't exist), disable button
+  if (player == undefined || player.isDead) {btnRespawnPlayer.isDisabled = true;}
+  
+  //Respawn information
+  x = width / 2;
+  y = 625 * progScale;
+  s = "This will count as a death";
+  let respawnInfo = new DisplayText(x, y, 0, 0, s);
+  respawnInfo.textSize = 25 * progScale;
+  allPauseObjects.push(respawnInfo);
 
   //Quit Game (Main Menu) button
   w = 400 * progScale;
@@ -854,6 +880,7 @@ function buildLevel(levelIndex, levelSet) {
 
         let p = new Player(x, y, w, w);
         allObjects.push(p);
+        player = p; //linking player to variable outside scope
 
         p.fillColor = color(255, 190, 0); //Orange
         p.spawnStrokeColor = color(255, 190, 0); //Orange
