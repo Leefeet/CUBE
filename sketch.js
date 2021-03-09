@@ -1,11 +1,20 @@
 /*
-  Platformer 1.3
+  Platformer 1.4
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 2-4-2021
+  Edited: 2-5-2021
   
   Changes Made:
-  - implement test Player object to test collision
+  - created mouseBlock object to help test collisions. This block is attached to the mouse
+  - created allBlocks[], which stores specifically physical blocks that the player can collide with
+  - simplified collision check by creating getMin() and getMax() functions for GameObject
+  - added to player movement
+    - different movement speeds for ground and air movement
+    - traction to slow down player on ground
+    - booleans for whether grounded or on a wall
+    - move with arrows keys and jump with spacebar
+  - added custom collision checking function to Player that applies a "threshold" when checking blocks. This makes it easier to slide over blocks where the player could get caught on the edges between two blocks
+
 */
 
 /*
@@ -17,6 +26,8 @@
 
 let player;
 
+let mouseBlock;
+
 function setup() {
   createCanvas(sketchWidth, sketchHeight);
   
@@ -25,10 +36,16 @@ function setup() {
   
   //setting initial variables
   allObjects = [];
+  allBlocks = [];
   backgroundColor = color(120, 120, 120, 255);
     
-  player = new Player(100, 100, 25, 25);
+  player = new Player(100, 250, 25, 25);
+  player.fillColor = color(255, 255, 0);
   allObjects.push(player);
+  
+  mouseBlock = new Block(0,0,50,50);
+  allObjects.push(mouseBlock);
+  allBlocks.push(mouseBlock);
   
   buildLevel1();
 }
@@ -37,8 +54,11 @@ function draw() {
   background(backgroundColor);
 
   fill(255);
-  //rect(100, 100, 100, 100);
-  print("player X: " + player.getX() + " | Y: " + player.getY());
+  
+  mouseBlock.setPosition(createVector(mouseX-mouseBlock.getWidth()/2, mouseY-mouseBlock.getHeight()/2));
+  
+  
+  //print("blocks: " + allBlocks.length);
   //updating GameObjects
   for (let i = 0; i < allObjects.length; i++)
     {
@@ -49,6 +69,9 @@ function draw() {
     {
       allObjects[i].draw();
     }
+  
+  //resetting Key Pressed Booleans
+  spaceWasPressed = false;
 }
 
 function buildLevel1()
@@ -57,20 +80,25 @@ function buildLevel1()
   let x = 50 * progScale;
   let y = sketchHeight -100*progScale;
   let w = 50 * progScale;
-  for (let i = 0; i < 5; i++)
+  for (let i = 0; i < 15; i++)
     {
       let b = new Block(x,y,w,w);
       allObjects.push(b);
+      allBlocks.push(b);
       
       //move position for next
       x += w;
     }
   
-  print("player X: " + player.getX() + " | Y: " + player.getY());
+  //print("player X: " + player.getX() + " | Y: " + player.getY());
 }
 
 function keyPressed() //activates 1 frame when a keyboard key is pressed down
 {
+  if (keyCode === 32)
+    {
+      spaceWasPressed = true;
+    }
 
   
 }

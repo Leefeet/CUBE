@@ -16,3 +16,6 @@ let currentScene = "menu"; //determines within draw() what functions should be r
 let backgroundColor; //the current color of the background
 
 let allObjects; //a collection of all existing GameObjects
+let allBlocks; //a collection of all existing Blocks
+
+let spaceWasPressed = false; //whether the SpaceBar was pressed down

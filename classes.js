@@ -31,46 +31,58 @@ function GameObject(x, y, w, h) {
     }
   }
   
+  //gives min and max values
+  this.getMinX = function() {return this.getX();}
+  this.getMaxX = function() {return this.getX() + this.getWidth();}
+  this.getMinY = function() {return this.getY();}
+  this.getMaxY = function() {return this.getY() + this.getHeight();}
+  
   //Gives extra data on the collision.
   //returns two numbers. The first one represents the side of collision On "other"
   // 1-Top : 2-Right : 3-Bottom : 4-Left
   //Second number is the collision depth, i.e. how far in the collision is. This number can be used to correct the collision
-  this.getColissionData = function(other)
+  this.getCollisionData = function(other)
   {
     let side = 0;
     let difference = 0;
     
     //differences  of GameObject opposing sides (references to other)
-    let dTop = abs(other.getY() - this.getY() + this.getHeight());
-    let dRight = abs(other.getX() + other.getWidth() - this.getX());
-    let dBottom = abs(other.getY() + other.getHeight() - this.getY());
-    let dLeft = abs(other.getX() - this.getX() + this.getWidth());
+    let dTop = abs(other.getMinY() - this.getMaxY());
+    let dRight = abs(other.getMaxX() - this.getMinX());
+    let dBottom = abs(other.getMaxY() - this.getMinY());
+    let dLeft = abs(other.getMinX() - this.getMaxX());
     
     //see which difference is the smallest
     if (dTop <= dRight && dTop <= dBottom && dTop <= dLeft)
       {
         side = 1;
         difference = dTop;
+        //print("TOP");
       }
     else if (dRight <= dTop && dRight <= dBottom && dRight <= dLeft)
       {
         side = 2;
         difference = dRight;
+        //print("RIGHT");
       }
     else if (dBottom <= dTop && dBottom <= dRight && dBottom <= dLeft)
       {
         side = 3;
         difference = dBottom;
+        //print("BOTTOM");
       }
     else //left side is least
       {
         side = 4;
         difference = dLeft;
+        //print("LEFT");
       }
+    
+    //print("dTOP: " + dTop + " | dRIGHT: " + dRight +"dBOTTOM: " + dBottom + " | dLEFT: " + dLeft);
     
     return [side, difference];
   }
-  
+    
   //setters and getters
   this.getPosition = function() {return this.position;}
   this.getX = function() {return this.position.x;}
@@ -128,17 +140,204 @@ function Block(x,y,w,h)
 function Player(x,y,w,h)
 {
   Block.call(this,x,y,w,h);
-  this.velocity = createVector(1000,1000);
-  this.forces = createVector(0,0);
-  this.gravity = 8;
+  this.velocity = createVector(0.1,0.1);
+  this.forces = createVector(0.0,0.0);
+  this.gravity = 0.01;
+  this.maxFallSpeed = 0.40;
+  
+  this.movementSpeed = 0.01;
+  this.airMovementSpeed = 0.025;
+  this.maxMovementSpeed = 0.25
+  this.movementTraction = 0.005;
+  this.cornerThreshold = 2.0; //provides a leniency for whether the player will hit the side or top/bottom of a block. This will allow the player to run smoothly over blocks that are next to each other and avoid getting stopped.
+  
+  this.jumpSpeed = 0.35;
+  this.isGrounded = true;
+  this.isOnRightWall = false;
+  this.isOnLeftWall = false;
   
   this.update = function() { //TODO: Make movement work
-    let pos = this.getPosition();
-    print("Old Pos: " + pos);
-    pos = pos.add(this.velocity.mult(deltaTime));
-    print("New Pos: " + pos);
-    this.setPosition(pos);
+    
+    this.playerMovement();
+    
+    //adding gravity
+    this.velocity.y += this.gravity;
+    
+    let pos = this.getPosition().copy();
+    let vel = this.velocity.copy();
+
+    
+    vel.mult(deltaTime); //as unit of deltaTime
+    
+    pos.add(vel); //moving player pos based on Velocity
+    
+    this.setPosition(pos); //applying new position to player
+    
+    this.testBlockCollision(pos); //testing if hit something and position/velocity needs adjustment
+    
+    this.setPosition(pos); //applying new position to player
   }
   
+  this.playerMovement = function()
+  {
+    //arrow keys for left/right movement
+    if (keyIsDown(39)) { //RIGHT
+      if (this.isGrounded) {this.velocity.x += this.movementSpeed;}
+      else {this.velocity.x += this.airMovementSpeed;}
+    }
+    if (keyIsDown(37)) { //LEFT
+      if (this.isGrounded) {this.velocity.x -= this.movementSpeed;}
+      else {this.velocity.x -= this.airMovementSpeed;}
+    }
+    
+    //if neither sirection is pressed and on the ground, slow player down
+    if (!keyIsDown(39) && !keyIsDown(37) && this.isGrounded)
+      {
+        //if slowing down would result in moving in the oposite direction. set movement to 0
+        if ((this.velocity.x > 0.0 &&
+             this.velocity.x - this.movementTraction < 0) ||
+           (this.velocity.x < 0.0 &&
+            this.velocity.x + this.movementTraction > 0) ||
+           this.velocity.x == 0.0)
+          {this.velocity.x = 0.0;}
+        else if (this.velocity.x > 0)
+          {this.velocity.x -= this.movementTraction;}
+        else //if (this.velocity.x < 0)
+          {this.velocity.x += this.movementTraction;}
+      }
+    //print("vel: " + this.velocity);
+    //if speed too fast, set to max
+    if (this.velocity.x > this.maxMovementSpeed)
+      {
+        this.velocity.x = this.maxMovementSpeed;
+      }
+    else if (this.velocity.x < -this.maxMovementSpeed)
+      {
+        this.velocity.x = -this.maxMovementSpeed;
+      }
+    
+    //jumping
+    if (spaceWasPressed && this.isGrounded) //Spacebar
+    { 
+      this.velocity.y -= this.jumpSpeed;
+      this.isGrounded = false;
+    }
+    
+    //falling speed, cap if too fast
+    if (this.velocity.y > this.maxFallSpeed)
+      {
+        this.velocity.y = this.maxFallSpeed;
+      }
+  }
+  
+  this.applyLeniency = function(dTop, dRight, dBottom, dLeft) //applies threshold
+  {
+    //removes some from left and right to make it less likely to trigger when hitting corners
+    dRight -= this.cornerThreshold;
+    dLeft -= this.cornerThreshold;
+  }
+  
+  this.testBlockCollision = function(pos)
+  {
+    //testing collision with all blocks
+    let colBlock; //The block this player collides with, if it exists
+    let colData; //data of collision. Side of collision, collision depth
+    
+    //start with not being grounded
+    this.isGrounded = false;
+    
+    for (let i = 0; i < allBlocks.length; i++)
+      {
+        if (this.collidesWith(allBlocks[i]))
+          {
+            //there's a collision, test which side and the depth
+            colData = this.getCollisionData(allBlocks[i]);
+            //print(colData);
+            //IDEA: halting velocity should only be done if the velocity is moving towards that side of the block. This can prevent losing speed if walking off a cliff where collision may beleave you hit the side.
+            
+            //moving player based on collision information
+            switch(colData[0]) {
+            case 1: //TOP
+              pos.y -= colData[1]; //adjust player up to top of block
+              this.velocity.y = 0.0; //halt veritcal velocity
+                this.isGrounded = true; //since on top, on ground
+              break;
+            case 2: //RIGHT
+              pos.x += colData[1]; //adjust player over to right of block
+              this.velocity.x = 0.0; //halt horizontal velocity
+              break;
+            case 3: //BOTTOM
+              pos.y += colData[1]; //adjust player down to bottom of block
+              this.velocity.y = 0.0; //halt veritcal velocity
+              break;
+            case 4: //LEFT
+              pos.x -= colData[1]; //adjust player over to left of block
+              this.velocity.x = 0.0; //halt horizontal velocity  
+              break;
+            default:
+              //nothing
+            }
+          }
+      }
+    
+    //if we 
+    
+  }
+    
+    this.determineHaltVelocity = function(side) {
+      
+    }
+  
+  //Gives extra data on the collision.
+  //returns two numbers. The first one represents the side of collision On "other"
+  // 1-Top : 2-Right : 3-Bottom : 4-Left
+  //Second number is the collision depth, i.e. how far in the collision is. This number can be used to correct the collision
+  ///In this overridden version, cornerThreshold is applied
+  this.getCollisionData = function(other)
+  {
+    let side = 0;
+    let difference = 0;
+    
+    //differences  of GameObject opposing sides (references to other)
+    let dTop = abs(other.getMinY() - this.getMaxY());
+    let dRight = abs(other.getMaxX() - this.getMinX());
+    let dBottom = abs(other.getMaxY() - this.getMinY());
+    let dLeft = abs(other.getMinX() - this.getMaxX());
+    
+    //Applying corner Threshhold
+    //removes some from left and right to make it less likely to trigger when hitting corners
+    dRightMod = dRight + this.cornerThreshold;
+    dLeftMod = dLeft + this.cornerThreshold;
+    
+    //see which difference is the smallest
+    if (dTop <= dRightMod && dTop <= dBottom && dTop <= dLeftMod)
+      {
+        side = 1;
+        difference = dTop;
+        //print("TOP");
+      }
+    else if (dRightMod <= dTop && dRightMod <= dBottom && dRightMod <= dLeftMod)
+      {
+        side = 2;
+        difference = dRight;
+        //print("RIGHT");
+      }
+    else if (dBottom <= dTop && dBottom <= dRightMod && dBottom <= dLeftMod)
+      {
+        side = 3;
+        difference = dBottom;
+        //print("BOTTOM");
+      }
+    else //left side is least
+      {
+        side = 4;
+        difference = dLeft;
+        //print("LEFT");
+      }
+    
+    //print("dTOP: " + dTop + " | dRIGHT: " + dRight +"dBOTTOM: " + dBottom + " | dLEFT: " + dLeft);
+    
+    return [side, difference];
+  }
   
 }
