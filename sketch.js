@@ -1,12 +1,16 @@
 /*
-  Platformer 1.34
+  Platformer 1.35
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 2-21-2021
+  Edited: 2-22-2021
   
   Changes Made:
-  - Version ready to play with the current levels
-  - Loads directly to the Main Menu
+  - Fixed bug involving bounce blocks. If the player landed on a bounce block, then jumped on the next frame, they would be launched into the air much higher than intended
+    - Fixed by setting the player as not Grounded if the top of a bounce block was touched
+    - This bug was found from a friend testing the game
+    - The player's onWall variables will set to false when touching a bounce block, to avoid the same behavior as above
+  - There could still be an issue if the player is adjacent both to a bounce block and normal block. this is rare, but should be dealt with in the future
+  - Adjusted Hard Level 2 to have a larger opening for the first obstacle. This will make the first obstacle easier as it was too perfect originally
 
   
   Ideas:

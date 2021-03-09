@@ -640,6 +640,7 @@ function Player(x, y, w, h) {
             //if bounce block, apply bounce velocity
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
               this.velocity.y = -(allBlocks[i].bounceSpeed * this.width / scaler);
+              this.isGrounded = false; //set on ground to false so player cannot jump on the next frame to launch themselves up
             }
             break;
           case 2: //RIGHT
@@ -650,6 +651,7 @@ function Player(x, y, w, h) {
             //if bounce block, apply bounce velocity
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
               this.velocity.x = (allBlocks[i].bounceSpeed * this.width / scaler);
+              this.isOnRightWall = false; //so player cannot wall jump off bounce block
             }
             break;
           case 3: //BOTTOM
@@ -670,6 +672,7 @@ function Player(x, y, w, h) {
             //if bounce block, apply bounce velocity
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
               this.velocity.x = -(allBlocks[i].bounceSpeed * this.width / scaler);
+              this.isOnLeftWall = false; //so player cannot wall jump off bounce block
             }
             break;
           default:
