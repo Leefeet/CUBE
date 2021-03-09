@@ -1,13 +1,12 @@
 /*
-  Platformer 1.33
+  Platformer 1.34
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 2-20-2021
+  Edited: 2-21-2021
   
   Changes Made:
-  - Created Hard Level 3. A single, but very precise and difficult jump. This should be the last for the hard levels to make it not too long.
-  - I was initially able to clear the jump, but I haven't officially completed the level as it is now. May need confirmation
-  - just confirmed, Hard Level 3 is possible. The Hard Levels are complete
+  - Version ready to play with the current levels
+  - Loads directly to the Main Menu
 
   
   Ideas:
@@ -123,8 +122,8 @@ function setup() {
   
   currentLevel = 1;
   //loadNextLevel();
-  //buildMainMenu();
-  buildLevel(2, hardLevels);
+  buildMainMenu();
+  //buildLevel(2, hardLevels);
   //buildResultsScreen();
 
 }
