@@ -1,16 +1,18 @@
 /*
-  Platformer 1.53
+  Platformer 1.54
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 3-3-2021
+  Edited: 3-5-2021
   
   Changes Made:
-  - Adjusted TutorialLevel_11 to make the first bouncing platform in the ground so players are more likely to step on it. Also brought the left wall closer to make a smaller left gap, and made the final bounce platform reach the right wall to prevent players from missing the goal.
-  - On Pause Menu, Changed the "Quit Game" button to say "Main Menu" to better communicate what it does
-  - Editing NormalLevel_9 to actually have content
-  - TODO: Editing NormalLevel_10 to actually have content
+  - Editing NormalLevel_10 to actually have content
+  - Edited final Tutorial Level (TutorialLevel_12) to be cleared automatically instead of requiring the player to move to the right
+  - TutorialLevel_12 now has more blocks to spell more words, with the full "text" now saying "YOU ARE READY TO PLAY!"
 
   Ideas:
+  - in a local session, store the player's best times and least deaths. Show this maybe on a screen before a game starts
+  - Store and display my best times/deaths on a screen before a game start, as something like "Developer Times"
+  - Store player's records/progress. Maybe through password or browser memory (cookies?) if possible
   - Particle effects for specific interactions
     - Wall-Sliding
   - Add some sort of level-clear animation (timer would be temporarily stopped)
@@ -142,11 +144,11 @@ function setup() {
   gameTimer = new Timer(0, 0, 0, 0);
   
   //creating gameObjects for main menu
-  //buildMainMenu();
+  buildMainMenu();
 
   //DEBUG, load project starting with specific level. Or load a specific screen
-  //buildLevel("number of level", "Level Set");
-  buildLevel(9, normalLevels);
+  //buildLevel("number of level - 1", "Level Set");
+  //buildLevel(11, tutorialLevels);
   //buildTutorialScreen();
   //buildPauseMenu();
 }
