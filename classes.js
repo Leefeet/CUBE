@@ -221,6 +221,9 @@ function BounceBlock(x, y, w, h) {
     let startY = 0;
     let w = this.getWidth()/n;
     
+    let fadeParticles = true;
+    let timeMultiplier = 0.5;
+    
     //summon particles along side
     switch (direction) {
     case 1: //TOP - particles along top
@@ -238,7 +241,8 @@ function BounceBlock(x, y, w, h) {
             let part = new Particle(x, y, w, w, this.getFillColor(), this.getWidth()/100, direction);
             allParticles.push(part);
             part.setStrokeWeight(0);
-            part.maxTime *= 2; //doubling lifespan
+            part.maxTime *= timeMultiplier; //changing lifespan
+            part.doesFadeAlpha = fadeParticles; //particles may fade over time
           }
         }
         break;
@@ -257,7 +261,8 @@ function BounceBlock(x, y, w, h) {
             let part = new Particle(x, y, w, w, this.getFillColor(), this.getWidth()/100, direction);
             allParticles.push(part);
             part.setStrokeWeight(0);
-            part.maxTime *= 2; //doubling lifespan
+            part.maxTime *= timeMultiplier; //changing lifespan
+            part.doesFadeAlpha = fadeParticles; //particles may fade over time
           }
         }
         break;
@@ -276,7 +281,8 @@ function BounceBlock(x, y, w, h) {
             let part = new Particle(x, y, w, w, this.getFillColor(), this.getWidth()/100, direction);
             allParticles.push(part);
             part.setStrokeWeight(0);
-            part.maxTime *= 2; //doubling lifespan
+            part.maxTime *= timeMultiplier; //changing lifespan
+            part.doesFadeAlpha = fadeParticles; //particles may fade over time
           }
         }
         break;
@@ -295,7 +301,8 @@ function BounceBlock(x, y, w, h) {
             let part = new Particle(x, y, w, w, this.getFillColor(), this.getWidth()/100, direction);
             allParticles.push(part);
             part.setStrokeWeight(0);
-            part.maxTime *= 2; //doubling lifespan
+            part.maxTime *= timeMultiplier; //changing lifespan
+            part.doesFadeAlpha = fadeParticles; //particles may fade over time
           }
         }
         break;
@@ -369,7 +376,7 @@ function Particle(x, y, w, h, c, scale, dir) {
   let scaler = scale; //helps adjust movement-variables for different screen sizes
   let direction = dir; //this can determine the general direction this particle will fly
 
-  this.fillColor = c;
+  this.fillColor = color(red(c), green(c), blue(c), alpha(c));
   this.blockType = BlockType.particle; //defaults to particle
 
   this.velocity = createVector(0, 0); //starts blank, will be set below
@@ -380,6 +387,8 @@ function Particle(x, y, w, h, c, scale, dir) {
 
   this.maxTime = 2.0; //amount of time this particle will live
   this.timeAlive = 0.0; //amount of time this particle has existed
+  
+  this.doesFadeAlpha = false; //whether alpha should fade over lifespan
 
   //setting initial velocity
   let velStartMin = 0.0 * scaler; //minmum possible value for random()
@@ -441,6 +450,12 @@ function Particle(x, y, w, h, c, scale, dir) {
     pos.add(vel); //moving particle pos based on Velocity
 
     this.setPosition(pos); //applying new position to particle
+    
+    //if fading alpha, fade over lifespan
+    if (this.doesFadeAlpha) {
+      let a = 255 * (1 - (this.timeAlive/this.maxTime)); //from 255 - 0
+      this.fillColor.setAlpha(a);
+    }
   }
 
 }
@@ -559,7 +574,7 @@ function Player(x, y, w, h) {
         this.spawnFillColor.setAlpha(this.spawnFillAlpha);
       } else {
         //updating respawn indicator fill
-        this.spawnFillAlpha = lerp(this.spawnFillAlpha, 255, this.maxDeadTime/10);
+        this.spawnFillAlpha = 255 * (this.timeDead/this.maxDeadTime);
         this.spawnFillColor.setAlpha(this.spawnFillAlpha);
       }
     } else {

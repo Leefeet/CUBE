@@ -1,22 +1,21 @@
 /*
-  Platformer 1.51
+  Platformer 1.52
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-27-2021
   
   Changes Made:
-  - Continuing work on particle effects for bouncing on Bounce Blocks
-    - Created specific algorithms based on collision side with BounceBlock
-    - Particles properly spawn on specific side of BounceBlock based on collision
-  - Fixed TextLevel_5 by adding the intended End Block
-  - Lengthened lifetime of BounceBlock particles by 4X since they fall much slower
-  - BounceBlock particles now function as intended. Motion could be toned down, but it works for now.
+  - Modified respawn indicator fill algorithm to be timeDead/maxTimeDead rather than a lerp function. This will make the fill transition more accurately than before and with different dead times set
+  - Particle Class now creates a copy of the color it receives so it cannot edit the color of the original object (deep copy).
+  - Particle now has a new boolean, doesFadeAlpha. Setting this to true will fade the particle's alpha from 255 to 0 over its lifespan, making it fade away
+  - BounceBlock bounce() function received some changes to make code easier to edit by using more defined variables
+  - BounceBlocks now use Particle's fadeAlpha to make the particles feel more hollow and less intrusive on gameplay.
+  - BounceBlock Particles last for 1 second, so they fade much quicker
   
 
   Ideas:
   - Particle effects for specific interactions
     - Wall-Sliding
-    - Bouncing off bounce Block
   - Add some sort of level-clear animation (timer would be temporarily stopped)
   - Add a "quickStylize" function to some Gameobjects like text and buttons that allows multiple formatting within a single function, like fill colors, strokes, hover colors, etc. to reduce the number of lines taken from variable setting.
   - a death counter on the level UI
