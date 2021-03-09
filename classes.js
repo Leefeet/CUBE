@@ -182,10 +182,10 @@ function Player(x,y,w,h)
   this.movementSpeed = 0.01 * w/scaler;
   this.airMovementSpeed = 0.005 * w/scaler;
   this.maxMovementSpeed = 0.25 * w/scaler;
-  this.movementTraction = 0.005 * w/scaler;
+  this.movementTraction = 0.010 * w/scaler;
   this.cornerThreshold = 2.0 * w/scaler; //provides a leniency for whether the player will hit the side or top/bottom of a block. This will allow the player to run smoothly over blocks that are next to each other and avoid getting stopped.
   
-  this.jumpSpeed = 0.35 * w/scaler;
+  this.jumpSpeed = 0.360 * w/scaler;
   this.wallJumpSpeedX = 0.4 * w/scaler;
   this.wallJumpSpeedY = 0.3 * w/scaler;
   this.isGrounded = true;
@@ -242,19 +242,28 @@ function Player(x,y,w,h)
   }
   
   this.playerMovement = function()
-  {
+  { 
     //arrow keys for left/right movement
-    if (keyIsDown(39)) { //RIGHT
-      if (this.isGrounded) {this.velocity.x += this.movementSpeed;}
+    if (keyIsDown(keyRight) || keyIsDown(keyD)) { //RIGHT
+      if (this.isGrounded && this.velocity.x < 0.0) { //stop quicker
+        this.velocity.x += this.movementSpeed;
+        this.velocity.x += this.movementTraction;
+      } 
+      else if (this.isGrounded) {this.velocity.x += this.movementSpeed;}
       else {this.velocity.x += this.airMovementSpeed;}
     }
-    if (keyIsDown(37)) { //LEFT
-      if (this.isGrounded) {this.velocity.x -= this.movementSpeed;}
+    if (keyIsDown(keyLeft) || keyIsDown(keyA)) { //LEFT
+      if (this.isGrounded && this.velocity.x > 0.0) { //stop quicker
+        this.velocity.x -= this.movementSpeed;
+        this.velocity.x -= this.movementTraction;
+      }
+      else if (this.isGrounded) {this.velocity.x -= this.movementSpeed;}
       else {this.velocity.x -= this.airMovementSpeed;}
     }
     
     //if neither sirection is pressed and on the ground, slow player down
-    if (!keyIsDown(39) && !keyIsDown(37) && this.isGrounded)
+    if (!keyIsDown(keyRight) && !keyIsDown(keyLeft) &&
+        !keyIsDown(keyD) && !keyIsDown(keyA) && this.isGrounded)
       {
         //if slowing down would result in moving in the oposite direction. set movement to 0
         if ((this.velocity.x > 0.0 &&
@@ -268,7 +277,9 @@ function Player(x,y,w,h)
         else //if (this.velocity.x < 0)
           {this.velocity.x += this.movementTraction;}
       }
-    //print("vel: " + this.velocity);
+    
+    
+    
     //if speed too fast, set to max
     if (this.velocity.x > this.maxMovementSpeed)
       {
@@ -354,6 +365,15 @@ function Player(x,y,w,h)
                 
                 //reset velocity
                 this.velocity = createVector(0.1 * w/scaler,0.1 * w/scaler);
+              }
+            //check if end block
+            if (allBlocks[i].getBlockType() == BlockType.end)
+              {
+                //flip boolean to load next level / end game
+                isLevelComplete = true;
+                
+                //skip rest of collision
+                break;
               }
             
             //test which side and the depth

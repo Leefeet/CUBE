@@ -24,6 +24,10 @@ let spaceWasPressed = false; //whether the SpaceBar was pressed down
 let capDeltaTime; //deltaTime that's been frame capped.
 let maxTime = 33; //max time for deltaTime, 33 milliseconds
 
+const keyA = 65;
+const keyD = 68;
+const keyLeft = 37;
+const keyRight = 39;
 
-
-
+let currentLevel = 0; //the number of the current level the player is on
+let isLevelComplete = false; //determines if player finished the level
