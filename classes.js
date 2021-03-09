@@ -155,22 +155,25 @@ function Block(x,y,w,h)
 function Player(x,y,w,h)
 {
   Block.call(this,x,y,w,h);
+  
+  let scaler = 25; //this is the width/height that the player was built for. This allows the player to have its attributes adjusted based on its size
+  
   this.velocity = createVector(0.1,0.1);
   this.forces = createVector(0.0,0.0);
-  this.gravity = 0.01;
-  this.maxFallSpeed = 0.50;
-  this.gravityWallSlide = 0.0033;
-  this.maxWallSlideSpeed = 0.20;
+  this.gravity = 0.01 * w/scaler; 
+  this.maxFallSpeed = 0.50 * w/scaler;
+  this.gravityWallSlide = 0.0033 * w/scaler;
+  this.maxWallSlideSpeed = 0.20 * w/scaler;
   
-  this.movementSpeed = 0.01;
-  this.airMovementSpeed = 0.005;
-  this.maxMovementSpeed = 0.25
-  this.movementTraction = 0.005;
-  this.cornerThreshold = 2.0; //provides a leniency for whether the player will hit the side or top/bottom of a block. This will allow the player to run smoothly over blocks that are next to each other and avoid getting stopped.
+  this.movementSpeed = 0.01 * w/scaler;
+  this.airMovementSpeed = 0.005 * w/scaler;
+  this.maxMovementSpeed = 0.25 * w/scaler;
+  this.movementTraction = 0.005 * w/scaler;
+  this.cornerThreshold = 2.0 * w/scaler; //provides a leniency for whether the player will hit the side or top/bottom of a block. This will allow the player to run smoothly over blocks that are next to each other and avoid getting stopped.
   
-  this.jumpSpeed = 0.35;
-  this.wallJumpSpeedX = 1.0;
-  this.wallJumpSpeedY = 0.35;
+  this.jumpSpeed = 0.35 * w/scaler;
+  this.wallJumpSpeedX = 0.4 * w/scaler;
+  this.wallJumpSpeedY = 0.3 * w/scaler;
   this.isGrounded = true;
   this.isOnRightWall = false;
   this.isOnLeftWall = false;

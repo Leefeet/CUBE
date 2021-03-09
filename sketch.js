@@ -1,18 +1,17 @@
 /*
-  Platformer 1.8
+  Platformer 1.9
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-9-2021
   
   Changes Made:
-  - implementing read-in data from text files
-  - implementing level loading from txt files
-    - a tile-like layout. letters inputted in a txt file are read as types of blocks and placed on the screen to create a level. This makes levels very easy to create and edit
-  - levelData[] stores information on level layouts
-  - preload() function ensures level files are loaded before they are used
-  - Level loading detects the width and height of the level. According to the game screen, it will size the blocks to best fit the screen
-  - player is built at 90% of the block width to help prevent getting stuck between two blocks
-
+  - Player's attributes now scale with player's size
+    - a new scaler variable in player represents the size the player was designer for. When the player's current width is divided by the scaler, it will cause the player's attributes to function the same regardless of size
+    - the player will always jump 3 blocks high, even if the blocks appear smaller or larger
+    - player variables are now set differently to account for this change
+  - Created a new test level
+  
+  
 */
 
 /*
@@ -85,13 +84,13 @@ function buildLevel(levelNum)
   let level = levelData[levelNum];
   
   //prints contents of level
-  print(levelData[levelNum]);
+  //print(levelData[levelNum]);
   
   //determining level block row and column number
   let rows = level.length;
   let cols = level[0].length;
   
-  print("rows: " + rows + " | columns: " + cols);
+  //print("rows: " + rows + " | columns: " + cols);
   
   //we can determine block widths based on sketch size
   //determine whether the level is wider or taller
