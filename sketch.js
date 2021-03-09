@@ -1,12 +1,16 @@
 /*
-  Platformer 1.31
+  Platformer 1.32
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-20-2021
   
   Changes Made:
-  - Reverted Particle and Player code back to 1.28. Work with deltaTime didn't yeild any good results and the current way it's working is good enough for now. There's other things I could work on instead
-  - Previous additions like extra test levels still remain
+  - Typo in "Congradulations" changed to "Congratulations"
+  - In Player, removed death() function as overloaded version that had a direciton parameter can be used just as well. Providing a 0 will make it work the same, so this will reduce unecessary code
+  - Created Hard Level 2. This one focuses more on tight fitting and specific movement with Bounce Blocks.
+  - Confirmed Hard Level 2 is possible to complete through segmentation testing.
+  - Created placeholder Hlevel_3.txt for a third hard level
+
   
   Ideas:
   - for the particle explosion, the velocity of the player influences the particles velocity
@@ -27,6 +31,10 @@
     Helpful link for inheritance: https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Objects/Inheritance
     InstanceOf: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof
     Object Collision: https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
+    
+    Maybe some good information on stopping players from getting stuck between blocks:
+    https://stackoverflow.com/questions/3902492/sliding-aabb-collision-getting-stuck-on-edges
+    https://www.reddit.com/r/gamedev/comments/1w92dm/2d_collision_detection_and_resolution_solving_the/
     
     DeltaTime may need to be applied twice: https://answers.unity.com/questions/216396/playing-with-gravity.html
     Also: https://www.reddit.com/r/gamemaker/comments/5vvxmr/platformer_gravity_with_delta_time/
@@ -79,7 +87,7 @@ function preload()
   }
   
   //Hard Levels
-  numLevels = 1; //number of level files to load
+  numLevels = 2; //number of level files to load
   for (let i = 0; i < numLevels; i++)
   {
   hardLevels.push(loadStrings('assets/Hlevel_' + (i+1) + '.txt'));
@@ -117,8 +125,8 @@ function setup() {
   
   currentLevel = 1;
   //loadNextLevel();
-  buildMainMenu();
-  //buildLevel(2, testLevels);
+  //buildMainMenu();
+  buildLevel(1, hardLevels);
   //buildResultsScreen();
 
 }
@@ -314,10 +322,10 @@ function buildMainMenu()
 //draws the main menu to the screen
 function buildResultsScreen()
 {
-  //creating congradulations message
+  //creating congratulations message
   let x = width/2;
   let y = 100 * progScale;
-  let s = "Congradulations!";
+  let s = "Congratulations!";
   let title = new DisplayText(x, y, 0, 0, s);
   title.textSize = 100 * progScale;
   allObjects.push(title);

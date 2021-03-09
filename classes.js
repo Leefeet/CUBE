@@ -344,36 +344,9 @@ function Player(x, y, w, h) {
   this.maxDeadTime = 0.5; //amount of time this particle will live
   this.timeDead = 0.0; //amount of time this particle has existed
 
-  this.death = function() {
-    //increment death counter
-    numberOfDeaths++;
-    
-    //creating particles at current position
-    let seg = 5;
-    for (let a = 0; a < seg; a++) {
-      for (let b = 0; b < seg; b++) {
-        let part = new Particle(this.getX() + (this.getWidth() / seg) * a, this.getY() + (this.getWidth() / seg) * b, this.getWidth() / seg, w / seg, this.getFillColor(), this.getWidth() / scaler, 0);
-        allParticles.push(part);
-        part.setStrokeWeight(0);
-      }
-    }
-
-    //teleport player back to spawn
-    this.setX(this.spawnPosition.x);
-    this.setY(this.spawnPosition.y);
-    pos = this.spawnPosition.copy();
-
-    //print(this.position);
-
-    //reset velocity
-    this.velocity = this.initialVelocity.copy();
-
-
-    this.isDead = true; //setting player to dead
-    
-  }
   
   //same, but included input for particle direction
+  // use 0 for no direction
   this.death = function(direction) {
     //increment death counter
     numberOfDeaths++;
@@ -638,7 +611,7 @@ function Player(x, y, w, h) {
         //check if kill block
         if (allBlocks[i].getBlockType() == BlockType.kill) {
           //spawn particles and do death-related changes
-          this.death();
+          this.death(0); //0 for no direction
           
           //skip rest of collision
           break;
