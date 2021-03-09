@@ -910,3 +910,73 @@ function DisplayText(x, y, w, h, s) {
   }
 
 }
+
+//Object: Timer
+//Function: keeps track of game time and displays it to screen
+//Inherits: DisplayText
+function Timer(x, y, w, h) {
+  DisplayText.call(this, x, y, w, h, "00:00:000");
+  
+  this.milliseconds = 0; //number of milliseconds that have passed
+  
+  //this.displayText = s; //the text displayed
+  
+  this.isCounting = false; //whether timer will continue to count or not
+  
+  this.update = function() {
+    //add to timer if counting
+    if (this.isCounting)
+      {
+    this.milliseconds += capDeltaTime; //deltaTime is in milliseconds, which works well for this
+      }    
+    
+    //building time text
+    //get minutes, seconds, and milliseconds
+    let min = this.getMinutes();
+    let sec = this.getSeconds();
+    let mil = this.getMilliseconds();
+    
+    //construct strings and add 0s if needed
+    let strMin;
+    let strSec;
+    let strMil;
+    
+    if (min < 10) { strMin = "0" + str(min); }
+    else { strMin = str(min); }
+    
+    if (sec < 10) { strSec = "0" + str(sec); }
+    else { strSec = str(sec); }
+    
+    if (mil < 10) { strMil = "00" + str(mil); }
+    else if (mil < 100) { strMil = "0" + str(mil); }
+    else { strMil = str(mil); }
+    
+    this.displayText = strMin + ":" + strSec + ":" + strMil;
+  }
+  
+  this.getMinutes = function() {
+    //60000 milliseconds in a minute
+    return int(this.milliseconds/60000);
+  }
+  
+  this.getSeconds = function() {
+        //1000 milliseconds in a second
+    // modulo 60 since we want seconds between 0-59 (minutes)
+    return int((this.milliseconds/1000) % 60);
+  }
+  
+  this.getMilliseconds = function() {
+    // modulo 1000 to get milliseconds absent of seconds and minutes
+    return int(this.milliseconds % 1000);
+  }
+  
+  this.reset = function()
+  {
+    this.milliseconds = 0;
+    this.isCounting = false;
+  }
+  
+  this.start = function() {this.isCounting = true;}
+  this.stop = function() {this.isCounting = false;}
+  
+}

@@ -1,16 +1,20 @@
 /*
-  Platformer 1.24
+  Platformer 1.25
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-19-2021
   
   Changes Made:
-  - Adjusted Player's death() function so that all death-related methods and changes are applied even when the player is changed to dead from outside the player object
-  - Death particle animation direction can now be influenced by including a number in the death() function
-  - Player falling off bottom, left, and right of screen will kill player and summon particles in appropriate direction
-  - When player collides with kill block, collision check for that frame ends. This will prevent displacement with blocks when the player is teleported back to the spawnpoint.
-  - Player's respawn timer was decreased by 50% to help get back to playing quicker
-  - Created better implementation of particle death. particles that are too old are now immediately removed from allParticles[] instead of going back and removing them later.
+  - Implementing Timer class, to count game time
+  - Timer is implemented, and includes:
+    - Displaying timer to screen and counting up with minutes, seconds, and milliseconds
+    - Has function to start(), stop(), and reset()
+    - Has gameTimer variable used in program to reuse and keep the same timer between levels
+  - The timer is tracked between levels
+    - When building level, timer is placed and added to allObjects[] to display on the UI
+    - When levelSet is over, timer is stop()
+    - when levelset is loaded, timer is reset() and start()
+  - When timer is displayed, it will add extra 0s if numbers are in single digits, or double digits for milliseconds
   
   Ideas:
   - for the particle explosion, the velocity of the player influences the particles velocity
@@ -53,6 +57,8 @@ let completedHard = false;
 let currentLevelSet;
 
 let inTutorial = false;
+
+let gameTimer;
 
 //runs actions that may be required before anything it setup() or draw()
 function preload()
@@ -98,6 +104,8 @@ function setup() {
   allBlocks = [];
   allParticles = [];
   backgroundColor = color(10, 10, 10, 255);
+  
+  gameTimer = new Timer(0, 0, 0, 0);
         
   //buildLevel1();
   
@@ -135,11 +143,14 @@ function draw() {
       
       if (!anotherLevel)
         {
+          //freeze timer, since we're done
+          gameTimer.stop();
+          
           //back to main menu     //TDOD this should go to a results screen
           buildMainMenu();
         }
     }
-    
+      
   //print("blocks: " + allBlocks.length);
   //updating GameObjects
   for (let i = 0; i < allObjects.length; i++)
@@ -147,7 +158,6 @@ function draw() {
       allObjects[i].update(); 
     }
   //updating particles
-  print("particle num: " + allParticles.length);
   for (let i = 0; i < allParticles.length; i++)
     {
       allParticles[i].update();
@@ -207,6 +217,7 @@ function buildMainMenu()
     currentLevelSet = tutorialLevels;
     currentLevel = 1; //for display
     currentLevelIndex = 0; //for level indexing
+    gameTimer.reset(); //reseting current time on timer
     buildLevel(currentLevelIndex, currentLevelSet); //starting level
   };
   let btnTutorial = new Button(x, y, w, h, startTutorial);
@@ -228,6 +239,7 @@ function buildMainMenu()
     currentLevelSet = levels;
     currentLevel = 1; //for display
     currentLevelIndex = 0; //for level indexing
+    gameTimer.reset(); //reseting current time on timer
     buildLevel(currentLevelIndex, currentLevelSet); //starting level
   };
   let btnStart = new Button(x, y, w, h, startGame);
@@ -249,6 +261,7 @@ function buildMainMenu()
     currentLevelSet = hardLevels;
     currentLevel = 1; //for display
     currentLevelIndex = 0; //for level indexing
+    gameTimer.reset(); //reseting current time on timer
     buildLevel(currentLevelIndex, currentLevelSet); //starting level
   };
   let btnHard = new Button(x, y, w, h, startHardGame);
@@ -423,6 +436,16 @@ function buildLevel(levelIndex, levelSet)
   title.textSize = 50 * progScale;
   title.textAlignH = LEFT;
   allObjects.push(title);
+  
+  //placing timer
+  x = width/1.5;
+  y = uiHeight/2;
+  gameTimer.setX(x);
+  gameTimer.setY(y);
+  gameTimer.textSize = 50 * progScale;
+  gameTimer.textAlignH = LEFT;
+  gameTimer.start();
+  allObjects.push(gameTimer);
 }
 
 //merges groups of blocks near each other into single rectangles
