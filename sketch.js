@@ -1,16 +1,16 @@
 /*
-  Platformer 1.50
+  Platformer 1.51
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-27-2021
   
   Changes Made:
-  - Added "created By" message on title screen.
-  - Title "Cube" is now in all Caps "CUBE"
-  - Working on particle effects for bouncing on Bounce Blocks
-    - Created TextLevel_5 to test bouncing particles
-    - Particles spawn on specific side of BounceBlock based on collision
-    - Getting particles to spawn on specific sides isn't working by reusing same algorithm. I need to try separate ones in a future version
+  - Continuing work on particle effects for bouncing on Bounce Blocks
+    - Created specific algorithms based on collision side with BounceBlock
+    - Particles properly spawn on specific side of BounceBlock based on collision
+  - Fixed TextLevel_5 by adding the intended End Block
+  - Lengthened lifetime of BounceBlock particles by 4X since they fall much slower
+  - BounceBlock particles now function as intended. Motion could be toned down, but it works for now.
   
 
   Ideas:
@@ -146,11 +146,11 @@ function setup() {
   gameTimer = new Timer(0, 0, 0, 0);
   
   //creating gameObjects for main menu
-  //buildMainMenu();
+  buildMainMenu();
 
   //DEBUG, load project starting with specific level. Or load a specific screen
   //buildLevel("number of level", "Level Set");
-  buildLevel(4, testLevels);
+  //buildLevel(4, testLevels);
   //buildTutorialScreen();
   //buildPauseMenu();
 }
@@ -220,7 +220,7 @@ function draw() {
     }
   }
   //updating particles (but only if not paused)
-  if (false) {//(!isPaused) {
+  if (!isPaused) {
     for (let i = 0; i < allParticles.length; i++) {
       allParticles[i].update();
 

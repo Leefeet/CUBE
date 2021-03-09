@@ -215,67 +215,93 @@ function BounceBlock(x, y, w, h) {
   this.bounce = function(direction) {
     
     let n = 5; //number of particles to make lengthwise
-    let d = 1; //number of particles to make depthwise ( d < n )
+    let d = 2; //number of particles to make depthwise ( d < n )
     //line of particle spawns
     let startX = 0;
     let startY = 0;
-    let endX = 0;
-    let endY = 0;
-    let depthX = 0;
-    let depthY = 0;
-    
     let w = this.getWidth()/n;
+    
     //summon particles along side
     switch (direction) {
     case 1: //TOP - particles along top
         startX = this.getMinX();
         startY = this.getMinY();
-        endX = this.getMaxX();
-        endY = this.getMinY();
-        depthX = 0;
-        depthY = 1;
+        
+        //spawning Particles
+        for (let i = 0; i < n; i++) {
+          for (let j = 0; j < d; j++) {
+            let x = startX;
+            let y = startY;
+            x += w * i;
+            y += w * j;
+
+            let part = new Particle(x, y, w, w, this.getFillColor(), this.getWidth()/100, direction);
+            allParticles.push(part);
+            part.setStrokeWeight(0);
+            part.maxTime *= 2; //doubling lifespan
+          }
+        }
         break;
     case 2: //RIGHT
         startX = this.getMaxX() - w*d;
         startY = this.getMinY();
-        endX = this.getMaxX();
-        endY = this.getMaxY();
-        depthX = 1;
-        depthY = 0;
+        
+        //spawning Particles
+        for (let i = 0; i < n; i++) {
+          for (let j = 0; j < d; j++) {
+            let x = startX;
+            let y = startY;
+            x += w * j;
+            y += w * i;
+
+            let part = new Particle(x, y, w, w, this.getFillColor(), this.getWidth()/100, direction);
+            allParticles.push(part);
+            part.setStrokeWeight(0);
+            part.maxTime *= 2; //doubling lifespan
+          }
+        }
         break;
     case 3: //BOTTOM
-        startX = this.getMaxX() - w*d;
+        startX = this.getMinX();
         startY = this.getMaxY() - w*d;
-        endX = this.getMinX();
-        endY = this.getMaxY();
-        depthX = 0;
-        depthY = -1;
+        
+        //spawning Particles
+        for (let i = 0; i < n; i++) {
+          for (let j = 0; j < d; j++) {
+            let x = startX;
+            let y = startY;
+            x += w * i;
+            y += w * j;
+
+            let part = new Particle(x, y, w, w, this.getFillColor(), this.getWidth()/100, direction);
+            allParticles.push(part);
+            part.setStrokeWeight(0);
+            part.maxTime *= 2; //doubling lifespan
+          }
+        }
         break;
     case 4: //LEFT
         startX = this.getMinX();
-        startY = this.getMaxY() - w*d;
-        endX = this.getMinX();
-        endY = this.getMinY();
-        depthX = -1;
-        depthY = 0;
+        startY = this.getMinY();
+
+        //spawning Particles
+        for (let i = 0; i < n; i++) {
+          for (let j = 0; j < d; j++) {
+            let x = startX;
+            let y = startY;
+            x += w * j;
+            y += w * i;
+
+            let part = new Particle(x, y, w, w, this.getFillColor(), this.getWidth()/100, direction);
+            allParticles.push(part);
+            part.setStrokeWeight(0);
+            part.maxTime *= 2; //doubling lifespan
+          }
+        }
         break;
     }
     
-    //spawning Particles
-    for (let i = 0; i < n; i++) {
-      for (let j = 0; j < d; j++) {
-        let x = startX;
-        let y = startY;
-        let sizeX = abs(startX - endX);
-        let sizeY = abs(startY - endY);
-        x += (((sizeX)/n) * i) + (depthX * w * j);
-        y += (((sizeY)/n) * i) + (depthY * w * j);
-
-        let part = new Particle(x, y, w, w, color(0, 0, 0), this.getWidth()/100, direction);
-        allParticles.push(part);
-        part.setStrokeWeight(0);
-      }
-    }
+    
   }
 
   this.getBounceSpeed = function() {
