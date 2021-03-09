@@ -1,21 +1,17 @@
 /*
-  Platformer 1.27
+  Platformer 1.28
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-19-2021
   
   Changes Made:
-  - Creating Level set for testing levels, called testLevels[]. This is for testing in a controlled environment, such as collision or edge cases
-  - Added hidden button on Main Menu for accessing the test levels. It will show up when you hover over the bottom right corner
-  - Fixing issue where bounce blocks won't bounce you if sliding over it on right side. I believe this is caused because when the block gives you vertical force, the collision with the other block you're standing on is also setting your y velocity to 0
-  - Player now bounces on bounce blocks that are inline with the ground and the player is over them. Fixed this with velocity checks
-    - Player's velocity on X or Y axis will only be set to 0 only if the player's velocity is moving towards the collision surface (i.e., having positive X velocity and moving towards a right wall)
+  - Touching a bounce block now sets the player's velocity rather than adding/subtracting to it. glitch involving landing/touching two bounce blocks at the same time would propell the player much faster than intended. This functions nearly identical since veclocity would be cleared upon collision anyway.
   
   Ideas:
   - for the particle explosion, the velocity of the player influences the particles velocity
   - For death animation, particles will eventually come back to spawn to reform player?
   - Change collision rules with certain blocks
-    - When touching a Blue Bounce BLock, the player will bounce if barely touching on the left but won't when on the right. This is because the order the blocks are checked for collision. I need to either A) always check Bounce Blocks First, B) Check for Bounce Blocks Last, or C) acitvate Bounc Block when a certain overlap is acheived. Any of these will make Bounce Block interactions more consistent
+    - Maybe acitvate Bounc Block when a certain overlap is acheived. Like, the player will bounce on a bounce block, that is inline with the ground, as soon as a single pixel of the player overlaps. This may be left intentionally
   - When the level is built, have rows and groups of blocks be "merged" to become one larger rectangle. This will improve performance as less blocks would need to be compared.
   - Add mroe block types, like:
     - 

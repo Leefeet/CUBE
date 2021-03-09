@@ -669,7 +669,7 @@ function Player(x, y, w, h) {
             this.isGrounded = true; //since on top, on ground
             //if bounce block, apply bounce velocity
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
-              this.velocity.y -= allBlocks[i].bounceSpeed * this.width / scaler;
+              this.velocity.y = -(allBlocks[i].bounceSpeed * this.width / scaler);
             }
             break;
           case 2: //RIGHT
@@ -679,7 +679,7 @@ function Player(x, y, w, h) {
             this.isOnRightWall = true; //since on right wall
             //if bounce block, apply bounce velocity
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
-              this.velocity.x += allBlocks[i].bounceSpeed * this.width / scaler;
+              this.velocity.x = (allBlocks[i].bounceSpeed * this.width / scaler);
             }
             break;
           case 3: //BOTTOM
@@ -688,7 +688,7 @@ function Player(x, y, w, h) {
             if (this.velocity.y < 0) { this.velocity.y = 0.0; }
             //if bounce block, apply bounce velocity
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
-              this.velocity.y += allBlocks[i].bounceSpeed * this.width / scaler;
+              this.velocity.y = (allBlocks[i].bounceSpeed * this.width / scaler);
             }
             break;
           case 4: //LEFT
@@ -699,7 +699,7 @@ function Player(x, y, w, h) {
             this.isOnLeftWall = true; //since on left wall
             //if bounce block, apply bounce velocity
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
-              this.velocity.x -= allBlocks[i].bounceSpeed * this.width / scaler;
+              this.velocity.x = -(allBlocks[i].bounceSpeed * this.width / scaler);
             }
             break;
           default:
