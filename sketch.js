@@ -1,16 +1,14 @@
 /*
-  Platformer 1.19
+  Platformer 1.20
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 2-12-2021
+  Edited: 2-16-2021
   
   Changes Made:
-  - Created new levels 1-10
-    - the original level_1.txt (test level) was changed to level_6.txt
-    - Levels 1-5 and 7-8 are new creations
-    - Levels 9 and 10 are placeholders for new levels
-  - Player's starting velocity is now straight down rather than diagonal
-  - Player's starting velocity is now stored in initialVelocity variable. This is referenced whenever Player respawns
+  - Player gravityWallSlide has been decreased even further
+  - Player's gravity and gravityWallSlide are now multiplied by capDeltaTime. This will prevent gravity from changing when the game lags, thus making the player jump higher than intended. Gravity variables were adjusted to compensate
+  - attempted to fix wall jumping/sliding issues under different progScale values but wasn't able to fix it, but theorized how to
+  - changed level_1.txt to intended level (was clone of level_8)
   
   Ideas:
   - Death animation for the player where they explode into multiple particles
@@ -31,7 +29,8 @@
     InstanceOf: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof
     Object Collision: https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
     
-    
+    Problems to Fix:
+    - When changing progScale to make game larger, wall sliding on the left-side of blocks doesn't work properly. Something must not be implementing it properly.
      TOD TODO TDOODT DTDO DTODO(*&^%$#@#$%^&*&^%$#$%^&)
     This might help with making movement/jumping consistent even during lag:
     https://www.reddit.com/r/gamemaker/comments/6ffh0k/inconsistent_jump_height_using_delta_timing/

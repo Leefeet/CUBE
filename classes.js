@@ -224,10 +224,11 @@ function Player(x, y, w, h) {
   this.velocity = createVector(0.0 * w / scaler, 0.1 * w / scaler);
   this.initialVelocity = this.velocity.copy();
   this.forces = createVector(0.0, 0.0);
-  this.gravity = 0.01 * w / scaler;
+  this.gravity = 0.00060 * w / scaler; //0.01 without capDeltaTime
   this.maxFallSpeed = 0.50 * w / scaler;
-  this.gravityWallSlide = 0.0033 * w / scaler;
+  this.gravityWallSlide = 0.00015 * w / scaler; //0.0025 without capDeltaTime
   this.maxWallSlideSpeed = 0.20 * w / scaler;
+  this.wallSlideThreshold = 0.000001; // if distance between wall is less than this, will consider player on wall
 
   this.movementSpeed = 0.01 * w / scaler;
   this.airMovementSpeed = 0.005 * w / scaler;
@@ -256,9 +257,9 @@ function Player(x, y, w, h) {
     //different gravity is sliding down a wall
     //must also make sure player is falling and not rising
     if (this.velocity.y > 0 && (this.isOnRightWall || this.isOnLeftWall)) {
-      this.velocity.y += this.gravityWallSlide;
+      this.velocity.y += this.gravityWallSlide * capDeltaTime;
     } else {
-      this.velocity.y += this.gravity;
+      this.velocity.y += this.gravity * capDeltaTime;
     }
 
     let pos = this.getPosition().copy();
@@ -272,7 +273,10 @@ function Player(x, y, w, h) {
     pos.add(vel); //moving player pos based on Velocity
 
     this.setPosition(pos); //applying new position to player
-
+  
+    //printing player's left position
+    //print("player right: " + this.getMaxX());
+    
     this.testBlockCollision(pos); //testing if hit something and position/velocity needs adjustment
 
     this.setPosition(pos); //applying new position to player
@@ -516,9 +520,39 @@ function Player(x, y, w, h) {
           default:
             //nothing
         }
+        
+        /*
+        
+        This will have to be implemented differently to work as intended.
+        With it as it is, it will never check a block unless it's being touched
+        
+        //new, extra check for wall adjacency
+        //to prevent a rare issue where adjaceny is very, very slightly off, do a check to set wallClinging status anyway
+        // if the distancec between the edgages is less than the threshold, consider the player on the wall
+        if (colData[0] != 1 && colData[0] != 3) //not top or bottom collision
+        {
+          let dLeft = abs(this.getMinX() - allBlocks[i].getMaxX()); //left of player to right of block
+          let dRight = abs(allBlocks[i].getMinX() - this.getMaxX()); //left of block to right of player
+          //print("dLeft: " + dLeft);
+          print("dRight: " + dRight);
+          // print("left: " + dRight < this.wallSlideThreshold);
+          // print("right: " + dRight);
+          // print(this.wallSlideThreshold);
+          if (dRight < this.wallSlideThreshold) //Right Wall Cling
+            {
+              print("RIGHT");
+              this.isOnLeftWall = true;
+            }
+          else if (dLeft < this.wallSlideThreshold) //Left Wall Cling
+            {
+              print("LEFT");
+              this.isOnRightWall = true;
+            }
+        }*/
       }
     }
-
+// TODO THIS
+      
     //if we 
 
   }
@@ -579,7 +613,7 @@ function Player(x, y, w, h) {
     {
       side = 4;
       difference = dLeft;
-      //print("LEFT");
+      //print("LEFT: " + other.getMinX());
     }
 
     //print("dTOP: " + dTop + " | dRIGHT: " + dRight +"dBOTTOM: " + dBottom + " | dLEFT: " + dLeft);
