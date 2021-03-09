@@ -635,6 +635,9 @@ function Player(x, y, w, h) {
     this.isGrounded = false;
     this.isOnRightWall = false;
     this.isOnLeftWall = false;
+    
+    //boolean to test whether a bounce block was touched
+    let touchedBounce = false;
 
     for (let i = 0; i < allBlocks.length; i++) {
       if (this.collidesWithAdjacent(allBlocks[i])) {
@@ -692,7 +695,7 @@ function Player(x, y, w, h) {
             //if bounce block, apply bounce velocity
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
               this.velocity.y = -(allBlocks[i].bounceSpeed * this.width / scaler);
-              this.isGrounded = false; //set on ground to false so player cannot jump on the next frame to launch themselves up
+              touchedBounce = true; //sets ground and wall variables later
             }
             break;
           case 2: //RIGHT
@@ -705,7 +708,7 @@ function Player(x, y, w, h) {
             //if bounce block, apply bounce velocity
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
               this.velocity.x = (allBlocks[i].bounceSpeed * this.width / scaler);
-              this.isOnRightWall = false; //so player cannot wall jump off bounce block
+              touchedBounce = true; //sets ground and wall variables later
             }
             break;
           case 3: //BOTTOM
@@ -717,6 +720,7 @@ function Player(x, y, w, h) {
             //if bounce block, apply bounce velocity
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
               this.velocity.y = (allBlocks[i].bounceSpeed * this.width / scaler);
+              touchedBounce = true; //sets ground and wall variables later
             }
             break;
           case 4: //LEFT
@@ -730,7 +734,7 @@ function Player(x, y, w, h) {
             //if bounce block, apply bounce velocity
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
               this.velocity.x = -(allBlocks[i].bounceSpeed * this.width / scaler);
-              this.isOnLeftWall = false; //so player cannot wall jump off bounce block
+              touchedBounce = true; //sets ground and wall variables later
             }
             break;
           default:
@@ -768,7 +772,14 @@ function Player(x, y, w, h) {
       }
     }
     // TODO THIS
-
+    
+    //If player touched a BounceBlock, cancel booleans needed for jumping and wall jumping.
+      //These prevent the player from jupming on the same frame they are bounced, which can multiply their bounce force
+    if (touchedBounce) {
+      this.isGrounded = false; //prevents grounded jumping
+      this.isOnRightWall = false; //prevents right wall jumping
+      this.isOnLeftWall = false; //prevents left wall jumping
+    }
   }
 
   //Gives extra data on the collision.

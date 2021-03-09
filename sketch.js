@@ -1,14 +1,14 @@
 /*
-  Platformer 1.45
+  Platformer 1.46
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 2-26-2021
+  Edited: 2-27-2021
   
   Changes Made:
-  - Implementing button disabling
-  - Added a isDisabled boolean to buttons, along with disabled colors. This will allow buttons to be set to disabled mode where they cannot be clicked
-    - Disabled buttons will appear greyed out and won't react to mouse hovering
-  - Greyed out Easy and Hard game buttons since their levels aren't created yet. They are disabled
+  - Fixing bug where player can go super high when between a bounce block and normal block. This is because the player can jump for one frame, and the velocity of the bounce and jump are combined
+  - Fixed the bug. Created a new boolean variable, touchedBounce, that is set to true whenever the player touches a bounceBlock within a frame. At the end of collision check, if it's true, all variables for the player being grounded or on a wall are set to false, meaning the player will be incapable of jumping. This makes sense since the player will immediately move due to the bouncing, so jumping wouldn't be possible.
+    - Potential issue with this: What if player bounces off side of block and wants to jump off ground. For first frame unable to jump.
+    - This could be solved by having individual checks specifically for certain sides of a bounce block, the top, leftSide, and rightSide, and only disabling jumping on that side
   
 
   Ideas:
@@ -139,6 +139,8 @@ function setup() {
 
   //creating timer for timing levels
   gameTimer = new Timer(0, 0, 0, 0);
+  
+  gameTimer.displayText
 
   //creating gameObjects for main menu
   buildMainMenu();
