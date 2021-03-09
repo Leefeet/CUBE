@@ -127,29 +127,18 @@ function Block(x,y,w,h)
 // child of Block for now so it can reuse drawing code
 function Player(x,y,w,h)
 {
-  Block.call(x,y,w,h);
-  this.velocity = createVector(1,1);
+  Block.call(this,x,y,w,h);
+  this.velocity = createVector(1000,1000);
   this.forces = createVector(0,0);
   this.gravity = 8;
   
-  this.update = function() {
+  this.update = function() { //TODO: Make movement work
     let pos = this.getPosition();
-    
-    pos *= this.velocity * deltaTime;
-    
+    print("Old Pos: " + pos);
+    pos = pos.add(this.velocity.mult(deltaTime));
+    print("New Pos: " + pos);
     this.setPosition(pos);
   }
-}
-
-function Box(x,y,w,h)
-{
-  GameObject.call(this,x,y,w,h);
   
-  this.update = function() {} //nothing to update
   
-  this.draw = function()
-  {
-    fill(255);
-    rect(this.getX(), this.getY(), this.getWidth(), this.getHeight());
-  }
 }

@@ -1,14 +1,11 @@
 /*
-  Platformer 1.2
+  Platformer 1.3
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-4-2021
   
   Changes Made:
-  - implemented Block drawing
-  - implemented Block setters and getters
-  - implemented GameObject collision (Axis-Aligned Bounding Box, or AABB)
-  - GameObjects Update() and Draw() loops for allObjects[] array
+  - implement test Player object to test collision
 */
 
 /*
@@ -29,9 +26,8 @@ function setup() {
   //setting initial variables
   allObjects = [];
   backgroundColor = color(120, 120, 120, 255);
-  myBox = new Box(0, 0, 300, 300);
     
-  player = new Player(sketchWidth/2, sketchHeight/2, 25, 25);
+  player = new Player(100, 100, 25, 25);
   allObjects.push(player);
   
   buildLevel1();
@@ -39,15 +35,14 @@ function setup() {
 
 function draw() {
   background(backgroundColor);
-    myBox.draw();
 
   fill(255);
-  rect(100, 100, 100, 100);
-  
+  //rect(100, 100, 100, 100);
+  print("player X: " + player.getX() + " | Y: " + player.getY());
   //updating GameObjects
   for (let i = 0; i < allObjects.length; i++)
     {
-      allObjects[i].update();
+      allObjects[i].update(); 
     }
   //Drawing GameObjects
   for (let i = 0; i < allObjects.length; i++)
@@ -70,6 +65,8 @@ function buildLevel1()
       //move position for next
       x += w;
     }
+  
+  print("player X: " + player.getX() + " | Y: " + player.getY());
 }
 
 function keyPressed() //activates 1 frame when a keyboard key is pressed down
