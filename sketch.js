@@ -1,15 +1,13 @@
 /*
-  Platformer 1.32
+  Platformer 1.33
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-20-2021
   
   Changes Made:
-  - Typo in "Congradulations" changed to "Congratulations"
-  - In Player, removed death() function as overloaded version that had a direciton parameter can be used just as well. Providing a 0 will make it work the same, so this will reduce unecessary code
-  - Created Hard Level 2. This one focuses more on tight fitting and specific movement with Bounce Blocks.
-  - Confirmed Hard Level 2 is possible to complete through segmentation testing.
-  - Created placeholder Hlevel_3.txt for a third hard level
+  - Created Hard Level 3. A single, but very precise and difficult jump. This should be the last for the hard levels to make it not too long.
+  - I was initially able to clear the jump, but I haven't officially completed the level as it is now. May need confirmation
+  - just confirmed, Hard Level 3 is possible. The Hard Levels are complete
 
   
   Ideas:
@@ -17,7 +15,7 @@
   - For death animation, particles will eventually come back to spawn to reform player?
   - Change collision rules with certain blocks
     - Maybe acitvate Bounc Block when a certain overlap is acheived. Like, the player will bounce on a bounce block, that is inline with the ground, as soon as a single pixel of the player overlaps. This may be left intentionally
-  - When the level is built, have rows and groups of blocks be "merged" to become one larger rectangle. This will improve performance as less blocks would need to be compared.
+  - When the level is built, have rows and groups of blocks be "merged" to become one larger rectangle. This will improve performance as less blocks would need to be compared. It can also prevent poor collision when a player lands between two blocks, or on the corner of a bounce block
   - Add mroe block types, like:
     - 
   - Upgrades for the player, like
@@ -87,7 +85,7 @@ function preload()
   }
   
   //Hard Levels
-  numLevels = 2; //number of level files to load
+  numLevels = 3; //number of level files to load
   for (let i = 0; i < numLevels; i++)
   {
   hardLevels.push(loadStrings('assets/Hlevel_' + (i+1) + '.txt'));
@@ -126,7 +124,7 @@ function setup() {
   currentLevel = 1;
   //loadNextLevel();
   //buildMainMenu();
-  buildLevel(1, hardLevels);
+  buildLevel(2, hardLevels);
   //buildResultsScreen();
 
 }
