@@ -664,7 +664,8 @@ function Player(x, y, w, h) {
         switch (colData[0]) {
           case 1: //TOP
             pos.y -= colData[1]; //adjust player up to top of block
-            this.velocity.y = 0.0; //halt veritcal velocity
+            //halt veritcal velocity if moving towards top
+            if (this.velocity.y > 0) { this.velocity.y = 0.0; }
             this.isGrounded = true; //since on top, on ground
             //if bounce block, apply bounce velocity
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
@@ -673,7 +674,8 @@ function Player(x, y, w, h) {
             break;
           case 2: //RIGHT
             pos.x += colData[1]; //adjust player over to right of block
-            this.velocity.x = 0.0; //halt horizontal velocity
+            //halt horizontal velocity if moving towards right side
+            if (this.velocity.x < 0) { this.velocity.x = 0.0; }
             this.isOnRightWall = true; //since on right wall
             //if bounce block, apply bounce velocity
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
@@ -682,7 +684,8 @@ function Player(x, y, w, h) {
             break;
           case 3: //BOTTOM
             pos.y += colData[1]; //adjust player down to bottom of block
-            this.velocity.y = 0.0; //halt veritcal velocity
+            //halt veritcal velocity if moving towards bottom
+            if (this.velocity.y < 0) { this.velocity.y = 0.0; }
             //if bounce block, apply bounce velocity
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
               this.velocity.y += allBlocks[i].bounceSpeed * this.width / scaler;
@@ -690,6 +693,8 @@ function Player(x, y, w, h) {
             break;
           case 4: //LEFT
             pos.x -= colData[1]; //adjust player over to left of block
+            //halt horizontal velocity if moving towards left side
+            if (this.velocity.x > 0) { this.velocity.x = 0.0; }
             this.velocity.x = 0.0; //halt horizontal velocity
             this.isOnLeftWall = true; //since on left wall
             //if bounce block, apply bounce velocity

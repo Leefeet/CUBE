@@ -1,19 +1,15 @@
 /*
-  Platformer 1.26
+  Platformer 1.27
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-19-2021
   
   Changes Made:
-  - Lightened background color to make it easier to see on a black page background
-  - Added variable for the name of the Level Set, so it can be displayed on the results screen.
-  - Working on level results screen
-    - Displays Congratulations message with level set name
-    - Displays time and death count
-    - Button to return to main menu
-  - Completing a level set will now lead to the results screen
-  - Death Count variable, numberOfDeaths, updated and now functions properly to count the number of deaths of the player. Will show up on results screen
-  - Title of level set will now display on UI during a level
+  - Creating Level set for testing levels, called testLevels[]. This is for testing in a controlled environment, such as collision or edge cases
+  - Added hidden button on Main Menu for accessing the test levels. It will show up when you hover over the bottom right corner
+  - Fixing issue where bounce blocks won't bounce you if sliding over it on right side. I believe this is caused because when the block gives you vertical force, the collision with the other block you're standing on is also setting your y velocity to 0
+  - Player now bounces on bounce blocks that are inline with the ground and the player is over them. Fixed this with velocity checks
+    - Player's velocity on X or Y axis will only be set to 0 only if the player's velocity is moving towards the collision surface (i.e., having positive X velocity and moving towards a right wall)
   
   Ideas:
   - for the particle explosion, the velocity of the player influences the particles velocity
@@ -49,6 +45,7 @@ let player;
 let tutorialLevels;
 let levels;
 let hardLevels;
+let testLevels;
 
 let completedHard = false;
 
@@ -65,6 +62,7 @@ function preload()
   levels = []; //an array of all the Levels
   tutorialLevels = []; //an array of all the Tutorial Levels
   hardLevels = []; //an array of all the hard Levels
+  testLevels = []; //an array of all testing Levels
     
   //Tutorial Levels
   let numLevels = 11; //number of level files to load
@@ -85,6 +83,13 @@ function preload()
   for (let i = 0; i < numLevels; i++)
   {
   hardLevels.push(loadStrings('assets/Hlevel_' + (i+1) + '.txt'));
+  }
+  
+  //test Levels
+  numLevels = 1; //number of level files to load
+  for (let i = 0; i < numLevels; i++)
+  {
+  testLevels.push(loadStrings('assets/test_' + (i+1) + '.txt'));
   }
   
   //loading fonts
@@ -274,6 +279,31 @@ function buildMainMenu()
   btnHard.textSize = 40 * progScale;
   btnHard.textColor = color(0, 0, 0);
   allObjects.push(btnHard);
+  
+  
+  //Secret Test Levels Button
+  w = 250 * progScale;
+  h = 50 * progScale;
+  x = 1000 * progScale;
+  y = 875 * progScale;
+  let startTestLevels = function() {
+    clearGameObjects(); //clearing menu
+    currentLevelSet = testLevels; //setting set of levels to load
+    currentLevelSetName = "Testing"; //setting name of level set
+    currentLevel = 1; //for display
+    currentLevelIndex = 0; //for level indexing
+    gameTimer.reset(); //reseting current time on timer
+    buildLevel(currentLevelIndex, currentLevelSet); //starting level
+  };
+  let btnTest = new Button(x, y, w, h, startTestLevels);
+  btnTest.displayText = "Test Levels";
+  btnTest.strokeWeight = 0;
+  btnTest.fillColor = backgroundColor;
+  btnTest.hoverColor = color(255, 100, 100);
+  btnTest.textSize = 30 * progScale;
+  btnTest.textColor = backgroundColor;
+  btnTest.textHoverColor = color(0, 0, 0);
+  allObjects.push(btnTest);
   
 }
 
