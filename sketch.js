@@ -1,17 +1,14 @@
 /*
-  Platformer 1.52
+  Platformer 1.53
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 2-27-2021
+  Edited: 3-3-2021
   
   Changes Made:
-  - Modified respawn indicator fill algorithm to be timeDead/maxTimeDead rather than a lerp function. This will make the fill transition more accurately than before and with different dead times set
-  - Particle Class now creates a copy of the color it receives so it cannot edit the color of the original object (deep copy).
-  - Particle now has a new boolean, doesFadeAlpha. Setting this to true will fade the particle's alpha from 255 to 0 over its lifespan, making it fade away
-  - BounceBlock bounce() function received some changes to make code easier to edit by using more defined variables
-  - BounceBlocks now use Particle's fadeAlpha to make the particles feel more hollow and less intrusive on gameplay.
-  - BounceBlock Particles last for 1 second, so they fade much quicker
-  
+  - Adjusted TutorialLevel_11 to make the first bouncing platform in the ground so players are more likely to step on it. Also brought the left wall closer to make a smaller left gap, and made the final bounce platform reach the right wall to prevent players from missing the goal.
+  - On Pause Menu, Changed the "Quit Game" button to say "Main Menu" to better communicate what it does
+  - Editing NormalLevel_9 to actually have content
+  - TODO: Editing NormalLevel_10 to actually have content
 
   Ideas:
   - Particle effects for specific interactions
@@ -145,11 +142,11 @@ function setup() {
   gameTimer = new Timer(0, 0, 0, 0);
   
   //creating gameObjects for main menu
-  buildMainMenu();
+  //buildMainMenu();
 
   //DEBUG, load project starting with specific level. Or load a specific screen
   //buildLevel("number of level", "Level Set");
-  //buildLevel(4, testLevels);
+  buildLevel(9, normalLevels);
   //buildTutorialScreen();
   //buildPauseMenu();
 }
@@ -697,7 +694,7 @@ function buildPauseMenu() {
     buildMainMenu(); //building the main menu
   };
   let btnQuitGame = new Button(x, y, w, h, quitGame);
-  btnQuitGame.displayText = "Quit Game";
+  btnQuitGame.displayText = "Main Menu";
   btnQuitGame.strokeWeight = 0;
   btnQuitGame.fillColor = color(255, 0, 0); //red
   btnQuitGame.hoverColor = color(255 / 2, 0, 0); //darker
