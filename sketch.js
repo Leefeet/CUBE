@@ -1,23 +1,30 @@
 /*
-  Platformer 1.41
+  Platformer 1.42
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 2-25-2021
+  Edited: 2-26-2021
   
   Changes Made:
-  - Removed leftover "TEST" variable
-  - Tutorial Button width is shorter and text is smaller
-    - Also changed color of button to light blue
-  - All buttons on the main menu get "half" darker when hovered and receive white text
-  - All Start Game menu buttons share the same font size, so they all look consistent
-  - Created new Tutorial Screen that explains the controls before starting the Tutorial Levels
-  - Pre-Tutorial screen now has an interactive player and block to allow the player to test the controls
-  - Tutorial Button on Main Menu now leads to pre-Tutorial screen
-  - Button on pre-Tutorial screen now leads to tutorial levels
+  - Removed an extra space in Jumping explanation in Tutorial
+  - Added keycode variables for ESC (Escape) and ENTER, usable for a pause screen
+  - created isPaused boolean to indicate if the game is paused.
+  - started buildPauseMenu() function to place a pause menu over the game level
+  - new array, allPauseObjects[], that specifically hold gameObjects of the pause menu. This allows them to be updated separately from the level and easily deleted.
+  - New update() and draw() Loops just for allPauseObjects[]. Only run if isPaused = true
+  - function clearGameObjects() now also clears out allPauseObjects[]
+  - new Function buildPauseMenu() is mostly functional. it implements:
+    - a title text saying the game is paused
+    - level name and level number
+    - The current time and death count
+    - Button to Quit Game, which acts identical to the "Main Menu" button on the results screen
+    - Button to Resume Game, which destroys the Pause Menu and unpauses the game
+    - A slightly transparent block covering the screen to slightly obscure the current level
+  - Pause Screen will need to be implemented through buttons
 
-  
+
   Ideas:
   - a pause button to freeze the game (and timer) and also options to go back to main menu and restart the level. Maybe information regarding the death count and timer could be shown
+  - Add a "quickStylize" function to some Gameobjects like text and buttons that allows multiple formatting within a single function, like fill colors, strokes, hover colors, etc. to reduce the number of lines taken from variable setting.
   - a death counter on the level UI
   - for the particle explosion, the velocity of the player influences the particles velocity
   - For death animation, particles will eventually come back to spawn to reform player?
@@ -73,6 +80,10 @@ let currentLevelSetName = "Null";
 let inTutorial = false;
 
 let gameTimer;
+
+let dataTime; //FOR TESTING
+
+let isPaused = false; //whether the game is paused, and thus Update() will be skipped for some gameObjects
 
 //runs actions that may be required before anything it setup() or draw()
 function preload() {
@@ -137,17 +148,20 @@ function setup() {
   allObjects = [];
   allBlocks = [];
   allParticles = [];
+  allPauseObjects = [];
   backgroundColor = color(50, 50, 50, 255);
 
   //creating timer for timing levels
   gameTimer = new Timer(0, 0, 0, 0);
 
   //creating gameObjects for main menu
-  buildMainMenu();
+  //buildMainMenu();
 
   //DEBUG, load project starting with specific level. Or load a specific screen
   //buildLevel("number of level", "Level Set");
+  buildLevel(1, normalLevels);
   //buildTutorialScreen();
+  buildPauseMenu();
 }
 
 function draw() {
@@ -181,21 +195,27 @@ function draw() {
     }
   }
 
-  //updating GameObjects
-  for (let i = 0; i < allObjects.length; i++) {
-    allObjects[i].update();
+  //updating GameObjects (but only if not paused)
+  if (!isPaused) {
+    for (let i = 0; i < allObjects.length; i++) {
+      allObjects[i].update();
 
-    //if GameObject is set to be destroyed, remove it
-    // UNDEFINED shouldn't need to be here, fix it! BandAid fix
-    if (allObjects[i] != undefined && allObjects[i].getToDestroy()) {
-      //remove the current object
-      allObjects.splice(i, 1);
+      //if GameObject is set to be destroyed, remove it
+      // UNDEFINED shouldn't need to be here, fix it! BandAid fix
+      if (allObjects[i] != undefined && allObjects[i].getToDestroy()) {
+        //remove the current object
+        allObjects.splice(i, 1);
 
-      //subtract 1 from i. Since this object was removed, all future object indexes will be shifted back 1. This will also update length()
-      i--;
+        //subtract 1 from i. Since this object was removed, all future object indexes will be shifted back 1. This will also update length()
+        i--;
+      }
     }
   }
-
+  else { //is paused, update pause menu gameObjects
+    for (let i = 0; i < allPauseObjects.length; i++) {
+      allPauseObjects[i].update();
+    }
+  }
   //updating particles
   for (let i = 0; i < allParticles.length; i++) {
     allParticles[i].update();
@@ -208,6 +228,9 @@ function draw() {
       i--;
     }
   }
+  
+  //for testing
+  dataTime.displayText = "Time: " + gameTimer.displayText; //FOR TESTING
 
   //Drawing GameObjects
   for (let i = 0; i < allObjects.length; i++) {
@@ -219,6 +242,12 @@ function draw() {
     allParticles[i].draw();
   }
 
+  //drawing pause menu objects, if pause
+  if (isPaused) {
+    for (let i = 0; i < allPauseObjects.length; i++) {
+      allPauseObjects[i].draw();
+  }
+  }
 
   //resetting Key Pressed Booleans
   spaceWasPressed = false;
@@ -421,7 +450,7 @@ function buildTutorialScreen() {
   //Jumping
   x = width / 4;
   y = 400 * progScale;
-  s = "To Jump, press the :";
+  s = "To Jump, press the:";
   let textjump = new DisplayText(x, y, 0, 0, s);
   textjump.textSize = 45 * progScale;
   allObjects.push(textjump);
@@ -507,6 +536,104 @@ function buildTutorialScreen() {
   
 }
 
+//draws a pause screen over a game
+function buildPauseMenu() {
+  //Things to display
+    //Title: Game Paused
+    //Info: Level Set + Level #
+    //Data: Current Time + Death Count
+    //Buttons: Quit Game + Resume Game
+    //Extra: Background half-transparent rectangle to cover level
+  
+  //we use allPauseObjects[] to store the pause menu items
+  
+  //setting isPaused to true
+  isPaused = true;
+  
+  //background
+  //using a Block since it will have the same effect
+  let bac = new Block(0, 0, width, height);
+  allPauseObjects.push(bac);
+  bac.setStrokeWeight(0);
+  let a = 255/1.15; // some transparency dulls out level
+  let c = color(red(backgroundColor), green(backgroundColor), blue(backgroundColor), a); //same as background color, but with transparency
+  bac.setFillColor(c);
+  
+  //Pause Title
+  let x = width / 2;
+  let y = 100 * progScale;
+  let s = "Game Paused";
+  let title = new DisplayText(x, y, 0, 0, s);
+  title.textSize = 100 * progScale;
+  allPauseObjects.push(title);
+  
+  //level information
+  x = width / 2;
+  y = 300 * progScale;
+  s = "" + currentLevelSetName + " — Level " + currentLevel;
+  let levelInfo = new DisplayText(x, y, 0, 0, s);
+  levelInfo.textSize = 60 * progScale;
+  allPauseObjects.push(levelInfo);
+  
+  //Time Data
+  x = width / 2;
+  y = 450 * progScale;
+  s = "Time: " + gameTimer.displayText;
+  dataTime = new DisplayText(x, y, 0, 0, s);
+  dataTime.textSize = 50 * progScale;
+  allPauseObjects.push(dataTime);
+  
+  //Death Data
+  x = width / 2;
+  y = 525 * progScale;
+  s = "Deaths: " + numberOfDeaths;
+  dataDeaths = new DisplayText(x, y, 0, 0, s);
+  dataDeaths.textSize = 50 * progScale;
+  allPauseObjects.push(dataDeaths);
+  
+  //Buttons
+  let buffer = 100 * progScale;
+  
+  //Quit Game (Main Menu) button
+  w = 400 * progScale;
+  h = 75 * progScale;
+  x = (width / 2) - w - buffer;
+  y = 800 * progScale;
+  let quitGame = function() {
+    clearGameObjects(); //clearing menu
+    gameTimer.reset(); //reseting current time on timer
+    numberOfDeaths = 0; //reseting death count
+    isPaused = false; //unpause the game
+    buildMainMenu(); //building the main menu
+  };
+  let btnQuitGame = new Button(x, y, w, h, quitGame);
+  btnQuitGame.displayText = "Quit Game";
+  btnQuitGame.strokeWeight = 0;
+  btnQuitGame.fillColor = color(255, 0, 0); //red
+  btnQuitGame.hoverColor = color(255/2, 0, 0); //darker
+  btnQuitGame.textSize = 45 * progScale;
+  btnQuitGame.textColor = color(0, 0, 0);
+  allPauseObjects.push(btnQuitGame);
+  
+  //Resume Game button
+  w = 400 * progScale;
+  h = 75 * progScale;
+  x = (width / 2) + buffer;
+  y = 800 * progScale;
+  let resumeGame = function() {
+    allPauseObjects = []; //clear pause menu objects
+    isPaused = false; //unpause the game
+  };
+  let btnResumeGame = new Button(x, y, w, h, resumeGame);
+  btnResumeGame.displayText = "Resume Game";
+  btnResumeGame.strokeWeight = 0;
+  btnResumeGame.fillColor = color(0, 255, 0); //green
+  btnResumeGame.hoverColor = color(0, 255/2, 0); //darker
+  btnResumeGame.textSize = 45 * progScale;
+  btnResumeGame.textColor = color(0, 0, 0);
+  allPauseObjects.push(btnResumeGame);
+}
+
 //draws the main menu to the screen
 function buildResultsScreen() {
   //creating congratulations message
@@ -584,6 +711,7 @@ function clearGameObjects() {
   allObjects = [];
   allBlocks = [];
   allParticles = [];
+  allPauseObjects = [];
 }
 
 //function called when level is complete, will load next level
