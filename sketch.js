@@ -1,11 +1,13 @@
 /*
-  Platformer 1.28
+  Platformer 1.29
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-19-2021
   
   Changes Made:
-  - Touching a bounce block now sets the player's velocity rather than adding/subtracting to it. glitch involving landing/touching two bounce blocks at the same time would propell the player much faster than intended. This functions nearly identical since veclocity would be cleared upon collision anyway.
+  - Fixing implementation of deltaTime (capDeltaTime). When playing test_2.txt and simply holding right, the player will land in different locations if the frameRate is at 60 vs. being at 15 (capped). That means there's something wrong with implementing deltaTime. I think it needs to be implemented before it's added to the velocity vector
+  - In Particle, removed the .mult() of capDeltaTime for velocity. Multiplied all variables affected by this by 16, since that's the typical deltaTime we receive for 60 frames per second
+  - Added new global variable, capDeltaSeconds, which is capDeltaTime but in seconds rather than milliseconds.
   
   Ideas:
   - for the particle explosion, the velocity of the player influences the particles velocity
@@ -82,7 +84,7 @@ function preload()
   }
   
   //test Levels
-  numLevels = 1; //number of level files to load
+  numLevels = 2; //number of level files to load
   for (let i = 0; i < numLevels; i++)
   {
   testLevels.push(loadStrings('assets/test_' + (i+1) + '.txt'));
@@ -133,6 +135,7 @@ function draw() {
     capDeltaTime = maxTime;
     //print("capped");
     }
+  capDeltaSeconds = capDeltaTime / 1000; // milliseconds / 1000 = seconds
   
   //if level is completed, run function
   if (isLevelComplete)

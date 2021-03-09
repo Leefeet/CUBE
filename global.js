@@ -20,6 +20,7 @@ let spaceWasPressed = false; //whether the SpaceBar was pressed down
 
 let capDeltaTime; //deltaTime that's been frame capped.
 let maxTime = 33; //max time for deltaTime, 33 milliseconds
+let capDeltaSeconds; //capDeltaTime, but in seconds
 
 const keyA = 65;
 const keyD = 68;
