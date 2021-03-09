@@ -225,18 +225,19 @@ function Particle(x, y, w, h, c, scale, dir) {
   this.fillColor = c;
   this.blockType = BlockType.particle; //defaults to particle
 
-  this.velocity = null; //starts null, will be set
+  this.velocity = createVector(0,0); //starts null, will be set
 
-  this.gravity = 0.096 * scaler; //particle falling down
-  this.traction = 0.008 * scaler; //particle slowing down sideways
-  this.maxFallSpeed = 80 * scaler;
+  this.gravity = 60 * scaler; //particle falling down
+  this.traction = 0.5 * scaler; //particle slowing down sideways
+  this.maxFallSpeed = 0.50 * scaler;
 
   this.maxTime = 2.0; //amount of time this particle will live
   this.timeAlive = 0.0; //amount of time this particle has existed
 
+/*
   //setting initial velocity
   let velStartMin = 0.0 * scaler;
-  let velStartMax = 2.0 * scaler;
+  let velStartMax = 0.2 * scaler;
   let multiplier = 2; //amplifies, so for directions
   //print("velMax: " + velStartMax);
   let rX;
@@ -270,14 +271,12 @@ function Particle(x, y, w, h, c, scale, dir) {
       this.velocity = createVector(rX, rY);
   }
   //print(this.velocity);
-
+*/
   this.update = function() {
     //increase timer
-    this.timeAlive += capDeltaSeconds;
+    this.timeAlive += capDeltaSeconds; //convert deltaTime to miliseconds
 
-    //particles need to move and have gravity applied.
-    this.velocity.y += this.gravity;
-
+/*
     //EDIT WHAT"S BELOW
     //add/remove traction depending on direction and speed
     if ((this.velocity.x > 0.0 && this.velocity.x - this.traction < 0) ||
@@ -285,25 +284,48 @@ function Particle(x, y, w, h, c, scale, dir) {
       this.velocity.x == 0.0) {
       this.velocity.x = 0.0;
     } else if (this.velocity.x > 0) {
-      this.velocity.x -= this.traction;
+      this.velocity.x -= this.traction * capDeltaTime;
     } else //if (this.velocity.x < 0)
     {
-      this.velocity.x += this.traction;
+      this.velocity.x += this.traction * capDeltaTime;
     }
+*/
 
-  
-    let pos = this.getPosition().copy();
+//yspeed += gravityrate*60*(DT*DT); // 60 is desired fps
     
-    ??THIS
-    RIGHT HERE!
-      is the oslution we
-      re looking for V  vv  V
-      //but it doesn't work for some reason
-    this.velocity.mult(capDeltaSeconds); //apply deltaTime
+    //applying gravity (with squared deltaTime since quadratic)
+    this.velocity.y += this.gravity * capDeltaSeconds * capDeltaSeconds;
+    
+    let pos = this.getPosition().copy();
+    pos.add(this.velocity);
+    this.setPosition(pos);
+    
+    //let vel = this.velocity.copy();
+    
+    /*
+    this.velocity.mult(capDeltaSeconds);
+    let other = 0.5 * this.gravity * capDeltaSeconds * capDeltaSeconds;
+    this.velocity.y += other;
+    pos.add(this.velocity);
+    */
+    //transform.position += velocity * Time.deltaTime + 0.5f * gravity  * Time.deltaTime * Time.deltaTime;
+    
 
-    pos.add(this.velocity); //moving particle pos based on Velocity
+    //vel.mult(capDeltaTime); //as unit of deltaTime
+    //this.velocity.x = this.velocity.x * capDeltaSeconds;
+    //this.velocity.y = this.velocity.y * capDeltaSeconds;
+    //vel.x = this.velocity.x * capDeltaSeconds;
+    //vel.y = this.velocity.y * capDeltaSeconds;
+    //this.velocity.mult(capDeltaSeconds);
+    //pos.add(this.velocity); //moving particle pos based on Velocity
 
-    this.setPosition(pos); //applying new position to particle
+    //this.setPosition(pos); //applying new position to particle
+    
+    
+    
+    //particles need to move and have gravity applied.
+    //this.velocity.y += this.gravity * capDeltaSeconds;
+    
   }
 
 }

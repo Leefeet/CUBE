@@ -1,13 +1,13 @@
 /*
-  Platformer 1.29
+  Platformer 1.30
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 2-19-2021
+  Edited: 2-20-2021
   
   Changes Made:
-  - Fixing implementation of deltaTime (capDeltaTime). When playing test_2.txt and simply holding right, the player will land in different locations if the frameRate is at 60 vs. being at 15 (capped). That means there's something wrong with implementing deltaTime. I think it needs to be implemented before it's added to the velocity vector
-  - In Particle, removed the .mult() of capDeltaTime for velocity. Multiplied all variables affected by this by 16, since that's the typical deltaTime we receive for 60 frames per second
-  - Added new global variable, capDeltaSeconds, which is capDeltaTime but in seconds rather than milliseconds.
+  - Continuing to fix deltaTime issues.
+  - Creating test level 3 to help quickly test whether deltaTime is working on the particles as intended
+  -
   
   Ideas:
   - for the particle explosion, the velocity of the player influences the particles velocity
@@ -28,6 +28,9 @@
     Helpful link for inheritance: https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Objects/Inheritance
     InstanceOf: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof
     Object Collision: https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
+    
+    DeltaTime may need to be applied twice: https://answers.unity.com/questions/216396/playing-with-gravity.html
+    Also: https://www.reddit.com/r/gamemaker/comments/5vvxmr/platformer_gravity_with_delta_time/
     
     Problems to Fix:
     - When changing progScale to make game larger, wall sliding on the left-side of blocks doesn't work properly. Something must not be implementing it properly.
@@ -84,7 +87,7 @@ function preload()
   }
   
   //test Levels
-  numLevels = 2; //number of level files to load
+  numLevels = 3; //number of level files to load
   for (let i = 0; i < numLevels; i++)
   {
   testLevels.push(loadStrings('assets/test_' + (i+1) + '.txt'));
@@ -115,8 +118,8 @@ function setup() {
   
   currentLevel = 1;
   //loadNextLevel();
-  buildMainMenu();
-  //buildLevel(0, hardLevels);
+  //buildMainMenu();
+  buildLevel(2, testLevels);
   //buildResultsScreen();
 
 }
@@ -136,7 +139,7 @@ function draw() {
     //print("capped");
     }
   capDeltaSeconds = capDeltaTime / 1000; // milliseconds / 1000 = seconds
-  
+  //print("capDeltaTime: " + capDeltaTime + " | capDeltaSeconds: " + capDeltaSeconds);
   //if level is completed, run function
   if (isLevelComplete)
     {
@@ -164,6 +167,9 @@ function draw() {
   for (let i = 0; i < allParticles.length; i++)
     {
       allParticles[i].update();
+      
+      //if (i == 0) {print("SPEED -- x: " + allParticles[i].velocity.x + " | y: " + allParticles[i].velocity.y);}
+      //if (i == 0) {print("POSITION -- x: " + allParticles[i].getX() + " | y: " + allParticles[i].getY());}
       
       if (allParticles[i].timeAlive >= allParticles[i].maxTime)
         {
