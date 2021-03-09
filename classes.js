@@ -135,7 +135,8 @@ const BlockType = Object.freeze({
   "kill": 2,
   "end": 3,
   "player": 4,
-  "bounce": 5
+  "bounce": 5,
+  "particle": 6,
 });
 
 
@@ -212,6 +213,97 @@ function BounceBlock(x, y, w, h) {
 
 }
 
+//Object: Particle
+//Function: draws a particle to the screen that have velocity and gravity
+//Inherits: Block (for drawing)
+function Particle(x, y, w, h, c, scale, dir) {
+  Block.call(this, x, y, w, h);
+
+  let scaler = scale; //helps adjust movement-variables for different screen sizes
+  let direction = dir; //this can determine the general direction this particle will fly
+
+  this.fillColor = c;
+  this.blockType = BlockType.particle; //defaults to particle
+
+  this.velocity = null; //starts null, will be set
+
+  this.gravity = 0.00060 * scaler; //particle falling down
+  this.traction = 0.00005 * scaler; //particle slowing down sideways
+  this.maxFallSpeed = 0.50 * scaler;
+
+  this.maxTime = 2.0; //amount of time this particle will live
+  this.timeAlive = 0.0; //amount of time this particle has existed
+
+
+  //setting initial velocity
+  let velStartMin = 0.0 * scaler;
+  let velStartMax = 0.2 * scaler;
+  //print("velMax: " + velStartMax);
+  let rX;
+  let rY;
+  switch (direction) {
+    case 1: //TOP
+      rX = random(-velStartMax, velStartMax);
+      rY = random(-velStartMax, velStartMin); //remeber, negative is up
+      this.velocity = createVector(rX, rY);
+      break;
+    case 2: //RIGHT
+      rX = random(velStartMin, velStartMax);
+      rY = random(-velStartMax, velStartMax);
+      this.velocity = createVector(rX, rY);
+      break;
+    case 3: //BOTTOM
+      rX = random(-velStartMax, velStartMax);
+      rY = random(velStartMin, velStartMax); //positive is down
+      this.velocity = createVector(rX, rY);
+      break;
+    case 4: //LEFT
+      rX = random(-velStartMax, velStartMin);
+      rY = random(-velStartMax, velStartMax);
+      this.velocity = createVector(rX, rY);
+      break;
+    default: //no direction specified, so any way
+      rX = random(-velStartMax, velStartMax);
+      //print("rX: " + rX);
+      rY = random(-velStartMax, velStartMax);
+      //print("rY: " + rY);
+      this.velocity = createVector(rX, rY);
+  }
+  //print(this.velocity);
+
+  this.update = function() {
+    //increase timer
+    this.timeAlive += capDeltaTime * 0.001; //convert deltaTime to miliseconds
+
+    //particles need to move and have gravity applied.
+    this.velocity.y += this.gravity * capDeltaTime;
+
+    //EDIT WHAT"S BELOW
+    //add/remove traction depending on direction and speed
+    if ((this.velocity.x > 0.0 && this.velocity.x - this.traction < 0) ||
+      (this.velocity.x < 0.0 && this.velocity.x + this.traction > 0) ||
+      this.velocity.x == 0.0) {
+      this.velocity.x = 0.0;
+    } else if (this.velocity.x > 0) {
+      this.velocity.x -= this.traction * capDeltaTime;
+    } else //if (this.velocity.x < 0)
+    {
+      this.velocity.x += this.traction * capDeltaTime;
+    }
+
+
+    let pos = this.getPosition().copy();
+    let vel = this.velocity.copy();
+
+    vel.mult(capDeltaTime); //as unit of deltaTime
+
+    pos.add(vel); //moving particle pos based on Velocity
+
+    this.setPosition(pos); //applying new position to particle
+  }
+
+}
+
 //movable object for player user
 // child of Block for now so it can reuse drawing code
 function Player(x, y, w, h) {
@@ -249,44 +341,93 @@ function Player(x, y, w, h) {
 
   this.blockType = BlockType.player;
 
-  this.update = function() { //TODO: Make movement work
+  //timing for death
+  this.isDead = false;
+  this.maxDeadTime = 1.0; //amount of time this particle will live
+  this.timeDead = 0.0; //amount of time this particle has existed
 
-    this.playerMovement();
-
-    //adding gravity
-    //different gravity is sliding down a wall
-    //must also make sure player is falling and not rising
-    if (this.velocity.y > 0 && (this.isOnRightWall || this.isOnLeftWall)) {
-      this.velocity.y += this.gravityWallSlide * capDeltaTime;
-    } else {
-      this.velocity.y += this.gravity * capDeltaTime;
+  this.death = function() {
+    this.isDead = true; //setting player to dead
+    //creating particles
+    let seg = 5;
+    for (let a = 0; a < seg; a++) {
+      for (let b = 0; b < seg; b++) {
+        let part = new Particle(this.getX() + (this.getWidth() / seg) * a, this.getY() + (this.getWidth() / seg) * b, this.getWidth() / seg, w / seg, this.getFillColor(), this.getWidth() / scaler, 0);
+        allParticles.push(part);
+        part.setStrokeWeight(0);
+      }
     }
+  }
 
-    let pos = this.getPosition().copy();
-    let vel = this.velocity.copy();
+  this.draw = function() {
+    //only draw if alive
+    if (!this.isDead) {
+      fill(this.fillColor);
+      //stroke
+      if (this.strokeWeight <= 0) {
+        noStroke();
+      } else {
+        stroke(this.strokeColor);
+        strokeWeight(this.strokeWeight);
+      }
+      //block
+      rect(this.getX(), this.getY(), this.getWidth(), this.getHeight());
+    }
+  }
 
-    //print("onLeft: " + this.isOnLeftWall);
-    //print("onRight: " + this.isOnRightWall);
+  this.update = function() {
 
-    vel.mult(capDeltaTime); //as unit of deltaTime
+    //only update movement if alive
+    if (this.isDead)
+      {
+        //increment timer
+        this.timeDead += capDeltaTime * 0.001; //convert deltaTime to miliseconds
 
-    pos.add(vel); //moving player pos based on Velocity
+        //respawn player if time is over
+        if (this.timeDead >= this.maxDeadTime)
+          {
+            this.isDead = false;
+            this.timeDead = 0.0;
+          }
+      }
+    else {
+      this.playerMovement();
 
-    this.setPosition(pos); //applying new position to player
-  
-    //printing player's left position
-    //print("player right: " + this.getMaxX());
-    
-    this.testBlockCollision(pos); //testing if hit something and position/velocity needs adjustment
+      //adding gravity
+      //different gravity is sliding down a wall
+      //must also make sure player is falling and not rising
+      if (this.velocity.y > 0 && (this.isOnRightWall || this.isOnLeftWall)) {
+        this.velocity.y += this.gravityWallSlide * capDeltaTime;
+      } else {
+        this.velocity.y += this.gravity * capDeltaTime;
+      }
 
-    this.setPosition(pos); //applying new position to player
+      let pos = this.getPosition().copy();
+      let vel = this.velocity.copy();
 
-    //if player is below screen, reset position
-    if (this.position.y > height + 10) {
-      this.setPosition(this.spawnPosition.copy());
+      //print("onLeft: " + this.isOnLeftWall);
+      //print("onRight: " + this.isOnRightWall);
 
-      //reset velocity
-      this.velocity = this.initialVelocity.copy();
+      vel.mult(capDeltaTime); //as unit of deltaTime
+
+      pos.add(vel); //moving player pos based on Velocity
+
+      this.setPosition(pos); //applying new position to player
+
+      //printing player's left position
+      //print("player right: " + this.getMaxX());
+
+      this.testBlockCollision(pos); //testing if hit something and position/velocity needs adjustment
+
+      this.setPosition(pos); //applying new position to player
+
+      //if player is below screen, reset position
+      if (this.position.y > height + 10) {
+        this.setPosition(this.spawnPosition.copy());
+
+        //reset velocity
+        this.velocity = this.initialVelocity.copy();
+      }
     }
 
     //updating variables
@@ -329,31 +470,27 @@ function Player(x, y, w, h) {
         this.velocity.x -= this.movementTraction;
       }
       //move to left normally, but only if below maxSpeed
-      else if (this.isGrounded && this.velocity.x > -this.maxMovementSpeed)
-      {
+      else if (this.isGrounded && this.velocity.x > -this.maxMovementSpeed) {
         //cap to max speed if adding speed would overshoot maxSpeed
         if (this.velocity.x - this.movementSpeed < -this.maxMovementSpeed) {
-            let dif = -this.maxMovementSpeed - this.velocity.x;
+          let dif = -this.maxMovementSpeed - this.velocity.x;
           this.velocity.x += dif;
-          } else {
-        this.velocity.x -= this.movementSpeed;
-          }
-      } 
+        } else {
+          this.velocity.x -= this.movementSpeed;
+        }
+      }
       //arial movement
       else if (!this.isGrounded && this.velocity.x > -this.maxMovementSpeed) {
         //cap to max speed if adding speed would overshoot maxSpeed
-        if (this.velocity.x - this.airMovementSpeed < -this.maxMovementSpeed)
-          {
-            let dif = -this.maxMovementSpeed - this.velocity.x;
+        if (this.velocity.x - this.airMovementSpeed < -this.maxMovementSpeed) {
+          let dif = -this.maxMovementSpeed - this.velocity.x;
           this.velocity.x += dif;
-          }
-        else
-          {
-            this.velocity.x -= this.airMovementSpeed;
-          }
-        
-        
-        
+        } else {
+          this.velocity.x -= this.airMovementSpeed;
+        }
+
+
+
       }
     }
 
@@ -375,16 +512,14 @@ function Player(x, y, w, h) {
       }
     }
     //if faster than movement speed
-    else if (this.isGrounded && abs(this.velocity.x) > this.maxMovementSpeed)
-    {
+    else if (this.isGrounded && abs(this.velocity.x) > this.maxMovementSpeed) {
       if (this.velocity.x > this.maxMovementSpeed) //moving right
-        {
-          this.velocity.x -= this.movementTraction;
-        }
-      else //moving left
-        {
-          this.velocity.x += this.movementTraction;
-        }
+      {
+        this.velocity.x -= this.movementTraction;
+      } else //moving left
+      {
+        this.velocity.x += this.movementTraction;
+      }
     }
 
 
@@ -456,6 +591,9 @@ function Player(x, y, w, h) {
         if (allBlocks[i].getBlockType() == BlockType.kill) {
           //print(this.spawnPosition);
 
+          //spawn particles
+          this.death();
+
           //teleport player back to spawn
           this.setX(this.spawnPosition.x);
           this.setY(this.spawnPosition.y);
@@ -520,7 +658,7 @@ function Player(x, y, w, h) {
           default:
             //nothing
         }
-        
+
         /*
         
         This will have to be implemented differently to work as intended.
@@ -551,8 +689,8 @@ function Player(x, y, w, h) {
         }*/
       }
     }
-// TODO THIS
-      
+    // TODO THIS
+
     //if we 
 
   }
@@ -629,47 +767,41 @@ function Button(x, y, w, h, onClick) {
   this.hoverColor = color(255, 255, 0); //the fill color when mouse hovers
   this.strokeColor = color(0, 0, 0); //the button outline color
   this.strokeWeight = 1 * progScale; //The width of the button border. Set to <= 0 to have no stroke
-  
+
   this.onClick = onClick; //What the button does when clicked
-  
+
   this.displayText = ""; //the text displayed within the button
   this.textSize = 10 * progScale; //size of font
   this.textColor = color(255, 255, 255);
   this.textHoverColor = color(255, 255, 255);
   this.textFont = fontRegular; //the font
-  
-  this.isHovering = false; //whether mouse is hovering over
-  
 
-  this.update = function()
-  {
-    if (this.isMouseHovering())
-      {
-        this.isHovering = true;
-        //change mouse cursor to pointer
-        cursor("pointer");
-        //if click, activate
-        if (mouseWasClickedLeft)
-          {
-            this.onClick();
-          }
+  this.isHovering = false; //whether mouse is hovering over
+
+
+  this.update = function() {
+    if (this.isMouseHovering()) {
+      this.isHovering = true;
+      //change mouse cursor to pointer
+      cursor("pointer");
+      //if click, activate
+      if (mouseWasClickedLeft) {
+        this.onClick();
       }
-    else
-      {
-        this.isHovering = false;
-      }
-  } 
-  
-  
-  this.draw = function()
-  {
+    } else {
+      this.isHovering = false;
+    }
+  }
+
+
+  this.draw = function() {
     //fill color changes if hovering
     if (this.isHovering) {
       fill(this.hoverColor);
     } else {
       fill(this.fillColor);
     }
-    
+
     if (this.strokeWeight <= 0) {
       noStroke();
     } else {
@@ -678,7 +810,7 @@ function Button(x, y, w, h, onClick) {
     }
 
     rect(this.getX(), this.getY(), this.getWidth(), this.getHeight());
-        
+
     //fill color changes if hovering
     if (this.isHovering) {
       fill(this.textHoverColor);
@@ -694,7 +826,7 @@ function Button(x, y, w, h, onClick) {
     text(this.displayText, textX, textY);
 
   }
-  
+
   this.isMouseHovering = function() {
     if (mouseX >= this.getX() && mouseX <= this.getX() + this.getWidth() &&
       mouseY >= this.getY() && mouseY <= this.getY() + this.getHeight()) {
@@ -709,7 +841,7 @@ function DisplayText(x, y, w, h, s) {
   GameObject.call(this, x, y, w, h);
   this.strokeColor = color(0, 0, 0); //the text outline color
   this.strokeWeight = 1 * progScale; //The width of the text border. Set to <= 0 to have no stroke
-  
+
   this.displayText = s; //the text displayed
   this.textSize = 10 * progScale; //size of font
   this.textColor = color(255, 255, 255);
@@ -717,12 +849,9 @@ function DisplayText(x, y, w, h, s) {
   this.textAlignV = CENTER; //Vertical align to coordinate
   this.textFont = fontRegular; //the font
 
-  this.update = function()
-  {
-  } 
-  
-  this.draw = function()
-  {
+  this.update = function() {}
+
+  this.draw = function() {
     //stroke
     if (this.strokeWeight <= 0) {
       noStroke();
@@ -730,7 +859,7 @@ function DisplayText(x, y, w, h, s) {
       stroke(this.strokeColor);
       strokeWeight(this.strokeWeight);
     }
-        
+
     fill(this.textColor);
     noStroke();
     textAlign(this.textAlignH, this.textAlignV);
@@ -741,5 +870,5 @@ function DisplayText(x, y, w, h, s) {
     text(this.displayText, textX, textY);
 
   }
-  
+
 }

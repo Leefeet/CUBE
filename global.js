@@ -13,6 +13,7 @@ let backgroundColor; //the current color of the background
 
 let allObjects; //a collection of all existing GameObjects
 let allBlocks; //a collection of all existing Blocks
+let allParticles; //a collection of all existing particles. May be used to put particles in front of all objects
 
 let spaceWasPressed = false; //whether the SpaceBar was pressed down
 

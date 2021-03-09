@@ -1,16 +1,24 @@
 /*
-  Platformer 1.22
+  Platformer 1.23
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-18-2021
   
   Changes Made:
-  - Created a hard level set, hardLevels[]
-  - created one level for the hard level set, Hlevel_1.txt
-  - Player now spawns in center of block grid space rather than the top left corner. This will prevent player from being stuck on the left edge when landing
-  - Added new Hard button to the main menu
+  - started working on Particle Class to be used during death animation
+  - created allParticles[] to store particles and display them separately in front of other objects
+  - BlockType now has "particle" member
+    - Spawn with random velocity within specific range. Can be influenced with a direction number
+  - Particle Object created, 
+  - Player now spawns particles when killed, making it look like an explosion
+  - Player now has variables for death, including isDead, timeDead, and maxDeadTime
+    - Player's isDead variable is used to determine whether to draw and update the player
+    - Player's death() function can be used to trigger death, both within and outside the Player object
+  - Player respawns after specific death timer
+  - Particles despawn after specific life time
   
   Ideas:
+  - For death animation, particles will eventually come back to spawn to reform player?
   - Death animation for the player where they explode into multiple particles
   - Change collision rules with certain blocks
     - When touching a Blue Bounce BLock, the player will bounce if barely touching on the left but won't when on the right. This is because the order the blocks are checked for collision. I need to either A) always check Bounce Blocks First, B) Check for Bounce Blocks Last, or C) acitvate Bounc Block when a certain overlap is acheived. Any of these will make Bounce Block interactions more consistent
@@ -91,6 +99,7 @@ function setup() {
   //setting initial variables
   allObjects = [];
   allBlocks = [];
+  allParticles = [];
   backgroundColor = color(10, 10, 10, 255);
         
   //buildLevel1();
@@ -101,6 +110,8 @@ function setup() {
   //loadNextLevel();
   buildMainMenu();
   //buildLevel(0, hardLevels);
+  
+
 }
 
 function draw() {
@@ -138,11 +149,33 @@ function draw() {
     {
       allObjects[i].update(); 
     }
+  //updating particles
+  let particlesToDelete = [];
+  for (let i = 0; i < allParticles.length; i++)
+    {
+      allParticles[i].update();
+      
+      if (allParticles[i].timeAlive >= allParticles[i].maxTime)
+        {
+          particlesToDelete.push(i);
+        }
+    }
+  //deleting particles that are marked
+  for (let i = 0; i < particlesToDelete.length; i++)
+    {
+      allParticles.splice(particlesToDelete[i], 1);
+    }
   //Drawing GameObjects
   for (let i = 0; i < allObjects.length; i++)
     {
       allObjects[i].draw();
     }
+  //drawing particles
+  for (let i = 0; i < allParticles.length; i++)
+    {
+      allParticles[i].draw();
+    }
+
   
   //resetting Key Pressed Booleans
   spaceWasPressed = false;
