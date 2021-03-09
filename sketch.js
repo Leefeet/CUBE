@@ -1,23 +1,19 @@
 /*
-  Platformer 1.23
+  Platformer 1.24
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 2-18-2021
+  Edited: 2-19-2021
   
   Changes Made:
-  - started working on Particle Class to be used during death animation
-  - created allParticles[] to store particles and display them separately in front of other objects
-  - BlockType now has "particle" member
-    - Spawn with random velocity within specific range. Can be influenced with a direction number
-  - Particle Object created, 
-  - Player now spawns particles when killed, making it look like an explosion
-  - Player now has variables for death, including isDead, timeDead, and maxDeadTime
-    - Player's isDead variable is used to determine whether to draw and update the player
-    - Player's death() function can be used to trigger death, both within and outside the Player object
-  - Player respawns after specific death timer
-  - Particles despawn after specific life time
+  - Adjusted Player's death() function so that all death-related methods and changes are applied even when the player is changed to dead from outside the player object
+  - Death particle animation direction can now be influenced by including a number in the death() function
+  - Player falling off bottom, left, and right of screen will kill player and summon particles in appropriate direction
+  - When player collides with kill block, collision check for that frame ends. This will prevent displacement with blocks when the player is teleported back to the spawnpoint.
+  - Player's respawn timer was decreased by 50% to help get back to playing quicker
+  - Created better implementation of particle death. particles that are too old are now immediately removed from allParticles[] instead of going back and removing them later.
   
   Ideas:
+  - for the particle explosion, the velocity of the player influences the particles velocity
   - For death animation, particles will eventually come back to spawn to reform player?
   - Death animation for the player where they explode into multiple particles
   - Change collision rules with certain blocks
@@ -40,6 +36,7 @@
     Problems to Fix:
     - When changing progScale to make game larger, wall sliding on the left-side of blocks doesn't work properly. Something must not be implementing it properly.
      TOD TODO TDOODT DTDO DTODO(*&^%$#@#$%^&*&^%$#$%^&)
+     Jumping (gravity) seems consistent, but player movement may need to be updated
     This might help with making movement/jumping consistent even during lag:
     https://www.reddit.com/r/gamemaker/comments/6ffh0k/inconsistent_jump_height_using_delta_timing/
     
@@ -150,20 +147,19 @@ function draw() {
       allObjects[i].update(); 
     }
   //updating particles
-  let particlesToDelete = [];
+  print("particle num: " + allParticles.length);
   for (let i = 0; i < allParticles.length; i++)
     {
       allParticles[i].update();
       
       if (allParticles[i].timeAlive >= allParticles[i].maxTime)
         {
-          particlesToDelete.push(i);
+          //remove the current particle
+          allParticles.splice(allParticles[i], 1);
+          
+          //subtract 1 from i. Since this particle was removed, all future particle indexes will be shifted back 1. This will also update length()
+          i--;
         }
-    }
-  //deleting particles that are marked
-  for (let i = 0; i < particlesToDelete.length; i++)
-    {
-      allParticles.splice(particlesToDelete[i], 1);
     }
   //Drawing GameObjects
   for (let i = 0; i < allObjects.length; i++)

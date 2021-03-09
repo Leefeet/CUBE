@@ -238,27 +238,28 @@ function Particle(x, y, w, h, c, scale, dir) {
   //setting initial velocity
   let velStartMin = 0.0 * scaler;
   let velStartMax = 0.2 * scaler;
+  let multiplier = 2; //amplifies, so for directions
   //print("velMax: " + velStartMax);
   let rX;
   let rY;
   switch (direction) {
     case 1: //TOP
       rX = random(-velStartMax, velStartMax);
-      rY = random(-velStartMax, velStartMin); //remeber, negative is up
+      rY = random(-velStartMax * multiplier, velStartMin); //remeber, negative is up
       this.velocity = createVector(rX, rY);
       break;
     case 2: //RIGHT
-      rX = random(velStartMin, velStartMax);
+      rX = random(velStartMin, velStartMax * multiplier);
       rY = random(-velStartMax, velStartMax);
       this.velocity = createVector(rX, rY);
       break;
     case 3: //BOTTOM
       rX = random(-velStartMax, velStartMax);
-      rY = random(velStartMin, velStartMax); //positive is down
+      rY = random(velStartMin, velStartMax * multiplier); //positive is down
       this.velocity = createVector(rX, rY);
       break;
     case 4: //LEFT
-      rX = random(-velStartMax, velStartMin);
+      rX = random(-velStartMax * multiplier, velStartMin);
       rY = random(-velStartMax, velStartMax);
       this.velocity = createVector(rX, rY);
       break;
@@ -343,12 +344,12 @@ function Player(x, y, w, h) {
 
   //timing for death
   this.isDead = false;
-  this.maxDeadTime = 1.0; //amount of time this particle will live
+  this.maxDeadTime = 0.5; //amount of time this particle will live
   this.timeDead = 0.0; //amount of time this particle has existed
 
   this.death = function() {
-    this.isDead = true; //setting player to dead
-    //creating particles
+    
+    //creating particles at current position
     let seg = 5;
     for (let a = 0; a < seg; a++) {
       for (let b = 0; b < seg; b++) {
@@ -357,6 +358,48 @@ function Player(x, y, w, h) {
         part.setStrokeWeight(0);
       }
     }
+
+    //teleport player back to spawn
+    this.setX(this.spawnPosition.x);
+    this.setY(this.spawnPosition.y);
+    pos = this.spawnPosition.copy();
+
+    //print(this.position);
+
+    //reset velocity
+    this.velocity = this.initialVelocity.copy();
+
+
+    this.isDead = true; //setting player to dead
+    
+  }
+  
+  //same, but included input for particle direction
+  this.death = function(direction) {
+    
+    //creating particles at current position
+    let seg = 5;
+    for (let a = 0; a < seg; a++) {
+      for (let b = 0; b < seg; b++) {
+        let part = new Particle(this.getX() + (this.getWidth() / seg) * a, this.getY() + (this.getWidth() / seg) * b, this.getWidth() / seg, w / seg, this.getFillColor(), this.getWidth() / scaler, direction);
+        allParticles.push(part);
+        part.setStrokeWeight(0);
+      }
+    }
+
+    //teleport player back to spawn
+    this.setX(this.spawnPosition.x);
+    this.setY(this.spawnPosition.y);
+    pos = this.spawnPosition.copy();
+
+    //print(this.position);
+
+    //reset velocity
+    this.velocity = this.initialVelocity.copy();
+
+
+    this.isDead = true; //setting player to dead
+    
   }
 
   this.draw = function() {
@@ -378,19 +421,16 @@ function Player(x, y, w, h) {
   this.update = function() {
 
     //only update movement if alive
-    if (this.isDead)
-      {
-        //increment timer
-        this.timeDead += capDeltaTime * 0.001; //convert deltaTime to miliseconds
+    if (this.isDead) {
+      //increment timer
+      this.timeDead += capDeltaTime * 0.001; //convert deltaTime to miliseconds
 
-        //respawn player if time is over
-        if (this.timeDead >= this.maxDeadTime)
-          {
-            this.isDead = false;
-            this.timeDead = 0.0;
-          }
+      //respawn player if time is over
+      if (this.timeDead >= this.maxDeadTime) {
+        this.isDead = false;
+        this.timeDead = 0.0;
       }
-    else {
+    } else {
       this.playerMovement();
 
       //adding gravity
@@ -421,13 +461,20 @@ function Player(x, y, w, h) {
 
       this.setPosition(pos); //applying new position to player
 
-      //if player is below screen, reset position
-      if (this.position.y > height + 10) {
-        this.setPosition(this.spawnPosition.copy());
-
-        //reset velocity
-        this.velocity = this.initialVelocity.copy();
+      // kill player if out of bounds
+      //if player is below screen, kill player
+      if (this.position.y > height) {
+        this.death(1); //particles up
       }
+      else if (this.position.x > width) //right side
+        {
+          this.death(4); //particles left
+        }
+      else if (this.position.x + this.getWidth() < 0.0) //left side
+        {
+          this.death(2); //particles right
+        }
+      //for now, don't kill off top
     }
 
     //updating variables
@@ -589,20 +636,11 @@ function Player(x, y, w, h) {
 
         //check if kill block
         if (allBlocks[i].getBlockType() == BlockType.kill) {
-          //print(this.spawnPosition);
-
-          //spawn particles
+          //spawn particles and do death-related changes
           this.death();
-
-          //teleport player back to spawn
-          this.setX(this.spawnPosition.x);
-          this.setY(this.spawnPosition.y);
-          pos = this.spawnPosition.copy();
-
-          //print(this.position);
-
-          //reset velocity
-          this.velocity = this.initialVelocity.copy();
+          
+          //skip rest of collision
+          break;
         }
         //check if end block
         if (allBlocks[i].getBlockType() == BlockType.end) {
