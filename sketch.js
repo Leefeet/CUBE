@@ -1,30 +1,19 @@
 /*
-  Platformer 1.14
+  Platformer 1.15
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-11-2021
   
   Changes Made:
-  - Made a few basic first levels, like a tutorial for the mechanics
-    - Levels 1-8 all inherently explain game mechanics, including sideways movement, jumping, how high the player can jump, jumping over gaps, wall jumping, end blocks, kill blocks, and bounce blocks
-      - level_1.txt teaches movement and encourages touching the End Block
-      - level_2.txt shows jumping
-      - level_3.txt shows how high you can jump
-      - level_4.txt shows you can jump over gaps
-      - level_5.txt shows wall jumping
-      - level_6.txt shows kill blocks
-      - level_7.txt teaches careful aerial movement to not hit the kill blocks
-      - level_8.txt shows bounce blocks
-  - Level txt loading is more automated, using a 'for' loop
-  - Added more introduction levels to teach players how to play
-  - Global currentLevel now begins at 1, where the real levels begin
-  - New Bounce Blocks push player based on bounce speed
-    - BlockType Enum now has a "bounce" member
-    - bounceSpeed can be obtained from a Bounce Block
-    - an 'S' in a level will create a Bounce Block ('S' stands for "speed" since B is already taken by the normal Block)
-    - During block collision, the Player checks if its a BounceBlock and adds the BounceBlock's velocity to its own velocity based on the side it hit (top, left, etc.)
-    - When Player uses bounceSpeed, it multiplies it by its width/scaler to ensure it will move the same regardless of how large blocks are rendered
-
+  - New buffer added to give blocks space from the edges of the sketch window
+    - This prevents blocks on the edge of the screen from merging with the page background. It also ensures a border around all sides of the level
+  - loadNextLevel() returns false if level isn't available (i.e. no more levels)
+  - uiHeight variable created to give space for a UI at top of screen. This pushes down the available space to render a level
+  - Player's maxMovementSpeed is now movement dependent, so the player can be moved faster by the environment
+  - rewrote movement code so player can move faster than maxMovementSpeed but not by pressing arrow keys.
+    - This allows BounceBlocks to propel the player on the X-axis faster than they normally could with the arrow keys
+  - Slightly changes the color of Bounce Blocks to make them more vibrant
+  - Code tidied by moving open and close brackets. Done unintentionally with a Tidy Code shortcut, but it makes all scopes more consistent visually. May undo for setters and getters in the future
   
   Ideas:
   - When the level is built, have rows and groups of blocks be "merged" to become one larger rectangle. This will improve performance as less blocks would need to be compared.
@@ -77,6 +66,7 @@ function setup() {
   
   //buildLevel(0);
   
+  currentLevel = 8;
   loadNextLevel();
 }
 
@@ -135,10 +125,12 @@ function loadNextLevel()
     {
       //load next level
       buildLevel(currentLevel);
+      return true;
     }
   else
     {
       // no more levels
+      return false;
     }
 }
 
@@ -158,21 +150,23 @@ function buildLevel(levelNum)
   
   //we can determine block widths based on sketch size
   //determine whether the level is wider or taller
-  let testWidth = width/cols;
-  let testHeight = height/rows;
+  let buffer = 25 * progScale; //pixel buffer around edge of sketch
+  let uiHeight = 100 * progScale; //height of UI background
+  let testWidth = (width-buffer)/cols;
+  let testHeight = ((height-buffer) - uiHeight)/rows;
   
   let blockWidth;
-  let startX = 0.0;
-  let startY = 0.0;
+  let startX = buffer/2;
+  let startY = (buffer/2) + uiHeight;
   
   if (testWidth < testHeight) {
     blockWidth = testWidth;
-    startY = (height - (blockWidth*rows))/2; //centers level vertically
+    startY = ((height - (blockWidth*rows))/2) + uiHeight; //centers level vertically
     //print("Wide");
   }
   else {
     blockWidth = testHeight;
-    startX = (width - (blockWidth*cols))/2; //centers level horizontally
+    startX = ((width - (blockWidth*cols))/2); //centers level horizontally
     //print(startY);
   }
   
@@ -248,7 +242,7 @@ function buildLevel(levelNum)
             allBlocks.push(s);
             
             s.setBlockType(BlockType.bounce);
-            s.fillColor = color(0, 0, 255); //blue
+            s.fillColor = color(10, 100, 255); //blue
             s.setStrokeWeight(0);
           }
       }
