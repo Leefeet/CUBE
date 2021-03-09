@@ -28,10 +28,11 @@ const keyA = 65; //keyboard code for the A key
 const keyD = 68; //keyboard code for the D key
 const keyLeft = 37; //keyboard code for the Left Arrow key
 const keyRight = 39; //keyboard code for the Right Arrow key
-const keyESC = 27; //keyboard code for the ESC key
-const keyEnter = 13; //keyboard code for the ENTER key
 
-let currentLevelIndex = 0; //the index number of the level's data
+let wasESC = false; //keyboard key ESC was initially pressed
+let wasEnter = false; //keyboard key Enter was initially pressed
+
+let currentLevelIndex = -1; //the index number of the level's data
 let currentLevel = 0; //the number of the current level the player is on
 let isLevelComplete = false; //determines if player finished the level
 
