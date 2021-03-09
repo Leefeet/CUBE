@@ -1,13 +1,30 @@
 /*
-  Platformer 1.13
+  Platformer 1.14
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 2-10-2021
+  Edited: 2-11-2021
   
   Changes Made:
-  - The program's first Level begins at level 1 instead of 0 (skips the test level)
-  - Modified level_1.txt slightly and with End Blocks to test what occurs when a level is completed and there's no next level
-  - Notated more ideas
+  - Made a few basic first levels, like a tutorial for the mechanics
+    - Levels 1-8 all inherently explain game mechanics, including sideways movement, jumping, how high the player can jump, jumping over gaps, wall jumping, end blocks, kill blocks, and bounce blocks
+      - level_1.txt teaches movement and encourages touching the End Block
+      - level_2.txt shows jumping
+      - level_3.txt shows how high you can jump
+      - level_4.txt shows you can jump over gaps
+      - level_5.txt shows wall jumping
+      - level_6.txt shows kill blocks
+      - level_7.txt teaches careful aerial movement to not hit the kill blocks
+      - level_8.txt shows bounce blocks
+  - Level txt loading is more automated, using a 'for' loop
+  - Added more introduction levels to teach players how to play
+  - Global currentLevel now begins at 1, where the real levels begin
+  - New Bounce Blocks push player based on bounce speed
+    - BlockType Enum now has a "bounce" member
+    - bounceSpeed can be obtained from a Bounce Block
+    - an 'S' in a level will create a Bounce Block ('S' stands for "speed" since B is already taken by the normal Block)
+    - During block collision, the Player checks if its a BounceBlock and adds the BounceBlock's velocity to its own velocity based on the side it hit (top, left, etc.)
+    - When Player uses bounceSpeed, it multiplies it by its width/scaler to ensure it will move the same regardless of how large blocks are rendered
+
   
   Ideas:
   - When the level is built, have rows and groups of blocks be "merged" to become one larger rectangle. This will improve performance as less blocks would need to be compared.
@@ -37,9 +54,12 @@ let levelData;
 function preload()
 {
   levelData = []; //an array of all the Levels
-  
-  levelData.push(loadStrings('assets/level_0.txt'));
-  levelData.push(loadStrings('assets/level_1.txt'));
+    
+  let numLevels = 10;
+  for (let i = 0; i < numLevels; i++)
+  {
+  levelData.push(loadStrings('assets/level_' + i + '.txt'));
+  }
 }
 
 function setup() {
@@ -217,8 +237,33 @@ function buildLevel(levelNum)
             e.fillColor = color(0, 244, 0); //green
             e.setStrokeWeight(0);
           }
+        else if (c == "S") //bounce block
+          {
+            let x = startX + blockWidth*i;
+            let y = startY + blockWidth*j;
+            let w = blockWidth;
+            
+            let s = new BounceBlock(x,y,w,w);
+            allObjects.push(s);
+            allBlocks.push(s);
+            
+            s.setBlockType(BlockType.bounce);
+            s.fillColor = color(0, 0, 255); //blue
+            s.setStrokeWeight(0);
+          }
       }
   }
+  
+  //merge adjacent blocks together
+  mergeBlocks();
+}
+
+//merges groups of blocks near each other into single rectangles
+function mergeBlocks()
+{
+  //uses allBlocks[]
+  
+  
   
 }
 

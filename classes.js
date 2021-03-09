@@ -117,7 +117,7 @@ function GameObject(x, y, w, h) {
 //ENUM for block type
 const BlockType = Object.freeze(
   {
-    "normal":1, "kill":2, "end":3, "player":4
+    "normal":1, "kill":2, "end":3, "player":4, "bounce":5
   }
 );
 
@@ -160,6 +160,21 @@ function Block(x,y,w,h)
   this.setStrokeColor = function(strokeColor) {this.strokeColor = strokeColor;}
   this.setStrokeWeight = function(strokeWeight) {this.strokeWeight = strokeWeight;}
   this.setBlockType = function(blockType) {this.blockType = blockType;}
+}
+
+//a bouncy block that pushes the player
+// Child of Block since it uses most of that
+function BounceBlock(x,y,w,h)
+{
+  Block.call(this,x,y,w,h);
+  
+  this.blockType = BlockType.bounce; //defaults to bounce
+  
+  this.bounceSpeed = 0.50; //bounces player away at this speed. About 6 blocks high
+  
+  this.getBounceSpeed = function() {return this.bounceSpeed;}
+  this.setBounceSpeed = function(bounceSpeed) {this.bounceSpeed = bounceSpeed;}
+
 }
 
 //movable object for player user
@@ -384,23 +399,43 @@ function Player(x,y,w,h)
             //moving player based on collision information
             switch(colData[0]) {
             case 1: //TOP
-              pos.y -= colData[1]; //adjust player up to top of block
-              this.velocity.y = 0.0; //halt veritcal velocity
+                pos.y -= colData[1]; //adjust player up to top of block
+                this.velocity.y = 0.0; //halt veritcal velocity
                 this.isGrounded = true; //since on top, on ground
+                //if bounce block, apply bounce velocity
+                if(allBlocks[i].getBlockType() == BlockType.bounce)
+                  {
+                    this.velocity.y -= allBlocks[i].bounceSpeed * this.width/scaler;
+                  }
               break;
             case 2: //RIGHT
-              pos.x += colData[1]; //adjust player over to right of block
-              this.velocity.x = 0.0; //halt horizontal velocity
+                pos.x += colData[1]; //adjust player over to right of block
+                this.velocity.x = 0.0; //halt horizontal velocity
                 this.isOnRightWall = true; //since on right wall
+                //if bounce block, apply bounce velocity
+                if(allBlocks[i].getBlockType() == BlockType.bounce)
+                  {
+                    this.velocity.x += allBlocks[i].bounceSpeed * this.width/scaler;
+                  }
               break;
             case 3: //BOTTOM
-              pos.y += colData[1]; //adjust player down to bottom of block
-              this.velocity.y = 0.0; //halt veritcal velocity
+                pos.y += colData[1]; //adjust player down to bottom of block
+                this.velocity.y = 0.0; //halt veritcal velocity
+                //if bounce block, apply bounce velocity
+                if(allBlocks[i].getBlockType() == BlockType.bounce)
+                  {
+                    this.velocity.y += allBlocks[i].bounceSpeed * this.width/scaler;
+                  }
               break;
             case 4: //LEFT
-              pos.x -= colData[1]; //adjust player over to left of block
-              this.velocity.x = 0.0; //halt horizontal velocity
+                pos.x -= colData[1]; //adjust player over to left of block
+                this.velocity.x = 0.0; //halt horizontal velocity
                 this.isOnLeftWall = true; //since on left wall
+                //if bounce block, apply bounce velocity
+                if(allBlocks[i].getBlockType() == BlockType.bounce)
+                  {
+                    this.velocity.x -= allBlocks[i].bounceSpeed * this.width/scaler;
+                  }
               break;
             default:
               //nothing
