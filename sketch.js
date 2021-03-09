@@ -1,20 +1,13 @@
 /*
-  Platformer 1.36
+  Platformer 1.37
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-23-2021
   
   Changes Made:
-  - Notated idea for a Checkpoint Block
-  - Implementing CheckpointBlock class
-  - Added new variable to GameObject, toDestroy. A Boolean that can be set to identify if an object wants to be destroyed, and removed from the game. This would only be used if the object would be desotroyed during a level and not when the level is unloaded.
-  - Checkpoint Block has animation to explode into particles when touched
-  - Fixed error in update loop for Particles[], where .splice() was using the particle object rather than the index number. Behavior remains the same but this is intended implementation.
-  - Player block check for checkpoint now removes the checkpoint block from the allBlocks[] array. In the future, this should be done outside the Player class to prevent issues in the future.
-  - ClearGameObjects() now clears allParticles[] array
-  - Checkpoint Blocks now function. When player touched them, they will explode and the player will inherit the checkpoint's position as the player's respawn position. This will last forever until a new level is loaded.
-  - Created text_4.txt level to test checkpoints
-  
+  - Attempting to fix bug where game will crash after returning to main menu
+  - clearGameObjects() now actually clears allParticles[] as well. Was not functional before.
+  - Implemented a cleaner (and quicker?) version of clearGameObjects() where arrays are simply set = [], which should make them blank
 
   
   Ideas:
@@ -56,7 +49,7 @@
     https://www.reddit.com/r/gamemaker/comments/6ffh0k/inconsistent_jump_height_using_delta_timing/
     
 */
-
+let TEST = false;
 let player;
 
 let tutorialLevels;
@@ -172,15 +165,23 @@ function draw() {
           buildResultsScreen()
         }
     }
-      
+  
+  
+  //TESTING
+  //if (TEST) {print("hello"); print(allObjects); TEST = false;}
+  
+  
   //print("blocks: " + allBlocks.length);
   //updating GameObjects
   for (let i = 0; i < allObjects.length; i++)
     {
+      print(allObjects[i].getX());
+      
       allObjects[i].update();
-
-      // if GameObject is set to be destroyed, remove it
-      if (allObjects[i].getToDestroy())
+            
+      //if GameObject is set to be destroyed, remove it
+      // UNDEFINED shouldn't need to be here, fix it! BandAid fix
+      if (allObjects[i] != undefined && allObjects[i].getToDestroy())
         {
           //remove the current object
           allObjects.splice(i, 1);
@@ -396,7 +397,8 @@ function buildResultsScreen()
   x = (width/2) - w/2;
   y = 800 * progScale;
   let backToMenu = function() {
-    clearGameObjects(); //clearing menu
+        TEST = true; //RMOVE THIS LATER
+clearGameObjects(); //clearing menu
     gameTimer.reset(); //reseting current time on timer
     numberOfDeaths = 0; //reseting death count
     buildMainMenu(); //building the main menu
@@ -414,9 +416,10 @@ function buildResultsScreen()
 
 function clearGameObjects()
 {
-  allBlocks.splice(0, allBlocks.length);
-  allParticles.splice(0, allBlocks.length);
-  allObjects.splice(0, allObjects.length); //remove all elements starting at the first index for the whole length
+  //resetting arrays to blank arrays
+  allObjects = [];
+  allBlocks = [];
+  allParticles = [];
 }
 
 //function called when level is complete, will load next level
