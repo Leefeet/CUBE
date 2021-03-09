@@ -1,13 +1,28 @@
 /*
-  Platformer 1.39
+  Platformer 1.40
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 2-24-2021
+  Edited: 2-25-2021
   
   Changes Made:
-  - Laying out new menu, which includes 4 difficulties: Easy, Normal, Hard, and Master. Not all of the buttons function yet.
-  - Test levels button is trnasparent rather than mimicing the background color
-  
+  - Added arrays for level sets easyLevels[], normalLevels[], and masterLevels[]
+  - Changed levels[] to normalLevels[]
+  - Changed hardLevels[] to masterLevels[]
+    - For all references to these arrays, they were changed to match the updated version
+  - Reworking the file names to fit the new level sets
+    - Hlevel-0 > HardLevel_0
+    - Tlevel_0 > TutorialLevel_0
+    - level_0 > NormalLevel_0
+    - test_1 > TestLevel_0
+    - EasyLevel_0
+  - all Hard levels were renamed to Master Levels .txt files
+  - Created placeholder 1 level for Easy and Hard Level sets
+  - Main Menu buttons are now functional and lead to their respective level sets
+  - Code for creating UI above game levels have been centralized in new function buildLevelUI()
+  - Went ahead and removed some commented extra code like old print() statements or unneeded comments. 
+    - Generally cleaned up code in sketch.js, global.js, and classes.js
+    - Added more comments where appropriate to explain variables or algorithms
+    - Removed code that was no longer used (commented out) and functions that were never implemented/used
 
   
   Ideas:
@@ -53,8 +68,10 @@ let TEST = false;
 let player;
 
 let tutorialLevels;
-let levels;
+let easyLevels;
+let normalLevels;
 let hardLevels;
+let masterLevels;
 let testLevels;
 
 let completedHard = false;
@@ -69,37 +86,56 @@ let gameTimer;
 //runs actions that may be required before anything it setup() or draw()
 function preload()
 {
-  levels = []; //an array of all the Levels
+  //establishing level sets as arrays
   tutorialLevels = []; //an array of all the Tutorial Levels
+  easyLevels = []; //an array of all the easy Levels
+  normalLevels = []; //an array of all the normal Levels
   hardLevels = []; //an array of all the hard Levels
+  masterLevels = []; //an array of all the master Levels
   testLevels = []; //an array of all testing Levels
-    
+  
+  //Loading Level Files:
+  
   //Tutorial Levels
   let numLevels = 12; //number of level files to load
   for (let i = 0; i < numLevels; i++)
   {
-  tutorialLevels.push(loadStrings('assets/Tlevel_' + (i+1) + '.txt'));
+  tutorialLevels.push(loadStrings('assets/TutorialLevel_' + (i+1) + '.txt'));
   }
   
-  //Regular Levels
+  //Easy Levels
+  numLevels = 1; //number of level files to load
+  for (let i = 0; i < numLevels; i++)
+  {
+  easyLevels.push(loadStrings('assets/EasyLevel_' + (i+1) + '.txt'));
+  }
+
+  //Normal Levels
   numLevels = 10; //number of level files to load
   for (let i = 0; i < numLevels; i++)
   {
-  levels.push(loadStrings('assets/level_' + (i+1) + '.txt'));
+  normalLevels.push(loadStrings('assets/NormalLevel_' + (i+1) + '.txt'));
   }
   
   //Hard Levels
+  numLevels = 1; //number of level files to load
+  for (let i = 0; i < numLevels; i++)
+  {
+  hardLevels.push(loadStrings('assets/HardLevel_' + (i+1) + '.txt'));
+  }
+  
+  //Master Levels
   numLevels = 3; //number of level files to load
   for (let i = 0; i < numLevels; i++)
   {
-  hardLevels.push(loadStrings('assets/Hlevel_' + (i+1) + '.txt'));
+  masterLevels.push(loadStrings('assets/MasterLevel_' + (i+1) + '.txt'));
   }
   
-  //test Levels
+  //Test Levels
   numLevels = 4; //number of level files to load
   for (let i = 0; i < numLevels; i++)
   {
-  testLevels.push(loadStrings('assets/test_' + (i+1) + '.txt'));
+  testLevels.push(loadStrings('assets/TestLevel_' + (i+1) + '.txt'));
   }
   
   //loading fonts
@@ -119,18 +155,14 @@ function setup() {
   allParticles = [];
   backgroundColor = color(50, 50, 50, 255);
   
+  //creating timer for timing levels
   gameTimer = new Timer(0, 0, 0, 0);
-        
-  //buildLevel1();
   
-  //buildLevel(0);
-  
-  currentLevel = 1;
-  //loadNextLevel();
+  //creating gameObjects for main menu
   buildMainMenu();
-  //buildLevel(2, hardLevels);
-  //buildResultsScreen();
-
+  
+  //DEBUG, load project starting with specific level
+  //buildLevel("number of level", "Level Set");
 }
 
 function draw() {
@@ -143,12 +175,12 @@ function draw() {
   
   //adjusting deltaTime
   capDeltaTime = deltaTime;
+  // cap deltaTime so a frame odesn't skip ahead too far
   if(deltaTime > maxTime) {
     capDeltaTime = maxTime;
-    //print("capped");
     }
   capDeltaSeconds = capDeltaTime / 1000; // milliseconds / 1000 = seconds
-  //print("capDeltaTime: " + capDeltaTime + " | capDeltaSeconds: " + capDeltaSeconds);
+
   //if level is completed, run function
   if (isLevelComplete)
     {
@@ -166,17 +198,9 @@ function draw() {
         }
     }
   
-  
-  //TESTING
-  //if (TEST) {print("hello"); print(allObjects); TEST = false;}
-  
-  
-  //print("blocks: " + allBlocks.length);
   //updating GameObjects
   for (let i = 0; i < allObjects.length; i++)
     {
-      //print(allObjects[i].getX());
-      
       allObjects[i].update();
             
       //if GameObject is set to be destroyed, remove it
@@ -190,14 +214,12 @@ function draw() {
           i--;
         }
     }
+  
   //updating particles
   for (let i = 0; i < allParticles.length; i++)
     {
       allParticles[i].update();
-      
-      //if (i == 0) {print("SPEED -- x: " + allParticles[i].velocity.x + " | y: " + allParticles[i].velocity.y);}
-      //if (i == 0) {print("POSITION -- x: " + allParticles[i].getX() + " | y: " + allParticles[i].getY());}
-      
+            
       if (allParticles[i].timeAlive >= allParticles[i].maxTime)
         {
           //remove the current particle
@@ -207,11 +229,13 @@ function draw() {
           i--;
         }
     }
+  
   //Drawing GameObjects
   for (let i = 0; i < allObjects.length; i++)
     {
       allObjects[i].draw();
     }
+  
   //drawing particles
   for (let i = 0; i < allParticles.length; i++)
     {
@@ -274,15 +298,13 @@ function buildMainMenu()
   x = (width/2) - w - (buffer * progScale);
   y = 450 * progScale;
   let startEasyGame = function() {
-    /* IMPLEMTN THIS
     clearGameObjects(); //clearing menu
-    currentLevelSet = levels; //setting set of levels to load
-    currentLevelSetName = "Normal"; //setting name of level set
+    currentLevelSet = easyLevels; //setting set of levels to load
+    currentLevelSetName = "Easy"; //setting name of level set
     currentLevel = 1; //for display
     currentLevelIndex = 0; //for level indexing
     gameTimer.reset(); //reseting current time on timer
     buildLevel(currentLevelIndex, currentLevelSet); //starting level
-    */
   };
   let btnEasy = new Button(x, y, w, h, startEasyGame);
   btnEasy.displayText = "Start Easy Game";
@@ -300,7 +322,7 @@ function buildMainMenu()
   y = 450 * progScale;
   let startNormalGame = function() {
     clearGameObjects(); //clearing menu
-    currentLevelSet = levels; //setting set of levels to load
+    currentLevelSet = normalLevels; //setting set of levels to load
     currentLevelSetName = "Normal"; //setting name of level set
     currentLevel = 1; //for display
     currentLevelIndex = 0; //for level indexing
@@ -345,15 +367,13 @@ function buildMainMenu()
   x = (width/2) + (buffer * progScale);
   y = 600 * progScale;
   let startMasterGame = function() {
-    /* IMPLEMENT THIS
     clearGameObjects(); //clearing menu
-    currentLevelSet = hardLevels; //setting set of levels to load
-    currentLevelSetName = "Hard"; //setting name of level set
+    currentLevelSet = masterLevels; //setting set of levels to load
+    currentLevelSetName = "Master"; //setting name of level set
     currentLevel = 1; //for display
     currentLevelIndex = 0; //for level indexing
     gameTimer.reset(); //reseting current time on timer
     buildLevel(currentLevelIndex, currentLevelSet); //starting level
-    */
   };
   let btnMaster = new Button(x, y, w, h, startMasterGame);
   btnMaster.displayText = "Start Master Game";
@@ -389,7 +409,6 @@ function buildMainMenu()
   btnTest.textColor = color(0, 0, 0, 0); //transparent
   btnTest.textHoverColor = color(0, 0, 0);
   allObjects.push(btnTest);
-  
 }
 
 //draws the main menu to the screen
@@ -450,8 +469,7 @@ function buildResultsScreen()
   x = (width/2) - w/2;
   y = 800 * progScale;
   let backToMenu = function() {
-        TEST = true; //RMOVE THIS LATER
-clearGameObjects(); //clearing menu
+    clearGameObjects(); //clearing menu
     gameTimer.reset(); //reseting current time on timer
     numberOfDeaths = 0; //reseting death count
     buildMainMenu(); //building the main menu
@@ -464,7 +482,6 @@ clearGameObjects(); //clearing menu
   btnMenu.textSize = 60 * progScale;
   btnMenu.textColor = color(0, 0, 0);
   allObjects.push(btnMenu);
-  
 }
 
 function clearGameObjects()
@@ -505,13 +522,14 @@ function buildLevel(levelIndex, levelSet)
 {
   let level = levelSet[levelIndex];
   
-  //prints contents of level
+  //DEBUG: prints contents of level to console
   //print(level);
   
   //determining level block row and column number
   let rows = level.length;
   let cols = level[0].length;
   
+  //DEBUG: prints the number of rows and columns to the console
   //print("rows: " + rows + " | columns: " + cols);
   
   //we can determine block widths based on sketch size
@@ -528,12 +546,10 @@ function buildLevel(levelIndex, levelSet)
   if (testWidth < testHeight) {
     blockWidth = testWidth;
     startY = ((height - (blockWidth*rows))/2) + uiHeight; //centers level vertically
-    //print("Wide");
   }
   else {
     blockWidth = testHeight;
     startX = ((width - (blockWidth*cols))/2); //centers level horizontally
-    //print(startY);
   }
   
   //constructing level
@@ -633,9 +649,15 @@ function buildLevel(levelIndex, levelSet)
   }
   
   //merge adjacent blocks together
+      // TODO: this may be implemented. Currently does nothing
   mergeBlocks();
   
   //building UI
+  buildLevelUI(levelIndex, uiHeight);
+}
+
+function buildLevelUI(levelIndex, uiHeight)
+{
   //Level Number
   let x = uiHeight/4;
   let y = uiHeight/2;
@@ -669,9 +691,7 @@ function buildLevel(levelIndex, levelSet)
 function mergeBlocks()
 {
   //uses allBlocks[]
-  
-  
-  
+  // THis funciton still needs to be implemented if I ever get to it/need it
 }
 
 
@@ -680,15 +700,5 @@ function keyPressed() //activates 1 frame when a keyboard key is pressed down
   if (keyCode === 32)
     {
       spaceWasPressed = true;
-    }
-
-  
+    }  
 }
-
-
-
-
-
-
-
-

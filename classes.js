@@ -1,6 +1,6 @@
 //Object: GameObject
 //Function: a base object for other objects to inherit from. Has basic functionality with position, size, update() and draw(), and setters/getters
-//Inherits: Object
+//Inherits: Object (Base JavaScript)
 function GameObject(x, y, w, h) {
   this.position = createVector(x, y); //object top-left corner in 3d space
   this.width = w; //Width of object collision box
@@ -13,7 +13,7 @@ function GameObject(x, y, w, h) {
   {
     throw new Error("function update() is not implemented. Called update() in GameObject object. Perhaps child lacks an update()");
   }
-  this.draw = function() //Draws the object visibly to the canvas
+  this.draw = function() //Draws the object visibly to the canvas (screen)
   {
     throw new Error("function draw() is not implemented. Called draw() in GameObject object. Perhaps child lacks an draw()");
   }
@@ -42,7 +42,7 @@ function GameObject(x, y, w, h) {
     }
   }
 
-  //gives min and max values
+  //gives min and max values (corners)
   this.getMinX = function() {
     return this.getX();
   }
@@ -74,22 +74,19 @@ function GameObject(x, y, w, h) {
     if (dTop <= dRight && dTop <= dBottom && dTop <= dLeft) {
       side = 1;
       difference = dTop;
-      //print("TOP");
     } else if (dRight <= dTop && dRight <= dBottom && dRight <= dLeft) {
       side = 2;
       difference = dRight;
-      //print("RIGHT");
     } else if (dBottom <= dTop && dBottom <= dRight && dBottom <= dLeft) {
       side = 3;
       difference = dBottom;
-      //print("BOTTOM");
     } else //left side is least
     {
       side = 4;
       difference = dLeft;
-      //print("LEFT");
     }
-
+  
+    // DEBUG: Prints difference values
     //print("dTOP: " + dTop + " | dRIGHT: " + dRight +"dBOTTOM: " + dBottom + " | dLEFT: " + dLeft);
 
     return [side, difference];
@@ -204,8 +201,9 @@ function Block(x, y, w, h) {
   }
 }
 
-//a bouncy block that pushes the player
-// Child of Block since it uses most of that
+//Object: VounceBlock
+//Function: a bouncy block that pushes the player away
+//Inherits: Block
 function BounceBlock(x, y, w, h) {
   Block.call(this, x, y, w, h);
 
@@ -222,8 +220,9 @@ function BounceBlock(x, y, w, h) {
 
 }
 
-// a block that sets a new respawn point for the player
-// Child of Block since it uses most of its functions
+//Object: CheckpointBlock
+//Function: a block that sets a new respawn point for the player
+//Inherits: Block
 function CheckpointBlock(x, y, w, h) {
   Block.call(this, x, y, w, h);
 
@@ -232,7 +231,7 @@ function CheckpointBlock(x, y, w, h) {
   this.fillColor = color(245, 66, 230); //Pink
 
   this.blockMargins = 0.20; // percentge the block will be smaller/floating. Like how the player is smaller than a block
-  // width is still the size of a normal block, is shrunk when draw()
+  // width is still the size of a normal block, but is shrunk when draw()
 
   //do this when block is visibly destroyed while a level is still in play
   this.destroy = function() {
@@ -280,20 +279,19 @@ function Particle(x, y, w, h, c, scale, dir) {
   this.fillColor = c;
   this.blockType = BlockType.particle; //defaults to particle
 
-  this.velocity = createVector(0, 0); //starts null, will be set
+  this.velocity = createVector(0, 0); //starts blank, will be set below
 
   this.gravity = 0.00060 * scaler; //particle falling down
   this.traction = 0.00005 * scaler; //particle slowing down sideways
-  this.maxFallSpeed = 0.50 * scaler;
+  this.maxFallSpeed = 0.50 * scaler; //maximum speed particle can fall down
 
   this.maxTime = 2.0; //amount of time this particle will live
   this.timeAlive = 0.0; //amount of time this particle has existed
 
   //setting initial velocity
-  let velStartMin = 0.0 * scaler;
-  let velStartMax = 0.2 * scaler;
+  let velStartMin = 0.0 * scaler; //minmum possible value for random()
+  let velStartMax = 0.2 * scaler; //maximum possible value for random()
   let multiplier = 2; //amplifies, so for directions
-  //print("velMax: " + velStartMax);
   let rX;
   let rY;
   switch (direction) {
@@ -319,12 +317,9 @@ function Particle(x, y, w, h, c, scale, dir) {
       break;
     default: //no direction specified, so any way
       rX = random(-velStartMax, velStartMax);
-      //print("rX: " + rX);
       rY = random(-velStartMax, velStartMax);
-      //print("rY: " + rY);
       this.velocity = createVector(rX, rY);
   }
-  //print(this.velocity);
 
   this.update = function() {
     //increase timer
@@ -357,8 +352,9 @@ function Particle(x, y, w, h, c, scale, dir) {
 
 }
 
-//movable object for player user
-// child of Block for now so it can reuse drawing code
+//Object: Player
+//Function: Movable objects that the player can move
+//Inherits: Block (for drawing)
 function Player(x, y, w, h) {
   Block.call(this, x, y, w, h);
 
@@ -367,47 +363,46 @@ function Player(x, y, w, h) {
   this.spawnPosition = createVector(x, y);
 
   this.velocity = createVector(0.0 * w / scaler, 0.1 * w / scaler);
-  this.initialVelocity = this.velocity.copy();
-  this.forces = createVector(0.0, 0.0);
+  this.initialVelocity = this.velocity.copy(); //stores the velocity used during a respawn
   this.gravity = 0.00060 * w / scaler; //0.01 without capDeltaTime
-  this.maxFallSpeed = 0.50 * w / scaler;
+  this.maxFallSpeed = 0.50 * w / scaler; //maximum speed player can fall down
   this.gravityWallSlide = 0.00015 * w / scaler; //0.0025 without capDeltaTime
   this.maxWallSlideSpeed = 0.20 * w / scaler;
   this.wallSlideThreshold = 0.000001; // if distance between wall is less than this, will consider player on wall
 
-  this.movementSpeed = 0.01 * w / scaler;
-  this.airMovementSpeed = 0.005 * w / scaler;
-  this.maxMovementSpeed = 0.25 * w / scaler;
-  this.movementTraction = 0.010 * w / scaler;
+  this.movementSpeed = 0.01 * w / scaler; //force applied when pressing left/right on the ground
+  this.airMovementSpeed = 0.005 * w / scaler; //force applied when pressing left/right in the air
+  this.maxMovementSpeed = 0.25 * w / scaler; //max speed left/right player can achieve with normal button movement
+  this.movementTraction = 0.010 * w / scaler; //speed player will slow down when not holding a direction
   this.cornerThreshold = 2.0 * w / scaler; //provides a leniency for whether the player will hit the side or top/bottom of a block. This will allow the player to run smoothly over blocks that are next to each other and avoid getting stopped.
 
-  this.jumpSpeed = 0.360 * w / scaler;
-  this.wallJumpSpeedX = 0.20 * w / scaler;
-  this.wallJumpSpeedY = 0.3 * w / scaler;
-  this.isGrounded = true;
-  this.isOnRightWall = false;
-  this.isOnLeftWall = false;
+  this.jumpSpeed = 0.360 * w / scaler; //force y of jump upwards
+  this.wallJumpSpeedX = 0.20 * w / scaler; //force of wall jump horizontally
+  this.wallJumpSpeedY = 0.3 * w / scaler; //force of wall jump upwards (2 blocks)
+  this.isGrounded = true; //if player is on the ground
+  this.isOnRightWall = false; //if player is on the wall to its right
+  this.isOnLeftWall = false; //if the player is on the wall to its left
   //previous frame
-  this.prevIsGrounded = false;
-  this.prevIsOnRightWall = false;
-  this.prevIsOnLeftWall = false;
+  this.prevIsGrounded = false; //if isGrounded was true the previous frame
+  this.prevIsOnRightWall = false; //if isOnRightWall was true the previous frame
+  this.prevIsOnLeftWall = false; //if isOnLeftWall was true the previous frame
 
-  this.blockType = BlockType.player;
+  this.blockType = BlockType.player; //Since Player inherits Block, this is what type of block this is for collision purposes
 
   //timing for death
-  this.isDead = true;
-  this.maxDeadTime = 0.5; //amount of time this particle will live
-  this.timeDead = 0.0; //amount of time this particle has existed
+  this.isDead = true; //whether player is "dead" or not
+  this.maxDeadTime = 0.5; //time in seconds the player waits for respawn
+  this.timeDead = 0.0; //time in seconds player has been dead
 
   //respawn indicator
-  this.spawnStrokeWeight = 1.0 * w / scaler;
-  this.spawnStrokeColor = this.fillColor;
+  this.spawnStrokeWeight = 1.0 * w / scaler; //outline thickness
+  this.spawnStrokeColor = this.fillColor; //outline color
   this.spawnFillColor = this.fillColor;
   this.spawnFillAlpha = 0.0; //how solid/visible the fill
 
 
   //same, but included input for particle direction
-  // use 0 for no direction
+  // 0 = no direction | 1 = TOP | 2 = RIGHT | 3 = BOTTOM | 4 = LEFT
   this.death = function(direction) {
     //increment death counter
     numberOfDeaths++;
@@ -427,32 +422,27 @@ function Player(x, y, w, h) {
     this.setY(this.spawnPosition.y);
     pos = this.spawnPosition.copy();
 
-    //print(this.position);
-
     //reset velocity
     this.velocity = this.initialVelocity.copy();
 
-
     this.isDead = true; //setting player to dead
-
   }
 
   this.draw = function() {
-
     //create spawnpoint outline
     stroke(this.spawnStrokeColor);
     strokeWeight(this.spawnStrokeWeight);
     fill(this.spawnFillColor);
     rect(this.spawnPosition.x, this.spawnPosition.y, this.getWidth(), this.getWidth());
 
-    //only draw if alive
+    //only draw player if alive
     if (!this.isDead) {
-      fill(this.fillColor);
+      fill(this.fillColor); //fill color for player
       //stroke
       if (this.strokeWeight <= 0) {
-        noStroke();
+        noStroke(); //ignore outline
       } else {
-        stroke(this.strokeColor);
+        stroke(this.strokeColor); //apply outline
         strokeWeight(this.strokeWeight);
       }
       //block
@@ -461,8 +451,7 @@ function Player(x, y, w, h) {
   }
 
   this.update = function() {
-
-    //only update movement if alive
+    //only update player's movement if alive
     if (this.isDead) {
       //increment timer
       this.timeDead += capDeltaTime * 0.001; //convert deltaTime to miliseconds
@@ -481,33 +470,25 @@ function Player(x, y, w, h) {
         this.spawnFillColor.setAlpha(this.spawnFillAlpha);
       }
     } else {
-
-
-      this.playerMovement();
+      this.playerMovement(); //calculate player's movement
 
       //adding gravity
-      //different gravity is sliding down a wall
-      //must also make sure player is falling and not rising
+      //different gravity if sliding down a wall
+      //must also make sure player is falling and not rising, otherwise player may get higher is sliding on a wall due to the reduced gravity
       if (this.velocity.y > 0 && (this.isOnRightWall || this.isOnLeftWall)) {
         this.velocity.y += this.gravityWallSlide * capDeltaTime;
-      } else {
+      } else { //apply normal gravity
         this.velocity.y += this.gravity * capDeltaTime;
       }
 
-      let pos = this.getPosition().copy();
-      let vel = this.velocity.copy();
-
-      //print("onLeft: " + this.isOnLeftWall);
-      //print("onRight: " + this.isOnRightWall);
-
+      let pos = this.getPosition().copy(); //copy of position
+      let vel = this.velocity.copy(); //copy of velocity
+      
       vel.mult(capDeltaTime); //as unit of deltaTime
 
       pos.add(vel); //moving player pos based on Velocity
 
       this.setPosition(pos); //applying new position to player
-
-      //printing player's left position
-      //print("player right: " + this.getMaxX());
 
       this.testBlockCollision(pos); //testing if hit something and position/velocity needs adjustment
 
@@ -527,7 +508,7 @@ function Player(x, y, w, h) {
       //for now, don't kill off top
     }
 
-    //updating variables
+    //updating previous boolean variables
     this.prevIsGrounded = this.isGrounded;
     this.prevIsOnRightWall = this.isOnRightWall;
     this.prevIsOnLeftWall = this.isOnLeftWall;
@@ -585,13 +566,10 @@ function Player(x, y, w, h) {
         } else {
           this.velocity.x -= this.airMovementSpeed;
         }
-
-
-
       }
     }
 
-    //if neither sirection is pressed and on the ground, slow player down
+    //if neither direction is pressed and on the ground, slow player down
     if (!keyIsDown(keyRight) && !keyIsDown(keyLeft) &&
       !keyIsDown(keyD) && !keyIsDown(keyA) && this.isGrounded) {
       //if slowing down would result in moving in the oposite direction. set movement to 0
@@ -619,18 +597,6 @@ function Player(x, y, w, h) {
       }
     }
 
-
-    //This is now handled within movement checks
-    //if speed too fast, set to max
-    // if (this.velocity.x > this.maxMovementSpeed)
-    //   {
-    //     this.velocity.x = this.maxMovementSpeed;
-    //   }
-    // else if (this.velocity.x < -this.maxMovementSpeed)
-    //   {
-    //     this.velocity.x = -this.maxMovementSpeed;
-    //   }
-
     //jumping
     if (spaceWasPressed && this.isGrounded) //Spacebar
     {
@@ -653,21 +619,11 @@ function Player(x, y, w, h) {
 
     //falling speed, cap if too fast
     //cap is different if sliding down a wall
-    // print("on right wall: " + this.prevIsOnRightWall);
-    // print("on left wall: " + this.prevIsOnLeftWall);
-    // print("Velocity" + this.velocity.y + " | mfall speed: " + this.maxFallSpeed);
     if (this.velocity.y > this.maxWallSlideSpeed && (this.prevIsOnRightWall || this.prevIsOnLeftWall)) {
       this.velocity.y = this.maxWallSlideSpeed;
     } else if (this.velocity.y > this.maxFallSpeed) {
       this.velocity.y = this.maxFallSpeed;
     }
-  }
-
-  this.applyLeniency = function(dTop, dRight, dBottom, dLeft) //applies threshold
-  {
-    //removes some from left and right to make it less likely to trigger when hitting corners
-    dRight -= this.cornerThreshold;
-    dLeft -= this.cornerThreshold;
   }
 
   this.testBlockCollision = function(pos) {
@@ -723,8 +679,6 @@ function Player(x, y, w, h) {
 
         //test which side and the depth
         colData = this.getCollisionData(allBlocks[i]);
-        //print(colData);
-        //IDEA: halting velocity should only be done if the velocity is moving towards that side of the block. This can prevent losing speed if walking off a cliff where collision may beleave you hit the side.
 
         //moving player based on collision information
         switch (colData[0]) {
@@ -815,12 +769,6 @@ function Player(x, y, w, h) {
     }
     // TODO THIS
 
-    //if we 
-
-  }
-
-  this.determineHaltVelocity = function(side) {
-
   }
 
   //Gives extra data on the collision.
@@ -862,22 +810,19 @@ function Player(x, y, w, h) {
     if (dTopMod <= dRightMod && dTopMod <= dBottomMod && dTopMod <= dLeftMod) {
       side = 1;
       difference = dTop;
-      //print("TOP");
     } else if (dRightMod <= dTopMod && dRightMod <= dBottomMod && dRightMod <= dLeftMod) {
       side = 2;
       difference = dRight;
-      //print("RIGHT");
     } else if (dBottomMod <= dTopMod && dBottomMod <= dRightMod && dBottomMod <= dLeftMod) {
       side = 3;
       difference = dBottom;
-      //print("BOTTOM");
     } else //left side is least
     {
       side = 4;
       difference = dLeft;
-      //print("LEFT: " + other.getMinX());
     }
 
+    //DEBUG: prints difference results to console
     //print("dTOP: " + dTop + " | dRIGHT: " + dRight +"dBOTTOM: " + dBottom + " | dLEFT: " + dLeft);
 
     return [side, difference];
@@ -885,6 +830,9 @@ function Player(x, y, w, h) {
 
 }
 
+//Object: Button
+//Function: Displays a button to the screen that can be clicked to activate a customizable function
+//Inherits: GameObject
 function Button(x, y, w, h, onClick) {
   GameObject.call(this, x, y, w, h);
   this.fillColor = color(255, 255, 255); //The fill color of the button
@@ -898,7 +846,7 @@ function Button(x, y, w, h, onClick) {
   this.textSize = 10 * progScale; //size of font
   this.textColor = color(255, 255, 255);
   this.textHoverColor = color(255, 255, 255);
-  this.textFont = fontRegular; //the font
+  this.textFont = fontRegular; //the font, what is looks like
 
   this.isHovering = false; //whether mouse is hovering over
 
@@ -907,7 +855,7 @@ function Button(x, y, w, h, onClick) {
     if (this.isMouseHovering()) {
       this.isHovering = true;
       //change mouse cursor to pointer
-      cursor("pointer");
+      cursor("pointer"); //changes cursor to "pointing" mode
       //if click, activate
       if (mouseWasClickedLeft) {
         this.onClick();
@@ -961,6 +909,9 @@ function Button(x, y, w, h, onClick) {
   }
 }
 
+//Object: DisplayText
+//Function: displays some text to the screen
+//Inherits: GameObject
 function DisplayText(x, y, w, h, s) {
   GameObject.call(this, x, y, w, h);
   this.strokeColor = color(0, 0, 0); //the text outline color
@@ -973,7 +924,7 @@ function DisplayText(x, y, w, h, s) {
   this.textAlignV = CENTER; //Vertical align to coordinate
   this.textFont = fontRegular; //the font
 
-  this.update = function() {}
+  this.update = function() {} //nothing to update
 
   this.draw = function() {
     //stroke
@@ -992,9 +943,7 @@ function DisplayText(x, y, w, h, s) {
     var textX = this.getX() + this.getWidth() / 2;
     var textY = this.getY() + this.getHeight() / 2;
     text(this.displayText, textX, textY);
-
   }
-
 }
 
 //Object: Timer
@@ -1004,8 +953,6 @@ function Timer(x, y, w, h) {
   DisplayText.call(this, x, y, w, h, "00:00:000");
 
   this.milliseconds = 0; //number of milliseconds that have passed
-
-  //this.displayText = s; //the text displayed
 
   this.isCounting = false; //whether timer will continue to count or not
 
