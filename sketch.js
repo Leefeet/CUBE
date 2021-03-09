@@ -1,26 +1,33 @@
 /*
-  Platformer 1.35
+  Platformer 1.36
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 2-22-2021
+  Edited: 2-23-2021
   
   Changes Made:
-  - Fixed bug involving bounce blocks. If the player landed on a bounce block, then jumped on the next frame, they would be launched into the air much higher than intended
-    - Fixed by setting the player as not Grounded if the top of a bounce block was touched
-    - This bug was found from a friend testing the game
-    - The player's onWall variables will set to false when touching a bounce block, to avoid the same behavior as above
-  - There could still be an issue if the player is adjacent both to a bounce block and normal block. this is rare, but should be dealt with in the future
-  - Adjusted Hard Level 2 to have a larger opening for the first obstacle. This will make the first obstacle easier as it was too perfect originally
+  - Notated idea for a Checkpoint Block
+  - Implementing CheckpointBlock class
+  - Added new variable to GameObject, toDestroy. A Boolean that can be set to identify if an object wants to be destroyed, and removed from the game. This would only be used if the object would be desotroyed during a level and not when the level is unloaded.
+  - Checkpoint Block has animation to explode into particles when touched
+  - Fixed error in update loop for Particles[], where .splice() was using the particle object rather than the index number. Behavior remains the same but this is intended implementation.
+  - Player block check for checkpoint now removes the checkpoint block from the allBlocks[] array. In the future, this should be done outside the Player class to prevent issues in the future.
+  - ClearGameObjects() now clears allParticles[] array
+  - Checkpoint Blocks now function. When player touched them, they will explode and the player will inherit the checkpoint's position as the player's respawn position. This will last forever until a new level is loaded.
+  - Created text_4.txt level to test checkpoints
+  
 
   
   Ideas:
+  - a pause button to freeze the game (and timer) and also options to go back to main menu and restart the level. Maybe information regarding the death count and timer could be shown
+  - a death counter on the level UI
+  - When a checkpoint is obtained, some visual indication should be left behind to remind the player where they will respawn. This should also be done for the default spawnpoint. Something like an outline of the player's size maybe?
   - for the particle explosion, the velocity of the player influences the particles velocity
   - For death animation, particles will eventually come back to spawn to reform player?
   - Change collision rules with certain blocks
     - Maybe acitvate Bounc Block when a certain overlap is acheived. Like, the player will bounce on a bounce block, that is inline with the ground, as soon as a single pixel of the player overlaps. This may be left intentionally
   - When the level is built, have rows and groups of blocks be "merged" to become one larger rectangle. This will improve performance as less blocks would need to be compared. It can also prevent poor collision when a player lands between two blocks, or on the corner of a bounce block
   - Add mroe block types, like:
-    - 
+    - Checkpoint Block. When touched, explodes and becomes the new spawnpoint for the player. Color could be Pink
   - Upgrades for the player, like
     - Midair Dash (omni-directional)
     - Double Jump
@@ -41,6 +48,7 @@
     Also: https://www.reddit.com/r/gamemaker/comments/5vvxmr/platformer_gravity_with_delta_time/
     
     Problems to Fix:
+    - When finishing a level set and returning to the main menu, the game will crash claiming that "allObjects[i] is undefined" in update loops.
     - When changing progScale to make game larger, wall sliding on the left-side of blocks doesn't work properly. Something must not be implementing it properly.
      TOD TODO TDOODT DTDO DTODO(*&^%$#@#$%^&*&^%$#$%^&)
      Jumping (gravity) seems consistent, but player movement may need to be updated
@@ -95,7 +103,7 @@ function preload()
   }
   
   //test Levels
-  numLevels = 3; //number of level files to load
+  numLevels = 4; //number of level files to load
   for (let i = 0; i < numLevels; i++)
   {
   testLevels.push(loadStrings('assets/test_' + (i+1) + '.txt'));
@@ -169,7 +177,17 @@ function draw() {
   //updating GameObjects
   for (let i = 0; i < allObjects.length; i++)
     {
-      allObjects[i].update(); 
+      allObjects[i].update();
+
+      // if GameObject is set to be destroyed, remove it
+      if (allObjects[i].getToDestroy())
+        {
+          //remove the current object
+          allObjects.splice(i, 1);
+          
+          //subtract 1 from i. Since this object was removed, all future object indexes will be shifted back 1. This will also update length()
+          i--;
+        }
     }
   //updating particles
   for (let i = 0; i < allParticles.length; i++)
@@ -182,7 +200,7 @@ function draw() {
       if (allParticles[i].timeAlive >= allParticles[i].maxTime)
         {
           //remove the current particle
-          allParticles.splice(allParticles[i], 1);
+          allParticles.splice(i, 1);
           
           //subtract 1 from i. Since this particle was removed, all future particle indexes will be shifted back 1. This will also update length()
           i--;
@@ -397,6 +415,7 @@ function buildResultsScreen()
 function clearGameObjects()
 {
   allBlocks.splice(0, allBlocks.length);
+  allParticles.splice(0, allBlocks.length);
   allObjects.splice(0, allObjects.length); //remove all elements starting at the first index for the whole length
 }
 
@@ -538,6 +557,18 @@ function buildLevel(levelIndex, levelSet)
             
             s.setBlockType(BlockType.bounce);
             s.fillColor = color(10, 100, 255); //blue
+            s.setStrokeWeight(0);
+          }
+        else if (c == "C") //Checkpoint block
+          {
+            let x = startX + blockWidth*i;
+            let y = startY + blockWidth*j;
+            let w = blockWidth;
+            
+            let s = new CheckpointBlock(x,y,w,w);
+            allObjects.push(s);
+            allBlocks.push(s);
+            
             s.setStrokeWeight(0);
           }
       }

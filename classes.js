@@ -5,6 +5,8 @@ function GameObject(x, y, w, h) {
   this.position = createVector(x, y); //object top-left corner in 3d space
   this.width = w; //Width of object collision box
   this.height = h; //Height of object collision box
+  
+  this.toDestroy = false; //Flag for whether this object should be destroyed
 
   // Abstract Functions, implemented by children
   this.update = function() //Updates the variables of the object
@@ -109,6 +111,9 @@ function GameObject(x, y, w, h) {
   this.getHeight = function() {
     return this.height;
   }
+  this.getToDestroy = function() {
+    return this.toDestroy;
+  }
 
   this.setPosition = function(position) {
     this.position = position;
@@ -125,6 +130,9 @@ function GameObject(x, y, w, h) {
   this.setHeight = function(h) {
     this.height = h;
   }
+  this.setToDestroy = function(toDestroy) {
+    this.toDestroy = toDestroy;
+  }
 
 }
 
@@ -137,6 +145,7 @@ const BlockType = Object.freeze({
   "player": 4,
   "bounce": 5,
   "particle": 6,
+  "checkpoint": 7,
 });
 
 
@@ -211,6 +220,52 @@ function BounceBlock(x, y, w, h) {
     this.bounceSpeed = bounceSpeed;
   }
 
+}
+
+// a block that sets a new respawn point for the player
+// Child of Block since it uses most of its functions
+function CheckpointBlock(x, y, w, h) {
+  Block.call(this, x, y, w, h);
+
+  this.blockType = BlockType.checkpoint; //defaults to checkpoint
+  
+  this.fillColor = color(245, 66, 230); //Pink
+  
+  this.blockMargins = 0.20; // percentge the block will be smaller/floating. Like how the player is smaller than a block
+  // width is still the size of a normal block, is shrunk when draw()
+  
+  //do this when block is visibly destroyed while a level is still in play
+  this.destroy = function() { 
+    //summon particles
+    let seg = 3;
+    for (let a = 0; a < seg; a++) {
+      for (let b = 0; b < seg; b++) {
+        let part = new Particle(this.getX() + (this.getWidth() / seg) * a, this.getY() + (this.getWidth() / seg) * b, this.getWidth() / seg, w / seg, this.getFillColor(), this.getWidth() / 25, 0);
+        allParticles.push(part);
+        part.setStrokeWeight(0);
+      }
+    }
+    
+    //set this checkpoint to be removed
+    this.setToDestroy(true);
+  }
+  
+  this.draw = function() {
+    fill(this.fillColor);
+    //stroke
+    if (this.strokeWeight <= 0) {
+      noStroke();
+    } else {
+      stroke(this.strokeColor);
+      strokeWeight(this.strokeWeight);
+    }
+    //block
+    let x = this.getX() + (this.getWidth() * this.blockMargins)/2;
+    let y = this.getY() + (this.getWidth() * this.blockMargins)/2;
+    let w = this.getWidth() - (this.getWidth() * this.blockMargins);
+    rect(x, y, w, w);
+  }
+    
 }
 
 //Object: Particle
@@ -623,6 +678,26 @@ function Player(x, y, w, h) {
 
           //skip rest of collision
           break;
+        }
+        //check if checkpoint block
+        if (allBlocks[i].getBlockType() == BlockType.checkpoint) {
+          //set this blocks spawn coordinate to  the checkpoint's
+          //Also take into account spawning in the middle of the grid space
+          //adjusting x and y based on w being smaller
+          let x = allBlocks[i].getX() + (allBlocks[i].getWidth() - this.getWidth())/2;
+          let y = allBlocks[i].getY() + (allBlocks[i].getWidth() - this.getWidth())/2;
+          this.spawnPosition = createVector(x, y);
+          
+          //set to destroy the checkpoint block
+          allBlocks[i].destroy();
+          
+          //remove this block from Blocks[]
+          // TODO, implement this in a better way outside of Player class
+          allBlocks.splice(i, 1);
+          i--;
+
+          //skip this collision
+          continue;
         }
 
         //test which side and the depth
