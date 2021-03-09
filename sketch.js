@@ -1,14 +1,16 @@
 /*
-  Platformer 1.20
+  Platformer 1.21
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-16-2021
   
   Changes Made:
-  - Player gravityWallSlide has been decreased even further
-  - Player's gravity and gravityWallSlide are now multiplied by capDeltaTime. This will prevent gravity from changing when the game lags, thus making the player jump higher than intended. Gravity variables were adjusted to compensate
-  - attempted to fix wall jumping/sliding issues under different progScale values but wasn't able to fix it, but theorized how to
-  - changed level_1.txt to intended level (was clone of level_8)
+  - Added placeholder levels for level_9 and level_10, so Player can finish full game loop
+  - Added two new tutorial levels that better show how BounceBlocks work
+    - New levels show how high bounce blocks bounce the player and how they can be used sideways
+    - New levels take the place of Tlevel_8.txt and Tlevel_9.txt
+    - previous levels 8 and 9 became Tlevel_10.txt and Tlevel_11.txt
+  - Edited final Tutorial Level to be semi-automatic
   
   Ideas:
   - Death animation for the player where they explode into multiple particles
@@ -53,7 +55,7 @@ function preload()
   tutorialLevels = []; //an array of all the Tutorial Levels
     
   //Tutorial Levels
-  let numLevels = 9; //number of level files to load
+  let numLevels = 11; //number of level files to load
   for (let i = 0; i < numLevels; i++)
   {
   tutorialLevels.push(loadStrings('assets/Tlevel_' + (i+1) + '.txt'));
