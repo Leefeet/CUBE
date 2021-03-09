@@ -1,11 +1,13 @@
 /*
-  Platformer 1.55
+  Platformer 1.56
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 3-6-2021
+  Edited: 3-8-2021
   
   Changes Made:
-  - Created variables to store the player's best time and least deaths for each difficulty level
+  - Added keyPressed(), keyReleased(), and keyTyped() functions that return "false" to prevent default behavior from the web browser, such as scrolling with the space bar
+    - Scrolling with the arrow keys still works though. Need to fix this
+  - Added some plain JavaScript to prevent arrow keys from scrolling the web page
   
   
   Ideas:
@@ -149,6 +151,8 @@ function setup() {
 
   frameRate(60);
   smooth();
+  
+  disableKeyScrolling();
 
   //setting initial variables
   allObjects = [];
@@ -307,6 +311,27 @@ function updateKeys() {
   } else {
     wasEnter = false;
   }
+}
+
+function keyPressed() {
+  return false; // prevent any default webpage behavior
+}
+
+function keyReleased() {
+  return false; // prevent any default webpage behavior
+}
+
+function keyTyped() {
+  return false; // prevent any default webpage behavior
+}
+
+function disableKeyScrolling() {
+  //borrowed from https://stackoverflow.com/questions/8916620/disable-arrow-key-scrolling-in-users-browser
+  window.addEventListener("keydown", function(e) {
+    if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.code) > -1) {
+        e.preventDefault();
+    }
+}, false);
 }
 
 //draws the main menu to the screen
