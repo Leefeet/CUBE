@@ -5,28 +5,31 @@
   Edited: 2-4-2021
   
   Changes Made:
-  - Testing how inheritance works best in JavaScript
-  - Tested input methods through keyboard
+  - Classes can now exist in seperate files, cleaning up space in JS files
+  - implementing inheritance
+  - Created basic GameObject class
+  - Created test Box class
+  - Added frameRate() and smooth() calls in setup()
+  - Decided not to use WebGL since implementation seems unecessary
 */
 
 /*
     Helpful link for inheritance: https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Objects/Inheritance
+    InstanceOf: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof
+    Object Collision: https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
     
 */
 
-let c = 0;
+let allObjects; //a collection of all existing GameObjects
 
 function setup() {
   createCanvas(400, 400);
   
-  let myObject = new GameObject(5);
-  myObject.printX();
+  frameRate(60);
+  smooth();
   
-  let myChild = new Inherit(7);
-  myChild.printX();
-  
-  let multiChild = new DoubleChild(9);
-  multiChild.printX();
+  myBox = new Box(0, 0, 300, 300);
+      
 }
 
 function keyPressed() {
@@ -39,31 +42,15 @@ function keyPressed() {
 
 function draw() {
   background(150);
-  
+    myBox.draw();
+
   fill(c);
   rect(100, 100, 100, 100);
-}
-
-
-function GameObject(x)
-{
-  this.x = x;
   
-  this.printX = function()
-  {
-    print(this.x);
-  }
 }
 
-function Inherit(x) //inherits from GameObject
-{
-  GameObject.call(this, x);
-}
 
-function DoubleChild(x) //inherits from Inherit
-{
-  Inherit.call(this, x);
-}
+
 
 
 
