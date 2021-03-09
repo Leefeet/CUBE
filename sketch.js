@@ -1,19 +1,11 @@
 /*
-  Platformer 1.6
+  Platformer 1.7
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-5-2021
   
   Changes Made:
-  - Added one extra block in testing environment to test jumping on the ground when adjacent to a wall at the same time
-  - Created new collision function in GameObject: collidesWithAdjacent(). This will return true if the two GameObjects are adjacent to each other, unlike the other function which will return false. This is very useful for wall sliding
-  - reduced player's air movement speed to prevent explioting wall jumps off the same wall
-  - added new player variables for wall jumping, speeds in the X and Y direction
-  - new boolean variables tracking whether the player was on the ground or a wall on the previous frame
-  - the player can now wall jump when in the air and on a wall
-    - When the player is both on the ground and on the wall, normal ground jumping will take priority
-  - player's wall sliding speed cap now uses the boolean variables for the previous frames
-  - player now uses adjacency collision check for block collisions
+  - None
 */
 
 /*
