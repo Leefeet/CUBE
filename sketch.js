@@ -1,23 +1,25 @@
 /*
-  Platformer 1.17
+  Platformer 1.18
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-12-2021
   
   Changes Made:
-  - Level # is now displayed on Level UI
-  - Created separate Text Game Object to use instead of invisible buttons
-    - Work like Button Objects, but without the rectangle and the clickable functions
-    - Have textAlign variables. These allow you to align the text to the Left, Right, or Center of its origin point
-  - Added fonts that fit the Pixel Aesthetic (pixelmix). All text uses these new fonts
-    - Created global variables fontRegular and fontBold
-  - Buttons properly change the computer cursor to the "pointer" icon when hovering over them
-  - Cursor now returns to "arrow" when hovering off a button
+  - levelData[] renamed to levels[].
+  - Now tutorialLevels[] stores the tutorial levels separate from normal levels.
+  - level .txt files now start at 1 instead of 0
+  - the tutorial levels have been renamed from level_#.txt to Tlevel_#.txt
+    - The original test level (now level_1.txt) remains with the level_#.txt format
+  - Loading levels through loadNextLevel() and buildLevel() now uses a new variable (currentLevelSet) equal-to the level set being run. This variable is set when a game-start button is pressed
+  - currentLevelIndex is now used to refer to the current level in the currentLevelSet[] array, while currentLevel is now used for the level # display in the level UI
+  - New game button added to main menu, which leads to full-game levels
+  - Removed some functions that were no longer used or implemented
+  - Removed some variables that were no longer used
   
   Ideas:
   - When the level is built, have rows and groups of blocks be "merged" to become one larger rectangle. This will improve performance as less blocks would need to be compared.
   - Add mroe block types, like:
-    - [DONE] Blue bounce blocks, bounce the player in a direction based on collision side
+    - 
   - Upgrades for the player, like
     - Midair Dash (omni-directional)
     - Double Jump
@@ -34,19 +36,31 @@
 
 let player;
 
-let mouseBlock;
+let tutorialLevels;
+let levels;
 
-let levelData;
+let currentLevelSet;
+
+let inTutorial = false;
 
 //runs actions that may be required before anything it setup() or draw()
 function preload()
 {
-  levelData = []; //an array of all the Levels
+  levels = []; //an array of all the Levels
+  tutorialLevels = []; //an array of all the Tutorial Levels
     
-  let numLevels = 10;
+  //Tutorial Levels
+  let numLevels = 9; //number of level files to load
   for (let i = 0; i < numLevels; i++)
   {
-  levelData.push(loadStrings('assets/level_' + i + '.txt'));
+  tutorialLevels.push(loadStrings('assets/Tlevel_' + (i+1) + '.txt'));
+  }
+  
+  //Regular Levels
+  numLevels = 1; //number of level files to load
+  for (let i = 0; i < numLevels; i++)
+  {
+  levels.push(loadStrings('assets/level_' + (i+1) + '.txt'));
   }
   
   //loading fonts
@@ -69,7 +83,7 @@ function setup() {
   
   //buildLevel(0);
   
-  currentLevel = 0;
+  currentLevel = 1;
   //loadNextLevel();
   buildMainMenu();
 }
@@ -93,10 +107,12 @@ function draw() {
   if (isLevelComplete)
     {
       isLevelComplete = false;
-      anotherLevel = loadNextLevel();
+      
+      let anotherLevel = loadNextLevel(currentLevelSet);
+      
       if (!anotherLevel)
         {
-          //main menu again
+          //back to main menu     //TDOD this should go to a results screen
           buildMainMenu();
         }
     }
@@ -144,8 +160,10 @@ function buildMainMenu()
   y = 300 * progScale;
   let startTutorial = function() {
     clearGameObjects(); //clearing menu
-    currentLevel = 0; // setting level to -1 first level
-    loadNextLevel(); //starting level
+    currentLevelSet = tutorialLevels;
+    currentLevel = 1; //for display
+    currentLevelIndex = 0; //for level indexing
+    buildLevel(currentLevelIndex, currentLevelSet); //starting level
   };
   let btnTutorial = new Button(x, y, w, h, startTutorial);
   btnTutorial.displayText = "Play Tutorial";
@@ -156,10 +174,26 @@ function buildMainMenu()
   btnTutorial.textColor = color(0, 0, 0);
   allObjects.push(btnTutorial);
   
-}
-
-function buildLevelFromFile(fileName)
-{
+  //Main Game button
+  w = 475 * progScale;
+  h = 100 * progScale;
+  x = (width/2) - w/2;
+  y = 450 * progScale;
+  let startGame = function() {
+    clearGameObjects(); //clearing menu
+    currentLevelSet = levels;
+    currentLevel = 1; //for display
+    currentLevelIndex = 0; //for level indexing
+    buildLevel(currentLevelIndex, currentLevelSet); //starting level
+  };
+  let btnStart = new Button(x, y, w, h, startGame);
+  btnStart.displayText = "Start Game";
+  btnStart.strokeWeight = 0;
+  btnStart.fillColor = color(255, 255, 0);
+  btnStart.hoverColor = color(0, 255, 0);
+  btnStart.textSize = 60 * progScale;
+  btnStart.textColor = color(0, 0, 0);
+  allObjects.push(btnStart);
   
 }
 
@@ -170,19 +204,21 @@ function clearGameObjects()
 }
 
 //function called when level is complete, will load next level
-function loadNextLevel()
+function loadNextLevel(levelSet)
 {
   //first, delete everything
   clearGameObjects();
   
-  //increment level
+  //increment level display
   currentLevel++;
+  //increment level index
+  currentLevelIndex++;
   
   //load next level if it exists
-  if (currentLevel < levelData.length)
+  if (currentLevelIndex < levelSet.length)
     {
       //load next level
-      buildLevel(currentLevel);
+      buildLevel(currentLevelIndex, levelSet);
       return true;
     }
   else
@@ -192,13 +228,13 @@ function loadNextLevel()
     }
 }
 
-//builds a specific level from the levelData[] array
-function buildLevel(levelNum)
+//builds a specific level from a provided data[] array of levels
+function buildLevel(levelIndex, levelSet)
 {
-  let level = levelData[levelNum];
+  let level = levelSet[levelIndex];
   
   //prints contents of level
-  //print(levelData[levelNum]);
+  //print(level);
   
   //determining level block row and column number
   let rows = level.length;
@@ -313,7 +349,7 @@ function buildLevel(levelNum)
   //Level Number
   let x = uiHeight/4;
   let y = uiHeight/2;
-  let s = "Level " + currentLevel;
+  let s = "Level " + (levelIndex+1);
   let title = new DisplayText(x, y, 0, 0, s);
   title.textSize = 50 * progScale;
   title.textAlignH = LEFT;
@@ -329,28 +365,6 @@ function mergeBlocks()
   
 }
 
-function buildLevel1()
-{
-  //creating 5 blocks
-  let x = 50 * progScale;
-  let y = sketchHeight -100*progScale;
-  let w = 50 * progScale;
-  for (let i = 0; i < 17; i++)
-    {
-      let b = new Block(x,y,w,w);
-      allObjects.push(b);
-      allBlocks.push(b);
-      
-      let c = new Block(y,x,w,w);
-      allObjects.push(c);
-      allBlocks.push(c);
-      
-      //move position for next
-      x += w;
-    }
-  
-  //print("player X: " + player.getX() + " | Y: " + player.getY());
-}
 
 function keyPressed() //activates 1 frame when a keyboard key is pressed down
 {
