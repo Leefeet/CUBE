@@ -227,14 +227,13 @@ function Particle(x, y, w, h, c, scale, dir) {
 
   this.velocity = createVector(0,0); //starts null, will be set
 
-  this.gravity = 60 * scaler; //particle falling down
-  this.traction = 0.5 * scaler; //particle slowing down sideways
+  this.gravity = 0.00060 * scaler; //particle falling down
+  this.traction = 0.00005 * scaler; //particle slowing down sideways
   this.maxFallSpeed = 0.50 * scaler;
 
   this.maxTime = 2.0; //amount of time this particle will live
   this.timeAlive = 0.0; //amount of time this particle has existed
 
-/*
   //setting initial velocity
   let velStartMin = 0.0 * scaler;
   let velStartMax = 0.2 * scaler;
@@ -271,13 +270,14 @@ function Particle(x, y, w, h, c, scale, dir) {
       this.velocity = createVector(rX, rY);
   }
   //print(this.velocity);
-*/
+
   this.update = function() {
     //increase timer
-    this.timeAlive += capDeltaSeconds; //convert deltaTime to miliseconds
+    this.timeAlive += capDeltaSeconds;
 
-/*
-    //EDIT WHAT"S BELOW
+    //particles need to move and have gravity applied.
+    this.velocity.y += this.gravity * capDeltaTime;
+
     //add/remove traction depending on direction and speed
     if ((this.velocity.x > 0.0 && this.velocity.x - this.traction < 0) ||
       (this.velocity.x < 0.0 && this.velocity.x + this.traction > 0) ||
@@ -289,43 +289,15 @@ function Particle(x, y, w, h, c, scale, dir) {
     {
       this.velocity.x += this.traction * capDeltaTime;
     }
-*/
 
-//yspeed += gravityrate*60*(DT*DT); // 60 is desired fps
-    
-    //applying gravity (with squared deltaTime since quadratic)
-    this.velocity.y += this.gravity * capDeltaSeconds * capDeltaSeconds;
-    
     let pos = this.getPosition().copy();
-    pos.add(this.velocity);
-    this.setPosition(pos);
-    
-    //let vel = this.velocity.copy();
-    
-    /*
-    this.velocity.mult(capDeltaSeconds);
-    let other = 0.5 * this.gravity * capDeltaSeconds * capDeltaSeconds;
-    this.velocity.y += other;
-    pos.add(this.velocity);
-    */
-    //transform.position += velocity * Time.deltaTime + 0.5f * gravity  * Time.deltaTime * Time.deltaTime;
-    
+    let vel = this.velocity.copy();
 
-    //vel.mult(capDeltaTime); //as unit of deltaTime
-    //this.velocity.x = this.velocity.x * capDeltaSeconds;
-    //this.velocity.y = this.velocity.y * capDeltaSeconds;
-    //vel.x = this.velocity.x * capDeltaSeconds;
-    //vel.y = this.velocity.y * capDeltaSeconds;
-    //this.velocity.mult(capDeltaSeconds);
-    //pos.add(this.velocity); //moving particle pos based on Velocity
+    vel.mult(capDeltaTime); //as unit of deltaTime
 
-    //this.setPosition(pos); //applying new position to particle
-    
-    
-    
-    //particles need to move and have gravity applied.
-    //this.velocity.y += this.gravity * capDeltaSeconds;
-    
+    pos.add(vel); //moving particle pos based on Velocity
+
+    this.setPosition(pos); //applying new position to particle
   }
 
 }
@@ -342,9 +314,9 @@ function Player(x, y, w, h) {
   this.velocity = createVector(0.0 * w / scaler, 0.1 * w / scaler);
   this.initialVelocity = this.velocity.copy();
   this.forces = createVector(0.0, 0.0);
-  this.gravity = 0.0096 * w / scaler; //0.01 without capDeltaTime
+  this.gravity = 0.00060 * w / scaler; //0.01 without capDeltaTime
   this.maxFallSpeed = 0.50 * w / scaler;
-  this.gravityWallSlide = 0.0024 * w / scaler; //0.0025 without capDeltaTime
+  this.gravityWallSlide = 0.00015 * w / scaler; //0.0025 without capDeltaTime
   this.maxWallSlideSpeed = 0.20 * w / scaler;
   this.wallSlideThreshold = 0.000001; // if distance between wall is less than this, will consider player on wall
 
@@ -466,13 +438,16 @@ function Player(x, y, w, h) {
       //different gravity is sliding down a wall
       //must also make sure player is falling and not rising
       if (this.velocity.y > 0 && (this.isOnRightWall || this.isOnLeftWall)) {
-        this.velocity.y += this.gravityWallSlide;
+        this.velocity.y += this.gravityWallSlide * capDeltaTime;
       } else {
-        this.velocity.y += this.gravity;
+        this.velocity.y += this.gravity * capDeltaTime;
       }
 
       let pos = this.getPosition().copy();
       let vel = this.velocity.copy();
+
+      //print("onLeft: " + this.isOnLeftWall);
+      //print("onRight: " + this.isOnRightWall);
 
       vel.mult(capDeltaTime); //as unit of deltaTime
 

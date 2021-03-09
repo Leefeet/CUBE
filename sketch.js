@@ -1,13 +1,12 @@
 /*
-  Platformer 1.30
+  Platformer 1.31
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-20-2021
   
   Changes Made:
-  - Continuing to fix deltaTime issues.
-  - Creating test level 3 to help quickly test whether deltaTime is working on the particles as intended
-  -
+  - Reverted Particle and Player code back to 1.28. Work with deltaTime didn't yeild any good results and the current way it's working is good enough for now. There's other things I could work on instead
+  - Previous additions like extra test levels still remain
   
   Ideas:
   - for the particle explosion, the velocity of the player influences the particles velocity
@@ -118,8 +117,8 @@ function setup() {
   
   currentLevel = 1;
   //loadNextLevel();
-  //buildMainMenu();
-  buildLevel(2, testLevels);
+  buildMainMenu();
+  //buildLevel(2, testLevels);
   //buildResultsScreen();
 
 }
