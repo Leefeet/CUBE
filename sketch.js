@@ -1,16 +1,14 @@
 /*
-  Platformer 1.21
+  Platformer 1.22
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 2-16-2021
+  Edited: 2-18-2021
   
   Changes Made:
-  - Added placeholder levels for level_9 and level_10, so Player can finish full game loop
-  - Added two new tutorial levels that better show how BounceBlocks work
-    - New levels show how high bounce blocks bounce the player and how they can be used sideways
-    - New levels take the place of Tlevel_8.txt and Tlevel_9.txt
-    - previous levels 8 and 9 became Tlevel_10.txt and Tlevel_11.txt
-  - Edited final Tutorial Level to be semi-automatic
+  - Created a hard level set, hardLevels[]
+  - created one level for the hard level set, Hlevel_1.txt
+  - Player now spawns in center of block grid space rather than the top left corner. This will prevent player from being stuck on the left edge when landing
+  - Added new Hard button to the main menu
   
   Ideas:
   - Death animation for the player where they explode into multiple particles
@@ -43,6 +41,9 @@ let player;
 
 let tutorialLevels;
 let levels;
+let hardLevels;
+
+let completedHard = false;
 
 let currentLevelSet;
 
@@ -53,6 +54,7 @@ function preload()
 {
   levels = []; //an array of all the Levels
   tutorialLevels = []; //an array of all the Tutorial Levels
+  hardLevels = []; //an array of all the hard Levels
     
   //Tutorial Levels
   let numLevels = 11; //number of level files to load
@@ -66,6 +68,13 @@ function preload()
   for (let i = 0; i < numLevels; i++)
   {
   levels.push(loadStrings('assets/level_' + (i+1) + '.txt'));
+  }
+  
+  //Hard Levels
+  numLevels = 1; //number of level files to load
+  for (let i = 0; i < numLevels; i++)
+  {
+  hardLevels.push(loadStrings('assets/Hlevel_' + (i+1) + '.txt'));
   }
   
   //loading fonts
@@ -91,7 +100,7 @@ function setup() {
   currentLevel = 1;
   //loadNextLevel();
   buildMainMenu();
-  //buildLevel(0, levels);
+  //buildLevel(0, hardLevels);
 }
 
 function draw() {
@@ -201,6 +210,27 @@ function buildMainMenu()
   btnStart.textColor = color(0, 0, 0);
   allObjects.push(btnStart);
   
+  //Hard Game button
+  w = 475 * progScale;
+  h = 100 * progScale;
+  x = (width/2) - w/2;
+  y = 600 * progScale;
+  let startHardGame = function() {
+    clearGameObjects(); //clearing menu
+    currentLevelSet = hardLevels;
+    currentLevel = 1; //for display
+    currentLevelIndex = 0; //for level indexing
+    buildLevel(currentLevelIndex, currentLevelSet); //starting level
+  };
+  let btnHard = new Button(x, y, w, h, startHardGame);
+  btnHard.displayText = "Start Hard Game";
+  btnHard.strokeWeight = 0;
+  btnHard.fillColor = color(255, 100, 100);
+  btnHard.hoverColor = color(100, 255, 100);
+  btnHard.textSize = 40 * progScale;
+  btnHard.textColor = color(0, 0, 0);
+  allObjects.push(btnHard);
+  
 }
 
 function clearGameObjects()
@@ -295,6 +325,10 @@ function buildLevel(levelIndex, levelSet)
             let x = startX + blockWidth*i;
             let y = startY + blockWidth*j;
             let w = blockWidth * 0.75;
+            
+            //adjusting x and y based on w being smaller
+            x += (blockWidth - w)/2;
+            y += (blockWidth - w)/2;
             
             let p = new Player(x,y,w,w);
             allObjects.push(p);
