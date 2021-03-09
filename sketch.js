@@ -1,15 +1,16 @@
 /*
-  Platformer 1.54
+  Platformer 1.55
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 3-5-2021
+  Edited: 3-6-2021
   
   Changes Made:
-  - Editing NormalLevel_10 to actually have content
-  - Edited final Tutorial Level (TutorialLevel_12) to be cleared automatically instead of requiring the player to move to the right
-  - TutorialLevel_12 now has more blocks to spell more words, with the full "text" now saying "YOU ARE READY TO PLAY!"
-
+  - Created variables to store the player's best time and least deaths for each difficulty level
+  
+  
   Ideas:
+  - Create Easy Levels
+  - Create Hard Levels
   - in a local session, store the player's best times and least deaths. Show this maybe on a screen before a game starts
   - Store and display my best times/deaths on a screen before a game start, as something like "Developer Times"
   - Store player's records/progress. Maybe through password or browser memory (cookies?) if possible
@@ -40,17 +41,20 @@
     Maybe some good information on stopping players from getting stuck between blocks:
     https://stackoverflow.com/questions/3902492/sliding-aabb-collision-getting-stuck-on-edges
     https://www.reddit.com/r/gamedev/comments/1w92dm/2d_collision_detection_and_resolution_solving_the/
+    https://forums.tigsource.com/index.php?topic=45567.0
     
     DeltaTime may need to be applied twice: https://answers.unity.com/questions/216396/playing-with-gravity.html
     Also: https://www.reddit.com/r/gamemaker/comments/5vvxmr/platformer_gravity_with_delta_time/
     
+    information on saving data:
+https://stackoverflow.com/questions/58490119/save-read-cookies-in-js
+    
     Problems to Fix:
-    - Player somtimes get's stuck on the corner between two blocks. This is uncommon but affects gameplay. This could be fixed with an update to the collision detection and how blocks are placed.
+    - Player sometimes gets stuck on the corner between two blocks. This is uncommon but affects gameplay. This could be fixed with an update to the collision detection and/or how blocks are placed.
     - When finishing a level set and returning to the main menu, the game will crash claiming that "allObjects[i] is undefined" in update loops.
     - When changing progScale to make game larger, wall sliding on the left-side of blocks doesn't work properly. Something must not be implementing it properly.
-    - Linear Interpolation for respawn animation can be 
      TOD TODO TDOODT DTDO DTODO(*&^%$#@#$%^&*&^%$#$%^&)
-     Jumping (gravity) seems consistent, but player movement may need to be updated
+     Jumping (gravity) seems consistent during lag, but player movement may need to be updated
     This might help with making movement/jumping consistent even during lag:
     https://www.reddit.com/r/gamemaker/comments/6ffh0k/inconsistent_jump_height_using_delta_timing/
     
@@ -73,6 +77,19 @@ let currentLevelSetName = "Null";
 let gameTimer;
 
 let isPaused = false; //whether the game is paused, and thus Update() will be skipped for some gameObjects
+
+//record variables for player times and death counts
+// records begin as "null" unless set by localStorage or by player
+//best times (in milliseconds)
+let bestTimeEasy = null;
+let bestTimeNormal = null;
+let bestTimeHard = null;
+let bestTimeMaster = null;
+//least deaths
+let bestDeathEasy = null;
+let bestDeathNormal = null;
+let bestDeathHard = null;
+let bestDeathMaster = null;
 
 //runs actions that may be required before anything it setup() or draw()
 function preload() {
