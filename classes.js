@@ -348,6 +348,8 @@ function Player(x, y, w, h) {
   this.timeDead = 0.0; //amount of time this particle has existed
 
   this.death = function() {
+    //increment death counter
+    numberOfDeaths++;
     
     //creating particles at current position
     let seg = 5;
@@ -376,6 +378,8 @@ function Player(x, y, w, h) {
   
   //same, but included input for particle direction
   this.death = function(direction) {
+    //increment death counter
+    numberOfDeaths++;
     
     //creating particles at current position
     let seg = 5;

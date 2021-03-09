@@ -1,25 +1,23 @@
 /*
-  Platformer 1.25
+  Platformer 1.26
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-19-2021
   
   Changes Made:
-  - Implementing Timer class, to count game time
-  - Timer is implemented, and includes:
-    - Displaying timer to screen and counting up with minutes, seconds, and milliseconds
-    - Has function to start(), stop(), and reset()
-    - Has gameTimer variable used in program to reuse and keep the same timer between levels
-  - The timer is tracked between levels
-    - When building level, timer is placed and added to allObjects[] to display on the UI
-    - When levelSet is over, timer is stop()
-    - when levelset is loaded, timer is reset() and start()
-  - When timer is displayed, it will add extra 0s if numbers are in single digits, or double digits for milliseconds
+  - Lightened background color to make it easier to see on a black page background
+  - Added variable for the name of the Level Set, so it can be displayed on the results screen.
+  - Working on level results screen
+    - Displays Congratulations message with level set name
+    - Displays time and death count
+    - Button to return to main menu
+  - Completing a level set will now lead to the results screen
+  - Death Count variable, numberOfDeaths, updated and now functions properly to count the number of deaths of the player. Will show up on results screen
+  - Title of level set will now display on UI during a level
   
   Ideas:
   - for the particle explosion, the velocity of the player influences the particles velocity
   - For death animation, particles will eventually come back to spawn to reform player?
-  - Death animation for the player where they explode into multiple particles
   - Change collision rules with certain blocks
     - When touching a Blue Bounce BLock, the player will bounce if barely touching on the left but won't when on the right. This is because the order the blocks are checked for collision. I need to either A) always check Bounce Blocks First, B) Check for Bounce Blocks Last, or C) acitvate Bounc Block when a certain overlap is acheived. Any of these will make Bounce Block interactions more consistent
   - When the level is built, have rows and groups of blocks be "merged" to become one larger rectangle. This will improve performance as less blocks would need to be compared.
@@ -55,6 +53,7 @@ let hardLevels;
 let completedHard = false;
 
 let currentLevelSet;
+let currentLevelSetName = "Null";
 
 let inTutorial = false;
 
@@ -103,7 +102,7 @@ function setup() {
   allObjects = [];
   allBlocks = [];
   allParticles = [];
-  backgroundColor = color(10, 10, 10, 255);
+  backgroundColor = color(50, 50, 50, 255);
   
   gameTimer = new Timer(0, 0, 0, 0);
         
@@ -115,7 +114,7 @@ function setup() {
   //loadNextLevel();
   buildMainMenu();
   //buildLevel(0, hardLevels);
-  
+  //buildResultsScreen();
 
 }
 
@@ -146,8 +145,8 @@ function draw() {
           //freeze timer, since we're done
           gameTimer.stop();
           
-          //back to main menu     //TDOD this should go to a results screen
-          buildMainMenu();
+          //back to main menu
+          buildResultsScreen()
         }
     }
       
@@ -214,7 +213,8 @@ function buildMainMenu()
   y = 300 * progScale;
   let startTutorial = function() {
     clearGameObjects(); //clearing menu
-    currentLevelSet = tutorialLevels;
+    currentLevelSet = tutorialLevels; //setting set of levels to load
+    currentLevelSetName = "Tutorial"; //setting name of level set
     currentLevel = 1; //for display
     currentLevelIndex = 0; //for level indexing
     gameTimer.reset(); //reseting current time on timer
@@ -236,7 +236,8 @@ function buildMainMenu()
   y = 450 * progScale;
   let startGame = function() {
     clearGameObjects(); //clearing menu
-    currentLevelSet = levels;
+    currentLevelSet = levels; //setting set of levels to load
+    currentLevelSetName = "Normal"; //setting name of level set
     currentLevel = 1; //for display
     currentLevelIndex = 0; //for level indexing
     gameTimer.reset(); //reseting current time on timer
@@ -258,7 +259,8 @@ function buildMainMenu()
   y = 600 * progScale;
   let startHardGame = function() {
     clearGameObjects(); //clearing menu
-    currentLevelSet = hardLevels;
+    currentLevelSet = hardLevels; //setting set of levels to load
+    currentLevelSetName = "Hard"; //setting name of level set
     currentLevel = 1; //for display
     currentLevelIndex = 0; //for level indexing
     gameTimer.reset(); //reseting current time on timer
@@ -272,6 +274,80 @@ function buildMainMenu()
   btnHard.textSize = 40 * progScale;
   btnHard.textColor = color(0, 0, 0);
   allObjects.push(btnHard);
+  
+}
+
+//draws the main menu to the screen
+function buildResultsScreen()
+{
+  //creating congradulations message
+  let x = width/2;
+  let y = 100 * progScale;
+  let s = "Congradulations!";
+  let title = new DisplayText(x, y, 0, 0, s);
+  title.textSize = 100 * progScale;
+  allObjects.push(title);
+  
+  //creating specific message on level
+  x = width/2;
+  y = 250 * progScale;
+  s = "You completed the\n" + currentLevelSetName + " levels";
+  let message = new DisplayText(x, y, 0, 0, s);
+  message.textSize = 60 * progScale;
+  allObjects.push(message);
+  
+  let gap = 25 * progScale; //gap between data title and data
+  
+  //time display  
+  x = (width/2) - gap;
+  y = 450 * progScale;
+  s = "Your Time:";
+  let yourTime = new DisplayText(x, y, 0, 0, s);
+  yourTime.textAlignH = RIGHT;
+  yourTime.textSize = 50 * progScale;
+  allObjects.push(yourTime);
+  
+  gameTimer.setY(y);
+  gameTimer.setX((width/2) + gap);
+  gameTimer.textSize = 50 * progScale;
+  gameTimer.textAlignH = LEFT;
+  allObjects.push(gameTimer);
+  
+  //Death display  
+  x = (width/2) - gap;
+  y = 550 * progScale;
+  s = "Deaths:";
+  let yourDeaths = new DisplayText(x, y, 0, 0, s);
+  yourDeaths.textAlignH = RIGHT;
+  yourDeaths.textSize = 50 * progScale;
+  allObjects.push(yourDeaths);
+  
+  x = (width/2) + gap;
+  s = str(numberOfDeaths);
+  let numDeaths = new DisplayText(x, y, 0, 0, s);
+  numDeaths.textAlignH = LEFT;
+  numDeaths.textSize = 50 * progScale;
+  allObjects.push(numDeaths);
+  
+  //Main Menu button
+  w = 475 * progScale;
+  h = 100 * progScale;
+  x = (width/2) - w/2;
+  y = 800 * progScale;
+  let backToMenu = function() {
+    clearGameObjects(); //clearing menu
+    gameTimer.reset(); //reseting current time on timer
+    numberOfDeaths = 0; //reseting death count
+    buildMainMenu(); //building the main menu
+  };
+  let btnMenu = new Button(x, y, w, h, backToMenu);
+  btnMenu.displayText = "Main Menu";
+  btnMenu.strokeWeight = 0;
+  btnMenu.fillColor = color(255, 255, 0);
+  btnMenu.hoverColor = color(0, 255, 0);
+  btnMenu.textSize = 60 * progScale;
+  btnMenu.textColor = color(0, 0, 0);
+  allObjects.push(btnMenu);
   
 }
 
@@ -437,8 +513,17 @@ function buildLevel(levelIndex, levelSet)
   title.textAlignH = LEFT;
   allObjects.push(title);
   
+  //Level Number
+  x = width/2;
+  y = uiHeight/2;
+  s = currentLevelSetName;
+  let setName = new DisplayText(x, y, 0, 0, s);
+  setName.textSize = 50 * progScale;
+  setName.textAlignH = CENTER;
+  allObjects.push(setName);
+  
   //placing timer
-  x = width/1.5;
+  x = width/1.3;
   y = uiHeight/2;
   gameTimer.setX(x);
   gameTimer.setY(y);

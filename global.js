@@ -33,3 +33,5 @@ let isLevelComplete = false; //determines if player finished the level
 let mouseWasClickedLeft = false;
 
 let fontRegular, fontBold; //fonts for text. Look Pixelated
+
+let numberOfDeaths = 0; //the number of deaths the player has suffered. SHould be for within the current level set
