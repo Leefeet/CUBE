@@ -105,13 +105,20 @@ function GameObject(x, y, w, h) {
   this.getWidth = function() {return this.width;}
   this.getHeight = function() {return this.height;}
   
-  this.setPosition = function(position) {this.position = position;}
+  this.setPosition = function(position) {this.position = position.copy();}
   this.setX = function(x) {this.position.x = x;}
   this.setY = function(y) {this.position.y = y;}
   this.setWidth = function(w) {this.width = w;}
   this.setHeight = function(h) {this.height = h;}
   
 }
+
+//ENUM for block type
+const BlockType = Object.freeze(
+  {
+    "normal":1, "kill":2, "end":3, "player":4
+  }
+);
 
 //Object: Block
 //Function: draws a block to the screen
@@ -123,6 +130,8 @@ function Block(x,y,w,h)
   this.strokeColor = color(0, 0, 0); //the block border color
   this.strokeWeight = 1 * progScale; //The width of the block border. Set to <= 0 to have no stroke
   //IDEA: implement strokes as overallping rectangles, so that strokes will be inside block rather than outside
+  
+  this.blockType = BlockType.normal;
   
   this.update = function() {} //nothing to update
   
@@ -143,11 +152,12 @@ function Block(x,y,w,h)
   this.getFillColor = function() {return this.fillColor;}
   this.getStrokeColor = function() {return this.strokeColor;}
   this.getStrokeWeight = function() {return this.strokeWeight;}
+  this.getBlockType = function() {return this.blockType;}
   
   this.setFillColor = function(fillColor) {this.fillColor = fillColor;}
   this.setStrokeColor = function(strokeColor) {this.strokeColor = strokeColor;}
   this.setStrokeWeight = function(strokeWeight) {this.strokeWeight = strokeWeight;}
-  
+  this.setBlockType = function(blockType) {this.blockType = blockType;}
 }
 
 //movable object for player user
@@ -157,6 +167,8 @@ function Player(x,y,w,h)
   Block.call(this,x,y,w,h);
   
   let scaler = 25; //this is the width/height that the player was built for. This allows the player to have its attributes adjusted based on its size
+  
+  this.spawnPosition = createVector(x,y);
   
   this.velocity = createVector(0.1,0.1);
   this.forces = createVector(0.0,0.0);
@@ -181,6 +193,8 @@ function Player(x,y,w,h)
     this.prevIsGrounded = false;
     this.prevIsOnRightWall = false;
     this.prevIsOnLeftWall = false;
+  
+  this.blockType = BlockType.player;
   
   this.update = function() { //TODO: Make movement work
     
@@ -313,7 +327,18 @@ function Player(x,y,w,h)
       {
         if (this.collidesWithAdjacent(allBlocks[i]))
           {
-            //there's a collision, test which side and the depth
+            //there's a collision
+            //is it a bad block?
+            if (allBlocks[i].getBlockType() == BlockType.kill)
+              {
+                //teleport player back to spawn point
+                //pos.x += 1;
+
+                //stop checking collision
+                break;
+              }
+            
+            //test which side and the depth
             colData = this.getCollisionData(allBlocks[i]);
             //print(colData);
             //IDEA: halting velocity should only be done if the velocity is moving towards that side of the block. This can prevent losing speed if walking off a cliff where collision may beleave you hit the side.

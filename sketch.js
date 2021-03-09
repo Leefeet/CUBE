@@ -1,16 +1,17 @@
 /*
-  Platformer 1.9
+  Platformer 1.10
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-9-2021
   
   Changes Made:
-  - Player's attributes now scale with player's size
-    - a new scaler variable in player represents the size the player was designer for. When the player's current width is divided by the scaler, it will cause the player's attributes to function the same regardless of size
-    - the player will always jump 3 blocks high, even if the blocks appear smaller or larger
-    - player variables are now set differently to account for this change
-  - Created a new test level
-  
+  - BlockType Enum created to track different kinds of blocks
+    - Block Object now has a variable for BlockType, along with a getter and setter
+  - Player now remembers spawn coordinates
+  - Created Kill blocks, which should "kill" the player and return them back to their spawnpoint
+    - adjusted test level to include a kill block
+    - function buildLevel() can now place Kill blocks if a 'K' is found
+  - Player's collision system seems off, like wall sliding not working well. Will fix in next version
   
 */
 
@@ -129,6 +130,19 @@ function buildLevel(levelNum)
             allObjects.push(p);
             
             p.fillColor = color(255, 255, 0); //yellow
+          }
+        else if (c == "K") //kill block
+          {
+            let x = blockWidth*i;
+            let y = blockWidth*j;
+            let w = blockWidth;
+            
+            let k = new Block(x,y,w,w);
+            allObjects.push(k);
+            allBlocks.push(k);
+            
+            k.setBlockType(BlockType.kill);
+            k.fillColor = color(255, 0, 0); //red
           }
       }
   }
