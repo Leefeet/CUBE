@@ -1,16 +1,12 @@
 /*
-  Platformer 1.38
+  Platformer 1.39
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-24-2021
   
   Changes Made:
-  - Added checkpoints to Hard Levels 1 and 2 to make them less unforgiving.
-  - On Hard Level 2, added an extra bounce block to make a specific jump more consistent, as sometimes hitting it would be impossible
-  - Added an outline for the Player's current spawnpoint. A simple stroke around an invisible rectangle. This will update when a player reaches a checkpoint.
-  - New animation during respawn. Respawn indicator slowly becomes less transparent with the same color as player. By the time the player respawns, the fill will be solid, so it looks like the player is coming out from the outline.
-  - Player now spawns "dead" so the level can begin with the respawn animation. This will not affect the player's death count
-  - Added a new Tutorial Level (inserted as level 8) that showcases Checkpoint Blocks
+  - Laying out new menu, which includes 4 difficulties: Easy, Normal, Hard, and Master. Not all of the buttons function yet.
+  - Test levels button is trnasparent rather than mimicing the background color
   
 
   
@@ -46,6 +42,7 @@
     Problems to Fix:
     - When finishing a level set and returning to the main menu, the game will crash claiming that "allObjects[i] is undefined" in update loops.
     - When changing progScale to make game larger, wall sliding on the left-side of blocks doesn't work properly. Something must not be implementing it properly.
+    - Linear Interpolation for respawn animation can be 
      TOD TODO TDOODT DTDO DTODO(*&^%$#@#$%^&*&^%$#$%^&)
      Jumping (gravity) seems consistent, but player movement may need to be updated
     This might help with making movement/jumping consistent even during lag:
@@ -246,6 +243,8 @@ function buildMainMenu()
   title.textSize = 200 * progScale;
   allObjects.push(title);
   
+  let buffer = 50 * progScale;
+  
   //tutorial button
   let w = 475 * progScale;
   let h = 75 * progScale;
@@ -269,12 +268,37 @@ function buildMainMenu()
   btnTutorial.textColor = color(0, 0, 0);
   allObjects.push(btnTutorial);
   
+  //Easy Game button
+  w = 475 * progScale;
+  h = 100 * progScale;
+  x = (width/2) - w - (buffer * progScale);
+  y = 450 * progScale;
+  let startEasyGame = function() {
+    /* IMPLEMTN THIS
+    clearGameObjects(); //clearing menu
+    currentLevelSet = levels; //setting set of levels to load
+    currentLevelSetName = "Normal"; //setting name of level set
+    currentLevel = 1; //for display
+    currentLevelIndex = 0; //for level indexing
+    gameTimer.reset(); //reseting current time on timer
+    buildLevel(currentLevelIndex, currentLevelSet); //starting level
+    */
+  };
+  let btnEasy = new Button(x, y, w, h, startEasyGame);
+  btnEasy.displayText = "Start Easy Game";
+  btnEasy.strokeWeight = 0;
+  btnEasy.fillColor = color(0, 255, 0);
+  btnEasy.hoverColor = color(0, 255, 0);
+  btnEasy.textSize = 40 * progScale;
+  btnEasy.textColor = color(0, 0, 0);
+  allObjects.push(btnEasy);
+  
   //Main Game button
   w = 475 * progScale;
   h = 100 * progScale;
-  x = (width/2) - w/2;
+  x = (width/2) + (buffer * progScale);
   y = 450 * progScale;
-  let startGame = function() {
+  let startNormalGame = function() {
     clearGameObjects(); //clearing menu
     currentLevelSet = levels; //setting set of levels to load
     currentLevelSetName = "Normal"; //setting name of level set
@@ -283,19 +307,19 @@ function buildMainMenu()
     gameTimer.reset(); //reseting current time on timer
     buildLevel(currentLevelIndex, currentLevelSet); //starting level
   };
-  let btnStart = new Button(x, y, w, h, startGame);
-  btnStart.displayText = "Start Game";
-  btnStart.strokeWeight = 0;
-  btnStart.fillColor = color(255, 255, 0);
-  btnStart.hoverColor = color(0, 255, 0);
-  btnStart.textSize = 60 * progScale;
-  btnStart.textColor = color(0, 0, 0);
-  allObjects.push(btnStart);
+  let btnNormal = new Button(x, y, w, h, startNormalGame);
+  btnNormal.displayText = "Start Normal Game";
+  btnNormal.strokeWeight = 0;
+  btnNormal.fillColor = color(255, 255, 0);
+  btnNormal.hoverColor = color(0, 255, 0);
+  btnNormal.textSize = 35 * progScale;
+  btnNormal.textColor = color(0, 0, 0);
+  allObjects.push(btnNormal);
   
   //Hard Game button
   w = 475 * progScale;
   h = 100 * progScale;
-  x = (width/2) - w/2;
+  x = (width/2) - w - (buffer * progScale);
   y = 600 * progScale;
   let startHardGame = function() {
     clearGameObjects(); //clearing menu
@@ -315,6 +339,32 @@ function buildMainMenu()
   btnHard.textColor = color(0, 0, 0);
   allObjects.push(btnHard);
   
+  //Master Game button
+  w = 475 * progScale;
+  h = 100 * progScale;
+  x = (width/2) + (buffer * progScale);
+  y = 600 * progScale;
+  let startMasterGame = function() {
+    /* IMPLEMENT THIS
+    clearGameObjects(); //clearing menu
+    currentLevelSet = hardLevels; //setting set of levels to load
+    currentLevelSetName = "Hard"; //setting name of level set
+    currentLevel = 1; //for display
+    currentLevelIndex = 0; //for level indexing
+    gameTimer.reset(); //reseting current time on timer
+    buildLevel(currentLevelIndex, currentLevelSet); //starting level
+    */
+  };
+  let btnMaster = new Button(x, y, w, h, startMasterGame);
+  btnMaster.displayText = "Start Master Game";
+  btnMaster.strokeWeight = 0;
+  btnMaster.fillColor = color(255, 0, 255);
+  btnMaster.hoverColor = color(0, 0, 0);
+  btnMaster.textSize = 37 * progScale;
+  btnMaster.textColor = color(0, 0, 0);
+  btnMaster.textHoverColor = color(255, 255, 255);
+  allObjects.push(btnMaster);
+  
   
   //Secret Test Levels Button
   w = 250 * progScale;
@@ -333,10 +383,10 @@ function buildMainMenu()
   let btnTest = new Button(x, y, w, h, startTestLevels);
   btnTest.displayText = "Test Levels";
   btnTest.strokeWeight = 0;
-  btnTest.fillColor = backgroundColor;
+  btnTest.fillColor = color(0, 0, 0, 0); //transparent
   btnTest.hoverColor = color(255, 100, 100);
   btnTest.textSize = 30 * progScale;
-  btnTest.textColor = backgroundColor;
+  btnTest.textColor = color(0, 0, 0, 0); //transparent
   btnTest.textHoverColor = color(0, 0, 0);
   allObjects.push(btnTest);
   
