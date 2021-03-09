@@ -1,20 +1,23 @@
 /*
-  Platformer 1.49
+  Platformer 1.50
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-27-2021
   
   Changes Made:
-  - Adding a "Restart Level" button to the pause menu to allow the player to retry, either because they're stuck or made a mistake. This will increment the death counter.
-  - the existing "player" variable is now actually linked with the player created during a level load
-  - Added a new "Respawn" button to the pause screen, functions as the "Restart Level" button
-    - Respawn button will be disabled if the player is currently dead or no player exists
-    - Respawning will instantly kill the player and respawn them
-    - Added message above respawn button informing player that it will count as a death
+  - Added "created By" message on title screen.
+  - Title "Cube" is now in all Caps "CUBE"
+  - Working on particle effects for bouncing on Bounce Blocks
+    - Created TextLevel_5 to test bouncing particles
+    - Particles spawn on specific side of BounceBlock based on collision
+    - Getting particles to spawn on specific sides isn't working by reusing same algorithm. I need to try separate ones in a future version
   
 
   Ideas:
-  - a pause button to freeze the game (and timer) and also options to go back to main menu and restart the level. Maybe information regarding the death count and timer could be shown
+  - Particle effects for specific interactions
+    - Wall-Sliding
+    - Bouncing off bounce Block
+  - Add some sort of level-clear animation (timer would be temporarily stopped)
   - Add a "quickStylize" function to some Gameobjects like text and buttons that allows multiple formatting within a single function, like fill colors, strokes, hover colors, etc. to reduce the number of lines taken from variable setting.
   - a death counter on the level UI
   - for the particle explosion, the velocity of the player influences the particles velocity
@@ -116,7 +119,7 @@ function preload() {
   }
 
   //Test Levels
-  numLevels = 4; //number of level files to load
+  numLevels = 5; //number of level files to load
   for (let i = 0; i < numLevels; i++) {
     testLevels.push(loadStrings('assets/TestLevel_' + (i + 1) + '.txt'));
   }
@@ -143,11 +146,11 @@ function setup() {
   gameTimer = new Timer(0, 0, 0, 0);
   
   //creating gameObjects for main menu
-  buildMainMenu();
+  //buildMainMenu();
 
   //DEBUG, load project starting with specific level. Or load a specific screen
   //buildLevel("number of level", "Level Set");
-  //buildLevel(1, normalLevels);
+  buildLevel(4, testLevels);
   //buildTutorialScreen();
   //buildPauseMenu();
 }
@@ -217,7 +220,7 @@ function draw() {
     }
   }
   //updating particles (but only if not paused)
-  if (!isPaused) {
+  if (false) {//(!isPaused) {
     for (let i = 0; i < allParticles.length; i++) {
       allParticles[i].update();
 
@@ -296,7 +299,7 @@ function buildMainMenu() {
   //creating Title
   let x = width / 2;
   let y = 150 * progScale;
-  let s = "Cube";
+  let s = "CUBE";
   let title = new DisplayText(x, y, 0, 0, s);
   title.textSize = 200 * progScale;
   allObjects.push(title);
@@ -447,6 +450,14 @@ function buildMainMenu() {
   btnTest.textColor = color(0, 0, 0, 0); //transparent
   btnTest.textHoverColor = color(0, 0, 0);
   allObjects.push(btnTest);
+  
+  //Created By message
+  x = width / 2;
+  y = 925 * progScale;
+  s = "Created and Programmed by Lee Thibodeau ©2021";
+  let createdBy = new DisplayText(x, y, 0, 0, s);
+  createdBy.textSize = 20 * progScale;
+  allObjects.push(createdBy);
 }
 
 //draw a tutorial screen to explain the controls before the Tutorial Levels

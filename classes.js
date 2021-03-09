@@ -210,6 +210,73 @@ function BounceBlock(x, y, w, h) {
   this.blockType = BlockType.bounce; //defaults to bounce
 
   this.bounceSpeed = 0.50; //bounces player away at this speed. About 6 blocks high
+  
+  //Do this if bounced on
+  this.bounce = function(direction) {
+    
+    let n = 5; //number of particles to make lengthwise
+    let d = 1; //number of particles to make depthwise ( d < n )
+    //line of particle spawns
+    let startX = 0;
+    let startY = 0;
+    let endX = 0;
+    let endY = 0;
+    let depthX = 0;
+    let depthY = 0;
+    
+    let w = this.getWidth()/n;
+    //summon particles along side
+    switch (direction) {
+    case 1: //TOP - particles along top
+        startX = this.getMinX();
+        startY = this.getMinY();
+        endX = this.getMaxX();
+        endY = this.getMinY();
+        depthX = 0;
+        depthY = 1;
+        break;
+    case 2: //RIGHT
+        startX = this.getMaxX() - w*d;
+        startY = this.getMinY();
+        endX = this.getMaxX();
+        endY = this.getMaxY();
+        depthX = 1;
+        depthY = 0;
+        break;
+    case 3: //BOTTOM
+        startX = this.getMaxX() - w*d;
+        startY = this.getMaxY() - w*d;
+        endX = this.getMinX();
+        endY = this.getMaxY();
+        depthX = 0;
+        depthY = -1;
+        break;
+    case 4: //LEFT
+        startX = this.getMinX();
+        startY = this.getMaxY() - w*d;
+        endX = this.getMinX();
+        endY = this.getMinY();
+        depthX = -1;
+        depthY = 0;
+        break;
+    }
+    
+    //spawning Particles
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < d; j++) {
+        let x = startX;
+        let y = startY;
+        let sizeX = abs(startX - endX);
+        let sizeY = abs(startY - endY);
+        x += (((sizeX)/n) * i) + (depthX * w * j);
+        y += (((sizeY)/n) * i) + (depthY * w * j);
+
+        let part = new Particle(x, y, w, w, color(0, 0, 0), this.getWidth()/100, direction);
+        allParticles.push(part);
+        part.setStrokeWeight(0);
+      }
+    }
+  }
 
   this.getBounceSpeed = function() {
     return this.bounceSpeed;
@@ -698,6 +765,7 @@ function Player(x, y, w, h) {
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
               this.velocity.y = -(allBlocks[i].bounceSpeed * this.width / scaler);
               touchedBounceTop = true; //sets ground variable later
+              allBlocks[i].bounce(colData[0]); // bounce effects
             }
             break;
           case 2: //RIGHT
@@ -711,6 +779,7 @@ function Player(x, y, w, h) {
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
               this.velocity.x = (allBlocks[i].bounceSpeed * this.width / scaler);
               touchedBounceRight = true; //sets wall variable later
+              allBlocks[i].bounce(colData[0]); // bounce effects
             }
             break;
           case 3: //BOTTOM
@@ -722,6 +791,7 @@ function Player(x, y, w, h) {
             //if bounce block, apply bounce velocity
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
               this.velocity.y = (allBlocks[i].bounceSpeed * this.width / scaler);
+              allBlocks[i].bounce(colData[0]); // bounce effects
             }
             break;
           case 4: //LEFT
@@ -736,6 +806,7 @@ function Player(x, y, w, h) {
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
               this.velocity.x = -(allBlocks[i].bounceSpeed * this.width / scaler);
               touchedBounceLeft = true; //sets wall variable later
+              allBlocks[i].bounce(colData[0]); // bounce effects
             }
             break;
           default:
