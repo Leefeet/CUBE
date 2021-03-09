@@ -849,10 +849,14 @@ function Button(x, y, w, h, onClick) {
   this.textFont = fontRegular; //the font, what is looks like
 
   this.isHovering = false; //whether mouse is hovering over
-
+  
+  this.isDisabled = false; //is in diabled mode, button cannot be clicked
+  this.disabledFill = color(255/1.8, 255/1.8, 255/1.8); //fill of button when disabled
+  this.disabledTextFill = color(255/3, 255/3, 255/3); //fill of text when disabled
 
   this.update = function() {
-    if (this.isMouseHovering()) {
+    //only approve if not disabled
+    if (!this.isDisabled && this.isMouseHovering()) {
       this.isHovering = true;
       //change mouse cursor to pointer
       cursor("pointer"); //changes cursor to "pointing" mode
@@ -870,6 +874,8 @@ function Button(x, y, w, h, onClick) {
     //fill color changes if hovering
     if (this.isHovering) {
       fill(this.hoverColor);
+    } else if (this.isDisabled) {
+      fill (this.disabledFill);
     } else {
       fill(this.fillColor);
     }
@@ -886,6 +892,8 @@ function Button(x, y, w, h, onClick) {
     //fill color changes if hovering
     if (this.isHovering) {
       fill(this.textHoverColor);
+    } else if (this.isDisabled) {
+      fill(this.disabledTextFill);
     } else {
       fill(this.textColor);
     }

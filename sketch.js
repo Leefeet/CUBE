@@ -1,15 +1,15 @@
 /*
-  Platformer 1.44
+  Platformer 1.45
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-26-2021
   
   Changes Made:
-  - Fixed bug where Particles would continue to update during a pause.
-    - This is because they are updated separate than other game objects, so added a new pause check
+  - Implementing button disabling
+  - Added a isDisabled boolean to buttons, along with disabled colors. This will allow buttons to be set to disabled mode where they cannot be clicked
+    - Disabled buttons will appear greyed out and won't react to mouse hovering
+  - Greyed out Easy and Hard game buttons since their levels aren't created yet. They are disabled
   
-  
-
 
   Ideas:
   - a pause button to freeze the game (and timer) and also options to go back to main menu and restart the level. Maybe information regarding the death count and timer could be shown
@@ -346,6 +346,7 @@ function buildMainMenu() {
   btnEasy.textColor = color(0, 0, 0); //black
   btnEasy.textHoverColor = color(255, 255, 255); //white
   allObjects.push(btnEasy);
+  btnEasy.isDisabled = true; //Disabled button, cannot be used
 
   //Normal Game button
   w = 475 * progScale;
@@ -394,6 +395,7 @@ function buildMainMenu() {
   btnHard.textColor = color(0, 0, 0); //black
   btnHard.textHoverColor = color(255, 255, 255); //White
   allObjects.push(btnHard);
+  btnHard.isDisabled = true; //Disabled button, cannot be used
 
   //Master Game button
   w = 475 * progScale;
