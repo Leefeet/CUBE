@@ -1,20 +1,12 @@
 /*
-  Platformer 1.43
+  Platformer 1.44
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-26-2021
   
   Changes Made:
-  - Implementing the pause screen to appear with a button press
-  - currentLevelIndex now starts at -1, which indicates that a currentLevel isn't set. This can be used to tell if the player is on a level, and whether pausing is possible. that means currentLevelIndex will be set to -1 when player is not in a level
-  - Variables keyESC and keyEnter removed since P5.js already have variables for these, since they're special keys and work differently
-    - Replaced them with new boolean variables that represents the initial press of the button: wasESC and wasEnter. An initial press is the first frame the button was pressed, and holding the key down for subsequent frames isn't counted
-    - Added function updateKeys() which updates these two variables
-  - Placed dataTime declaration back inside buildPauseMenu()
-  - Added functions for pauseGame() and unpauseGame() so pausing and unpausing can be controlled from multiple places using the same code
-  - Pausing now functions as expected
-    - Pressing ESC or Enter will pause the game, or unpause it
-    - Displays proper time and other information
+  - Fixed bug where Particles would continue to update during a pause.
+    - This is because they are updated separate than other game objects, so added a new pause check
   
   
 
@@ -50,6 +42,7 @@
     Also: https://www.reddit.com/r/gamemaker/comments/5vvxmr/platformer_gravity_with_delta_time/
     
     Problems to Fix:
+    - Player somtimes get's stuck on the corner between two blocks. This is uncommon but affects gameplay. This could be fixed with an update to the collision detection and how blocks are placed.
     - When finishing a level set and returning to the main menu, the game will crash claiming that "allObjects[i] is undefined" in update loops.
     - When changing progScale to make game larger, wall sliding on the left-side of blocks doesn't work properly. Something must not be implementing it properly.
     - Linear Interpolation for respawn animation can be 
@@ -221,16 +214,18 @@ function draw() {
       allPauseObjects[i].update();
     }
   }
-  //updating particles
-  for (let i = 0; i < allParticles.length; i++) {
-    allParticles[i].update();
+  //updating particles (but only if not paused)
+  if (!isPaused) {
+    for (let i = 0; i < allParticles.length; i++) {
+      allParticles[i].update();
 
-    if (allParticles[i].timeAlive >= allParticles[i].maxTime) {
-      //remove the current particle
-      allParticles.splice(i, 1);
+      if (allParticles[i].timeAlive >= allParticles[i].maxTime) {
+        //remove the current particle
+        allParticles.splice(i, 1);
 
-      //subtract 1 from i. Since this particle was removed, all future particle indexes will be shifted back 1. This will also update length()
-      i--;
+        //subtract 1 from i. Since this particle was removed, all future particle indexes will be shifted back 1. This will also update length()
+        i--;
+      }
     }
   }
 
@@ -259,7 +254,7 @@ function draw() {
 
   //ressetting mouseWasClickedLeft
   mouseWasClickedLeft = false;
-  
+
   //resetting other keys
   updateKeys();
 }
