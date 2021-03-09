@@ -1,19 +1,15 @@
 /*
-  Platformer 1.4
+  Platformer 1.5
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-5-2021
   
   Changes Made:
-  - created mouseBlock object to help test collisions. This block is attached to the mouse
-  - created allBlocks[], which stores specifically physical blocks that the player can collide with
-  - simplified collision check by creating getMin() and getMax() functions for GameObject
-  - added to player movement
-    - different movement speeds for ground and air movement
-    - traction to slow down player on ground
-    - booleans for whether grounded or on a wall
-    - move with arrows keys and jump with spacebar
-  - added custom collision checking function to Player that applies a "threshold" when checking blocks. This makes it easier to slide over blocks where the player could get caught on the edges between two blocks
+  - edited testing environment to create a wall to test player wall sliding
+  - in player, added variables for wallSliding gravity and maxSpeed. This allows wall sliding to be slower than normal falling. If player is on a wal, this new gravity and speed cap are applied
+  - booleans for player being on a wall now update properly
+  - Corner threshold for checking player collision now accoutns for the player sliding down a wall. This will help prevent player from getting "stuck" on walls when sliding down and potentially landing on the ground between two blocks for a single frame
+  -
 
 */
 
@@ -80,11 +76,15 @@ function buildLevel1()
   let x = 50 * progScale;
   let y = sketchHeight -100*progScale;
   let w = 50 * progScale;
-  for (let i = 0; i < 15; i++)
+  for (let i = 0; i < 16; i++)
     {
       let b = new Block(x,y,w,w);
       allObjects.push(b);
       allBlocks.push(b);
+      
+      let c = new Block(y,x,w,w);
+      allObjects.push(c);
+      allBlocks.push(c);
       
       //move position for next
       x += w;

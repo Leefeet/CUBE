@@ -144,6 +144,8 @@ function Player(x,y,w,h)
   this.forces = createVector(0.0,0.0);
   this.gravity = 0.01;
   this.maxFallSpeed = 0.40;
+  this.gravityWallSlide = 0.0033;
+  this.maxWallSlideSpeed = 0.20;
   
   this.movementSpeed = 0.01;
   this.airMovementSpeed = 0.025;
@@ -161,11 +163,18 @@ function Player(x,y,w,h)
     this.playerMovement();
     
     //adding gravity
-    this.velocity.y += this.gravity;
+    //different gravity is sliding down a wall
+    //must also make sure player is falling and not rising
+    if (this.velocity.y > 0 && (this.isOnRightWall || this.isOnLeftWall))
+      {this.velocity.y += this.gravityWallSlide;}
+    else
+      {this.velocity.y += this.gravity;}
     
     let pos = this.getPosition().copy();
     let vel = this.velocity.copy();
-
+    
+    //print("onLeft: " + this.isOnLeftWall);
+    //print("onRight: " + this.isOnRightWall);
     
     vel.mult(deltaTime); //as unit of deltaTime
     
@@ -224,9 +233,14 @@ function Player(x,y,w,h)
     }
     
     //falling speed, cap if too fast
-    if (this.velocity.y > this.maxFallSpeed)
+    //cap is different if sliding down a wall
+    if (this.velocity.y > this.maxFallSpeed && !this.isOnRightWall && !this.isOnLeftWall)
       {
         this.velocity.y = this.maxFallSpeed;
+      }
+    else if (this.velocity.y > this.maxWallSlideSpeed)
+      {
+        this.velocity.y = this.maxWallSlideSpeed;
       }
   }
   
@@ -243,8 +257,10 @@ function Player(x,y,w,h)
     let colBlock; //The block this player collides with, if it exists
     let colData; //data of collision. Side of collision, collision depth
     
-    //start with not being grounded
+    //start with not being grounded or on walls
     this.isGrounded = false;
+    this.isOnRightWall = false;
+    this.isOnLeftWall = false;
     
     for (let i = 0; i < allBlocks.length; i++)
       {
@@ -265,6 +281,7 @@ function Player(x,y,w,h)
             case 2: //RIGHT
               pos.x += colData[1]; //adjust player over to right of block
               this.velocity.x = 0.0; //halt horizontal velocity
+                this.isOnRightWall = true; //since on right wall
               break;
             case 3: //BOTTOM
               pos.y += colData[1]; //adjust player down to bottom of block
@@ -272,7 +289,8 @@ function Player(x,y,w,h)
               break;
             case 4: //LEFT
               pos.x -= colData[1]; //adjust player over to left of block
-              this.velocity.x = 0.0; //halt horizontal velocity  
+              this.velocity.x = 0.0; //halt horizontal velocity
+                this.isOnLeftWall = true; //since on left wall
               break;
             default:
               //nothing
@@ -306,9 +324,21 @@ function Player(x,y,w,h)
     
     //Applying corner Threshhold
     //removes some from left and right to make it less likely to trigger when hitting corners
-    dRightMod = dRight + this.cornerThreshold;
-    dLeftMod = dLeft + this.cornerThreshold;
+    //only apply if player is not on wall
+    let dRightMod = dRight;
+    let dLeftMod = dLeft;
+    if (!this.isOnRightWall && !this.isOnLeftWall)
+      {
+        dRightMod = dRight + this.cornerThreshold;
+        dLeftMod = dLeft + this.cornerThreshold;
+      }
+    else
+      {
+        print("dsuhisdufh");
+      }
     
+    //TODO: MAKE IT SO THAT WHEN SLIDING DOWN WALL, THRESHOLD ISN'T APPLIED
+            
     //see which difference is the smallest
     if (dTop <= dRightMod && dTop <= dBottom && dTop <= dLeftMod)
       {
