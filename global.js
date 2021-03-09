@@ -33,3 +33,5 @@ let currentLevel = 0; //the number of the current level the player is on
 let isLevelComplete = false; //determines if player finished the level
 
 let mouseWasClickedLeft = false;
+
+let fontRegular, fontBold; //fonts for text. Look Pixelated

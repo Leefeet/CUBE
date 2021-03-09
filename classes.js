@@ -600,14 +600,19 @@ function Button(x, y, w, h, onClick) {
   this.displayText = ""; //the text displayed within the button
   this.textSize = 10 * progScale; //size of font
   this.textColor = color(255, 255, 255);
+  this.textHoverColor = color(255, 255, 255);
+  this.textFont = fontRegular; //the font
   
   this.isHovering = false; //whether mouse is hovering over
+  
 
   this.update = function()
   {
     if (this.isMouseHovering())
       {
         this.isHovering = true;
+        //change mouse cursor to pointer
+        cursor("pointer");
         //if click, activate
         if (mouseWasClickedLeft)
           {
@@ -639,10 +644,16 @@ function Button(x, y, w, h, onClick) {
 
     rect(this.getX(), this.getY(), this.getWidth(), this.getHeight());
         
-    fill(this.textColor);
+    //fill color changes if hovering
+    if (this.isHovering) {
+      fill(this.textHoverColor);
+    } else {
+      fill(this.textColor);
+    }
     noStroke();
     textAlign(CENTER, CENTER);
     textSize(this.textSize);
+    textFont(this.textFont);
     var textX = this.getX() + this.getWidth() / 2;
     var textY = this.getY() + this.getHeight() / 2;
     text(this.displayText, textX, textY);
@@ -657,4 +668,43 @@ function Button(x, y, w, h, onClick) {
       return false;
     }
   }
+}
+
+function DisplayText(x, y, w, h, s) {
+  GameObject.call(this, x, y, w, h);
+  this.strokeColor = color(0, 0, 0); //the text outline color
+  this.strokeWeight = 1 * progScale; //The width of the text border. Set to <= 0 to have no stroke
+  
+  this.displayText = s; //the text displayed
+  this.textSize = 10 * progScale; //size of font
+  this.textColor = color(255, 255, 255);
+  this.textAlignH = CENTER; //Horizontal align to coordinate
+  this.textAlignV = CENTER; //Vertical align to coordinate
+  this.textFont = fontRegular; //the font
+
+  this.update = function()
+  {
+  } 
+  
+  this.draw = function()
+  {
+    //stroke
+    if (this.strokeWeight <= 0) {
+      noStroke();
+    } else {
+      stroke(this.strokeColor);
+      strokeWeight(this.strokeWeight);
+    }
+        
+    fill(this.textColor);
+    noStroke();
+    textAlign(this.textAlignH, this.textAlignV);
+    textSize(this.textSize);
+    textFont(this.textFont);
+    var textX = this.getX() + this.getWidth() / 2;
+    var textY = this.getY() + this.getHeight() / 2;
+    text(this.displayText, textX, textY);
+
+  }
+  
 }

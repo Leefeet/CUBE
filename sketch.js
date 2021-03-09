@@ -1,23 +1,23 @@
 /*
-  Platformer 1.16
+  Platformer 1.17
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 2-11-2021
+  Edited: 2-12-2021
   
   Changes Made:
-  - Added mouseWasClickedLeft variable. Updates to true on frame when left click was released
-  - Created new Button Object
-    - Rectangular button with text
-    - Detects if mouse is hovering over itself
-    - Button will change color if mouse is hovering
-    - Clicking button will activate its onClick() function
-  - Main menu prototype leads to levels. Built with buildMainMenu()
-  - When there's no new level, returns to main menu
+  - Level # is now displayed on Level UI
+  - Created separate Text Game Object to use instead of invisible buttons
+    - Work like Button Objects, but without the rectangle and the clickable functions
+    - Have textAlign variables. These allow you to align the text to the Left, Right, or Center of its origin point
+  - Added fonts that fit the Pixel Aesthetic (pixelmix). All text uses these new fonts
+    - Created global variables fontRegular and fontBold
+  - Buttons properly change the computer cursor to the "pointer" icon when hovering over them
+  - Cursor now returns to "arrow" when hovering off a button
   
   Ideas:
   - When the level is built, have rows and groups of blocks be "merged" to become one larger rectangle. This will improve performance as less blocks would need to be compared.
   - Add mroe block types, like:
-    - Blue bounce blocks, bounce the player in a direction based on collision side
+    - [DONE] Blue bounce blocks, bounce the player in a direction based on collision side
   - Upgrades for the player, like
     - Midair Dash (omni-directional)
     - Double Jump
@@ -48,6 +48,10 @@ function preload()
   {
   levelData.push(loadStrings('assets/level_' + i + '.txt'));
   }
+  
+  //loading fonts
+  fontRegular = loadFont('assets/pixelmix.ttf');
+  fontBold = loadFont('assets/pixelmix_bold.ttf');
 }
 
 function setup() {
@@ -74,6 +78,9 @@ function draw() {
   background(backgroundColor);
 
   fill(255);
+  
+  //reseting mouse cursor
+  cursor(ARROW);
   
   //adjusting deltaTime
   capDeltaTime = deltaTime;
@@ -125,19 +132,19 @@ function buildMainMenu()
   //creating Title
   let x = width/2;
   let y = 150 * progScale;
-  let blank = function() {return;}
-  let title = new Button(x, y, 0, 0, blank);
-  title.displayText = "Cube";
+  let s = "Cube";
+  let title = new DisplayText(x, y, 0, 0, s);
   title.textSize = 200 * progScale;
   allObjects.push(title);
   
   //tutorial button
-  let w = 600 * progScale;
-  let h = 125 * progScale;
+  let w = 475 * progScale;
+  let h = 75 * progScale;
   x = (width/2) - w/2;
   y = 300 * progScale;
   let startTutorial = function() {
     clearGameObjects(); //clearing menu
+    currentLevel = 0; // setting level to -1 first level
     loadNextLevel(); //starting level
   };
   let btnTutorial = new Button(x, y, w, h, startTutorial);
@@ -145,7 +152,7 @@ function buildMainMenu()
   btnTutorial.strokeWeight = 0;
   btnTutorial.fillColor = color(255, 255, 0);
   btnTutorial.hoverColor = color(0, 255, 0);
-  btnTutorial.textSize = 100 * progScale;
+  btnTutorial.textSize = 50 * progScale;
   btnTutorial.textColor = color(0, 0, 0);
   allObjects.push(btnTutorial);
   
@@ -301,6 +308,16 @@ function buildLevel(levelNum)
   
   //merge adjacent blocks together
   mergeBlocks();
+  
+  //building UI
+  //Level Number
+  let x = uiHeight/4;
+  let y = uiHeight/2;
+  let s = "Level " + currentLevel;
+  let title = new DisplayText(x, y, 0, 0, s);
+  title.textSize = 50 * progScale;
+  title.textAlignH = LEFT;
+  allObjects.push(title);
 }
 
 //merges groups of blocks near each other into single rectangles
