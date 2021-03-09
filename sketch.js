@@ -1,19 +1,22 @@
 /*
-  Platformer 1.37
+  Platformer 1.38
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 2-23-2021
+  Edited: 2-24-2021
   
   Changes Made:
-  - Attempting to fix bug where game will crash after returning to main menu
-  - clearGameObjects() now actually clears allParticles[] as well. Was not functional before.
-  - Implemented a cleaner (and quicker?) version of clearGameObjects() where arrays are simply set = [], which should make them blank
+  - Added checkpoints to Hard Levels 1 and 2 to make them less unforgiving.
+  - On Hard Level 2, added an extra bounce block to make a specific jump more consistent, as sometimes hitting it would be impossible
+  - Added an outline for the Player's current spawnpoint. A simple stroke around an invisible rectangle. This will update when a player reaches a checkpoint.
+  - New animation during respawn. Respawn indicator slowly becomes less transparent with the same color as player. By the time the player respawns, the fill will be solid, so it looks like the player is coming out from the outline.
+  - Player now spawns "dead" so the level can begin with the respawn animation. This will not affect the player's death count
+  - Added a new Tutorial Level (inserted as level 8) that showcases Checkpoint Blocks
+  
 
   
   Ideas:
   - a pause button to freeze the game (and timer) and also options to go back to main menu and restart the level. Maybe information regarding the death count and timer could be shown
   - a death counter on the level UI
-  - When a checkpoint is obtained, some visual indication should be left behind to remind the player where they will respawn. This should also be done for the default spawnpoint. Something like an outline of the player's size maybe?
   - for the particle explosion, the velocity of the player influences the particles velocity
   - For death animation, particles will eventually come back to spawn to reform player?
   - Change collision rules with certain blocks
@@ -75,7 +78,7 @@ function preload()
   testLevels = []; //an array of all testing Levels
     
   //Tutorial Levels
-  let numLevels = 11; //number of level files to load
+  let numLevels = 12; //number of level files to load
   for (let i = 0; i < numLevels; i++)
   {
   tutorialLevels.push(loadStrings('assets/Tlevel_' + (i+1) + '.txt'));
@@ -175,7 +178,7 @@ function draw() {
   //updating GameObjects
   for (let i = 0; i < allObjects.length; i++)
     {
-      print(allObjects[i].getX());
+      //print(allObjects[i].getX());
       
       allObjects[i].update();
             
@@ -517,6 +520,8 @@ function buildLevel(levelIndex, levelSet)
             allObjects.push(p);
             
             p.fillColor = color(255, 190, 0); //Orange
+            p.spawnStrokeColor = color(255, 190, 0); //Orange
+            p.spawnFillColor = color(255, 190, 0, 0); //Orange with transparency
             
             p.setStrokeWeight(0);
           }

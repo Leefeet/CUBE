@@ -5,7 +5,7 @@ function GameObject(x, y, w, h) {
   this.position = createVector(x, y); //object top-left corner in 3d space
   this.width = w; //Width of object collision box
   this.height = h; //Height of object collision box
-  
+
   this.toDestroy = false; //Flag for whether this object should be destroyed
 
   // Abstract Functions, implemented by children
@@ -228,14 +228,14 @@ function CheckpointBlock(x, y, w, h) {
   Block.call(this, x, y, w, h);
 
   this.blockType = BlockType.checkpoint; //defaults to checkpoint
-  
+
   this.fillColor = color(245, 66, 230); //Pink
-  
+
   this.blockMargins = 0.20; // percentge the block will be smaller/floating. Like how the player is smaller than a block
   // width is still the size of a normal block, is shrunk when draw()
-  
+
   //do this when block is visibly destroyed while a level is still in play
-  this.destroy = function() { 
+  this.destroy = function() {
     //summon particles
     let seg = 3;
     for (let a = 0; a < seg; a++) {
@@ -245,11 +245,11 @@ function CheckpointBlock(x, y, w, h) {
         part.setStrokeWeight(0);
       }
     }
-    
+
     //set this checkpoint to be removed
     this.setToDestroy(true);
   }
-  
+
   this.draw = function() {
     fill(this.fillColor);
     //stroke
@@ -260,12 +260,12 @@ function CheckpointBlock(x, y, w, h) {
       strokeWeight(this.strokeWeight);
     }
     //block
-    let x = this.getX() + (this.getWidth() * this.blockMargins)/2;
-    let y = this.getY() + (this.getWidth() * this.blockMargins)/2;
+    let x = this.getX() + (this.getWidth() * this.blockMargins) / 2;
+    let y = this.getY() + (this.getWidth() * this.blockMargins) / 2;
     let w = this.getWidth() - (this.getWidth() * this.blockMargins);
     rect(x, y, w, w);
   }
-    
+
 }
 
 //Object: Particle
@@ -280,7 +280,7 @@ function Particle(x, y, w, h, c, scale, dir) {
   this.fillColor = c;
   this.blockType = BlockType.particle; //defaults to particle
 
-  this.velocity = createVector(0,0); //starts null, will be set
+  this.velocity = createVector(0, 0); //starts null, will be set
 
   this.gravity = 0.00060 * scaler; //particle falling down
   this.traction = 0.00005 * scaler; //particle slowing down sideways
@@ -395,17 +395,23 @@ function Player(x, y, w, h) {
   this.blockType = BlockType.player;
 
   //timing for death
-  this.isDead = false;
+  this.isDead = true;
   this.maxDeadTime = 0.5; //amount of time this particle will live
   this.timeDead = 0.0; //amount of time this particle has existed
 
-  
+  //respawn indicator
+  this.spawnStrokeWeight = 1.0 * w / scaler;
+  this.spawnStrokeColor = this.fillColor;
+  this.spawnFillColor = this.fillColor;
+  this.spawnFillAlpha = 0.0; //how solid/visible the fill
+
+
   //same, but included input for particle direction
   // use 0 for no direction
   this.death = function(direction) {
     //increment death counter
     numberOfDeaths++;
-    
+
     //creating particles at current position
     let seg = 5;
     for (let a = 0; a < seg; a++) {
@@ -428,10 +434,17 @@ function Player(x, y, w, h) {
 
 
     this.isDead = true; //setting player to dead
-    
+
   }
 
   this.draw = function() {
+
+    //create spawnpoint outline
+    stroke(this.spawnStrokeColor);
+    strokeWeight(this.spawnStrokeWeight);
+    fill(this.spawnFillColor);
+    rect(this.spawnPosition.x, this.spawnPosition.y, this.getWidth(), this.getWidth());
+
     //only draw if alive
     if (!this.isDead) {
       fill(this.fillColor);
@@ -458,8 +471,18 @@ function Player(x, y, w, h) {
       if (this.timeDead >= this.maxDeadTime) {
         this.isDead = false;
         this.timeDead = 0.0;
+
+        //reseting respawn indicator
+        this.spawnFillAlpha = 0.0;
+        this.spawnFillColor.setAlpha(this.spawnFillAlpha);
+      } else {
+        //updating respawn indicator fill
+        this.spawnFillAlpha = lerp(this.spawnFillAlpha, 255, this.maxDeadTime/10);
+        this.spawnFillColor.setAlpha(this.spawnFillAlpha);
       }
     } else {
+
+
       this.playerMovement();
 
       //adding gravity
@@ -494,15 +517,13 @@ function Player(x, y, w, h) {
       //if player is below screen, kill player
       if (this.position.y > height) {
         this.death(1); //particles up
+      } else if (this.position.x > width) //right side
+      {
+        this.death(4); //particles left
+      } else if (this.position.x + this.getWidth() < 0.0) //left side
+      {
+        this.death(2); //particles right
       }
-      else if (this.position.x > width) //right side
-        {
-          this.death(4); //particles left
-        }
-      else if (this.position.x + this.getWidth() < 0.0) //left side
-        {
-          this.death(2); //particles right
-        }
       //for now, don't kill off top
     }
 
@@ -667,7 +688,7 @@ function Player(x, y, w, h) {
         if (allBlocks[i].getBlockType() == BlockType.kill) {
           //spawn particles and do death-related changes
           this.death(0); //0 for no direction
-          
+
           //skip rest of collision
           break;
         }
@@ -684,13 +705,13 @@ function Player(x, y, w, h) {
           //set this blocks spawn coordinate to  the checkpoint's
           //Also take into account spawning in the middle of the grid space
           //adjusting x and y based on w being smaller
-          let x = allBlocks[i].getX() + (allBlocks[i].getWidth() - this.getWidth())/2;
-          let y = allBlocks[i].getY() + (allBlocks[i].getWidth() - this.getWidth())/2;
+          let x = allBlocks[i].getX() + (allBlocks[i].getWidth() - this.getWidth()) / 2;
+          let y = allBlocks[i].getY() + (allBlocks[i].getWidth() - this.getWidth()) / 2;
           this.spawnPosition = createVector(x, y);
-          
+
           //set to destroy the checkpoint block
           allBlocks[i].destroy();
-          
+
           //remove this block from Blocks[]
           // TODO, implement this in a better way outside of Player class
           allBlocks.splice(i, 1);
@@ -710,7 +731,9 @@ function Player(x, y, w, h) {
           case 1: //TOP
             pos.y -= colData[1]; //adjust player up to top of block
             //halt veritcal velocity if moving towards top
-            if (this.velocity.y > 0) { this.velocity.y = 0.0; }
+            if (this.velocity.y > 0) {
+              this.velocity.y = 0.0;
+            }
             this.isGrounded = true; //since on top, on ground
             //if bounce block, apply bounce velocity
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
@@ -721,7 +744,9 @@ function Player(x, y, w, h) {
           case 2: //RIGHT
             pos.x += colData[1]; //adjust player over to right of block
             //halt horizontal velocity if moving towards right side
-            if (this.velocity.x < 0) { this.velocity.x = 0.0; }
+            if (this.velocity.x < 0) {
+              this.velocity.x = 0.0;
+            }
             this.isOnRightWall = true; //since on right wall
             //if bounce block, apply bounce velocity
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
@@ -732,7 +757,9 @@ function Player(x, y, w, h) {
           case 3: //BOTTOM
             pos.y += colData[1]; //adjust player down to bottom of block
             //halt veritcal velocity if moving towards bottom
-            if (this.velocity.y < 0) { this.velocity.y = 0.0; }
+            if (this.velocity.y < 0) {
+              this.velocity.y = 0.0;
+            }
             //if bounce block, apply bounce velocity
             if (allBlocks[i].getBlockType() == BlockType.bounce) {
               this.velocity.y = (allBlocks[i].bounceSpeed * this.width / scaler);
@@ -741,7 +768,9 @@ function Player(x, y, w, h) {
           case 4: //LEFT
             pos.x -= colData[1]; //adjust player over to left of block
             //halt horizontal velocity if moving towards left side
-            if (this.velocity.x > 0) { this.velocity.x = 0.0; }
+            if (this.velocity.x > 0) {
+              this.velocity.x = 0.0;
+            }
             this.velocity.x = 0.0; //halt horizontal velocity
             this.isOnLeftWall = true; //since on left wall
             //if bounce block, apply bounce velocity
@@ -973,67 +1002,79 @@ function DisplayText(x, y, w, h, s) {
 //Inherits: DisplayText
 function Timer(x, y, w, h) {
   DisplayText.call(this, x, y, w, h, "00:00:000");
-  
+
   this.milliseconds = 0; //number of milliseconds that have passed
-  
+
   //this.displayText = s; //the text displayed
-  
+
   this.isCounting = false; //whether timer will continue to count or not
-  
+
   this.update = function() {
     //add to timer if counting
-    if (this.isCounting)
-      {
-    this.milliseconds += capDeltaTime; //deltaTime is in milliseconds, which works well for this
-      }    
-    
+    if (this.isCounting) {
+      this.milliseconds += capDeltaTime; //deltaTime is in milliseconds, which works well for this
+    }
+
     //building time text
     //get minutes, seconds, and milliseconds
     let min = this.getMinutes();
     let sec = this.getSeconds();
     let mil = this.getMilliseconds();
-    
+
     //construct strings and add 0s if needed
     let strMin;
     let strSec;
     let strMil;
-    
-    if (min < 10) { strMin = "0" + str(min); }
-    else { strMin = str(min); }
-    
-    if (sec < 10) { strSec = "0" + str(sec); }
-    else { strSec = str(sec); }
-    
-    if (mil < 10) { strMil = "00" + str(mil); }
-    else if (mil < 100) { strMil = "0" + str(mil); }
-    else { strMil = str(mil); }
-    
+
+    if (min < 10) {
+      strMin = "0" + str(min);
+    } else {
+      strMin = str(min);
+    }
+
+    if (sec < 10) {
+      strSec = "0" + str(sec);
+    } else {
+      strSec = str(sec);
+    }
+
+    if (mil < 10) {
+      strMil = "00" + str(mil);
+    } else if (mil < 100) {
+      strMil = "0" + str(mil);
+    } else {
+      strMil = str(mil);
+    }
+
     this.displayText = strMin + ":" + strSec + ":" + strMil;
   }
-  
+
   this.getMinutes = function() {
     //60000 milliseconds in a minute
-    return int(this.milliseconds/60000);
+    return int(this.milliseconds / 60000);
   }
-  
+
   this.getSeconds = function() {
-        //1000 milliseconds in a second
+    //1000 milliseconds in a second
     // modulo 60 since we want seconds between 0-59 (minutes)
-    return int((this.milliseconds/1000) % 60);
+    return int((this.milliseconds / 1000) % 60);
   }
-  
+
   this.getMilliseconds = function() {
     // modulo 1000 to get milliseconds absent of seconds and minutes
     return int(this.milliseconds % 1000);
   }
-  
-  this.reset = function()
-  {
+
+  this.reset = function() {
     this.milliseconds = 0;
     this.isCounting = false;
   }
-  
-  this.start = function() {this.isCounting = true;}
-  this.stop = function() {this.isCounting = false;}
-  
+
+  this.start = function() {
+    this.isCounting = true;
+  }
+  this.stop = function() {
+    this.isCounting = false;
+  }
+
 }
