@@ -1,16 +1,19 @@
 /*
-  Platformer 1.5
+  Platformer 1.6
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-5-2021
   
   Changes Made:
-  - edited testing environment to create a wall to test player wall sliding
-  - in player, added variables for wallSliding gravity and maxSpeed. This allows wall sliding to be slower than normal falling. If player is on a wal, this new gravity and speed cap are applied
-  - booleans for player being on a wall now update properly
-  - Corner threshold for checking player collision now accoutns for the player sliding down a wall. This will help prevent player from getting "stuck" on walls when sliding down and potentially landing on the ground between two blocks for a single frame
-  -
-
+  - Added one extra block in testing environment to test jumping on the ground when adjacent to a wall at the same time
+  - Created new collision function in GameObject: collidesWithAdjacent(). This will return true if the two GameObjects are adjacent to each other, unlike the other function which will return false. This is very useful for wall sliding
+  - reduced player's air movement speed to prevent explioting wall jumps off the same wall
+  - added new player variables for wall jumping, speeds in the X and Y direction
+  - new boolean variables tracking whether the player was on the ground or a wall on the previous frame
+  - the player can now wall jump when in the air and on a wall
+    - When the player is both on the ground and on the wall, normal ground jumping will take priority
+  - player's wall sliding speed cap now uses the boolean variables for the previous frames
+  - player now uses adjacency collision check for block collisions
 */
 
 /*
@@ -76,7 +79,7 @@ function buildLevel1()
   let x = 50 * progScale;
   let y = sketchHeight -100*progScale;
   let w = 50 * progScale;
-  for (let i = 0; i < 16; i++)
+  for (let i = 0; i < 17; i++)
     {
       let b = new Block(x,y,w,w);
       allObjects.push(b);

@@ -31,6 +31,21 @@ function GameObject(x, y, w, h) {
     }
   }
   
+  //Object collision with another GameObject including adjacency
+  this.collidesWithAdjacent = function(other)
+  {
+    if (this.getX() <= other.getX() + other.getWidth() && 
+       this.getX() + this.getWidth() >= other.getX() &&
+       this.getY() <= other.getY() + other.getHeight() &&
+       this.getY() + this.getHeight() >= other.getY())
+      {
+        return true; //there is a collision
+      }
+    else {
+      return false; //there is no collision
+    }
+  }
+  
   //gives min and max values
   this.getMinX = function() {return this.getX();}
   this.getMaxX = function() {return this.getX() + this.getWidth();}
@@ -143,20 +158,26 @@ function Player(x,y,w,h)
   this.velocity = createVector(0.1,0.1);
   this.forces = createVector(0.0,0.0);
   this.gravity = 0.01;
-  this.maxFallSpeed = 0.40;
+  this.maxFallSpeed = 0.50;
   this.gravityWallSlide = 0.0033;
   this.maxWallSlideSpeed = 0.20;
   
   this.movementSpeed = 0.01;
-  this.airMovementSpeed = 0.025;
+  this.airMovementSpeed = 0.005;
   this.maxMovementSpeed = 0.25
   this.movementTraction = 0.005;
   this.cornerThreshold = 2.0; //provides a leniency for whether the player will hit the side or top/bottom of a block. This will allow the player to run smoothly over blocks that are next to each other and avoid getting stopped.
   
   this.jumpSpeed = 0.35;
+  this.wallJumpSpeedX = 1.0;
+  this.wallJumpSpeedY = 0.35;
   this.isGrounded = true;
   this.isOnRightWall = false;
   this.isOnLeftWall = false;
+  //previous frame
+    this.prevIsGrounded = false;
+    this.prevIsOnRightWall = false;
+    this.prevIsOnLeftWall = false;
   
   this.update = function() { //TODO: Make movement work
     
@@ -185,6 +206,11 @@ function Player(x,y,w,h)
     this.testBlockCollision(pos); //testing if hit something and position/velocity needs adjustment
     
     this.setPosition(pos); //applying new position to player
+    
+    //updating variables
+    this.prevIsGrounded = this.isGrounded;
+    this.prevIsOnRightWall = this.isOnRightWall;
+    this.prevIsOnLeftWall = this.isOnLeftWall;
   }
   
   this.playerMovement = function()
@@ -231,16 +257,34 @@ function Player(x,y,w,h)
       this.velocity.y -= this.jumpSpeed;
       this.isGrounded = false;
     }
+
+    //wall jumping
+    //Right Wall Jump, pushes to left
+    //Note that a wall jump and normal jump cannot occur at the same time
+    else if (!this.isGrounded && this.prevIsOnRightWall && spaceWasPressed)
+      {
+        this.velocity.x += this.wallJumpSpeedX; //left speed
+        this.velocity.y = -this.wallJumpSpeedY;
+      }
+    //Left Wall jump, pushes to the right
+    else if (!this.isGrounded && this.prevIsOnLeftWall && spaceWasPressed)
+      {
+        this.velocity.x -= this.wallJumpSpeedX; //right speed
+        this.velocity.y = -this.wallJumpSpeedY;
+      }
     
     //falling speed, cap if too fast
     //cap is different if sliding down a wall
-    if (this.velocity.y > this.maxFallSpeed && !this.isOnRightWall && !this.isOnLeftWall)
-      {
-        this.velocity.y = this.maxFallSpeed;
-      }
-    else if (this.velocity.y > this.maxWallSlideSpeed)
+    // print("on right wall: " + this.prevIsOnRightWall);
+    // print("on left wall: " + this.prevIsOnLeftWall);
+    // print("Velocity" + this.velocity.y + " | mfall speed: " + this.maxFallSpeed);
+    if (this.velocity.y > this.maxWallSlideSpeed && (this.prevIsOnRightWall || this.prevIsOnLeftWall))
       {
         this.velocity.y = this.maxWallSlideSpeed;
+      }
+    else if (this.velocity.y > this.maxFallSpeed)
+      {
+        this.velocity.y = this.maxFallSpeed;
       }
   }
   
@@ -264,7 +308,7 @@ function Player(x,y,w,h)
     
     for (let i = 0; i < allBlocks.length; i++)
       {
-        if (this.collidesWith(allBlocks[i]))
+        if (this.collidesWithAdjacent(allBlocks[i]))
           {
             //there's a collision, test which side and the depth
             colData = this.getCollisionData(allBlocks[i]);
@@ -324,35 +368,41 @@ function Player(x,y,w,h)
     
     //Applying corner Threshhold
     //removes some from left and right to make it less likely to trigger when hitting corners
-    //only apply if player is not on wall
+    //only apply if player is not on wall the previous frame
     let dRightMod = dRight;
+    let dTopMod = dTop;
+    let dBottomMod = dBottom;
     let dLeftMod = dLeft;
-    if (!this.isOnRightWall && !this.isOnLeftWall)
+    
+    if (!this.prevIsOnRightWall && !this.prevIsOnLeftWall)
       {
         dRightMod = dRight + this.cornerThreshold;
         dLeftMod = dLeft + this.cornerThreshold;
+        //print("not on wall");
       }
     else
       {
-        print("dsuhisdufh");
+        dTopMod = dTop + this.cornerThreshold;
+        dBottomMod = dBottom + this.cornerThreshold;
+        //print("On Wall");
       }
     
     //TODO: MAKE IT SO THAT WHEN SLIDING DOWN WALL, THRESHOLD ISN'T APPLIED
             
     //see which difference is the smallest
-    if (dTop <= dRightMod && dTop <= dBottom && dTop <= dLeftMod)
+    if (dTopMod <= dRightMod && dTopMod <= dBottomMod && dTopMod <= dLeftMod)
       {
         side = 1;
         difference = dTop;
         //print("TOP");
       }
-    else if (dRightMod <= dTop && dRightMod <= dBottom && dRightMod <= dLeftMod)
+    else if (dRightMod <= dTopMod && dRightMod <= dBottomMod && dRightMod <= dLeftMod)
       {
         side = 2;
         difference = dRight;
         //print("RIGHT");
       }
-    else if (dBottom <= dTop && dBottom <= dRightMod && dBottom <= dLeftMod)
+    else if (dBottomMod <= dTopMod && dBottomMod <= dRightMod && dBottomMod <= dLeftMod)
       {
         side = 3;
         difference = dBottom;
