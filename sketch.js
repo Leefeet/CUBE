@@ -1,28 +1,27 @@
 /*
-  Platformer 1.15
+  Platformer 1.16
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 2-11-2021
   
   Changes Made:
-  - New buffer added to give blocks space from the edges of the sketch window
-    - This prevents blocks on the edge of the screen from merging with the page background. It also ensures a border around all sides of the level
-  - loadNextLevel() returns false if level isn't available (i.e. no more levels)
-  - uiHeight variable created to give space for a UI at top of screen. This pushes down the available space to render a level
-  - Player's maxMovementSpeed is now movement dependent, so the player can be moved faster by the environment
-  - rewrote movement code so player can move faster than maxMovementSpeed but not by pressing arrow keys.
-    - This allows BounceBlocks to propel the player on the X-axis faster than they normally could with the arrow keys
-  - Slightly changes the color of Bounce Blocks to make them more vibrant
-  - Code tidied by moving open and close brackets. Done unintentionally with a Tidy Code shortcut, but it makes all scopes more consistent visually. May undo for setters and getters in the future
+  - Added mouseWasClickedLeft variable. Updates to true on frame when left click was released
+  - Created new Button Object
+    - Rectangular button with text
+    - Detects if mouse is hovering over itself
+    - Button will change color if mouse is hovering
+    - Clicking button will activate its onClick() function
+  - Main menu prototype leads to levels. Built with buildMainMenu()
+  - When there's no new level, returns to main menu
   
   Ideas:
   - When the level is built, have rows and groups of blocks be "merged" to become one larger rectangle. This will improve performance as less blocks would need to be compared.
   - Add mroe block types, like:
     - Blue bounce blocks, bounce the player in a direction based on collision side
   - Upgrades for the player, like
-    - Midair Dash
+    - Midair Dash (omni-directional)
     - Double Jump
-    These upgrades ar etemporary per-level and change the color of the player to indicate they are in affect and are usable (change color when used)
+    These upgrades are temporary per-level and change the color of the player to indicate they are in affect and are usable (change color when used)
   
 */
 
@@ -66,8 +65,9 @@ function setup() {
   
   //buildLevel(0);
   
-  currentLevel = 8;
-  loadNextLevel();
+  currentLevel = 0;
+  //loadNextLevel();
+  buildMainMenu();
 }
 
 function draw() {
@@ -86,9 +86,14 @@ function draw() {
   if (isLevelComplete)
     {
       isLevelComplete = false;
-      loadNextLevel();
+      anotherLevel = loadNextLevel();
+      if (!anotherLevel)
+        {
+          //main menu again
+          buildMainMenu();
+        }
     }
-  
+    
   //print("blocks: " + allBlocks.length);
   //updating GameObjects
   for (let i = 0; i < allObjects.length; i++)
@@ -103,6 +108,47 @@ function draw() {
   
   //resetting Key Pressed Booleans
   spaceWasPressed = false;
+  
+  //ressetting mouseWasClickedLeft
+  mouseWasClickedLeft = false;
+}
+
+function mouseClicked() {
+  if (mouseButton === LEFT) {
+    mouseWasClickedLeft = true;
+  }
+}
+
+//draws the main menu to the screen
+function buildMainMenu()
+{
+  //creating Title
+  let x = width/2;
+  let y = 150 * progScale;
+  let blank = function() {return;}
+  let title = new Button(x, y, 0, 0, blank);
+  title.displayText = "Cube";
+  title.textSize = 200 * progScale;
+  allObjects.push(title);
+  
+  //tutorial button
+  let w = 600 * progScale;
+  let h = 125 * progScale;
+  x = (width/2) - w/2;
+  y = 300 * progScale;
+  let startTutorial = function() {
+    clearGameObjects(); //clearing menu
+    loadNextLevel(); //starting level
+  };
+  let btnTutorial = new Button(x, y, w, h, startTutorial);
+  btnTutorial.displayText = "Play Tutorial";
+  btnTutorial.strokeWeight = 0;
+  btnTutorial.fillColor = color(255, 255, 0);
+  btnTutorial.hoverColor = color(0, 255, 0);
+  btnTutorial.textSize = 100 * progScale;
+  btnTutorial.textColor = color(0, 0, 0);
+  allObjects.push(btnTutorial);
+  
 }
 
 function buildLevelFromFile(fileName)
@@ -110,12 +156,17 @@ function buildLevelFromFile(fileName)
   
 }
 
+function clearGameObjects()
+{
+  allBlocks.splice(0, allBlocks.length);
+  allObjects.splice(0, allObjects.length); //remove all elements starting at the first index for the whole length
+}
+
 //function called when level is complete, will load next level
 function loadNextLevel()
 {
   //first, delete everything
-  allBlocks.splice(0, allBlocks.length);
-  allObjects.splice(0, allObjects.length); //remove all elements starting at the first index for the whole length
+  clearGameObjects();
   
   //increment level
   currentLevel++;

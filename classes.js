@@ -587,3 +587,74 @@ function Player(x, y, w, h) {
   }
 
 }
+
+function Button(x, y, w, h, onClick) {
+  GameObject.call(this, x, y, w, h);
+  this.fillColor = color(255, 255, 255); //The fill color of the button
+  this.hoverColor = color(255, 255, 0); //the fill color when mouse hovers
+  this.strokeColor = color(0, 0, 0); //the button outline color
+  this.strokeWeight = 1 * progScale; //The width of the button border. Set to <= 0 to have no stroke
+  
+  this.onClick = onClick; //What the button does when clicked
+  
+  this.displayText = ""; //the text displayed within the button
+  this.textSize = 10 * progScale; //size of font
+  this.textColor = color(255, 255, 255);
+  
+  this.isHovering = false; //whether mouse is hovering over
+
+  this.update = function()
+  {
+    if (this.isMouseHovering())
+      {
+        this.isHovering = true;
+        //if click, activate
+        if (mouseWasClickedLeft)
+          {
+            this.onClick();
+          }
+      }
+    else
+      {
+        this.isHovering = false;
+      }
+  } 
+  
+  
+  this.draw = function()
+  {
+    //fill color changes if hovering
+    if (this.isHovering) {
+      fill(this.hoverColor);
+    } else {
+      fill(this.fillColor);
+    }
+    
+    if (this.strokeWeight <= 0) {
+      noStroke();
+    } else {
+      stroke(this.strokeColor);
+      strokeWeight(this.strokeWeight);
+    }
+
+    rect(this.getX(), this.getY(), this.getWidth(), this.getHeight());
+        
+    fill(this.textColor);
+    noStroke();
+    textAlign(CENTER, CENTER);
+    textSize(this.textSize);
+    var textX = this.getX() + this.getWidth() / 2;
+    var textY = this.getY() + this.getHeight() / 2;
+    text(this.displayText, textX, textY);
+
+  }
+  
+  this.isMouseHovering = function() {
+    if (mouseX >= this.getX() && mouseX <= this.getX() + this.getWidth() &&
+      mouseY >= this.getY() && mouseY <= this.getY() + this.getHeight()) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+}
