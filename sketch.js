@@ -1,33 +1,22 @@
 /*
-  Platformer 1.12
+  Platformer 1.13
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 2-9-2021
+  Edited: 2-10-2021
   
   Changes Made:
-  - Implemented "end" blocks, which advance to the next level if touched
-    - When an 'E' is found, it places an End Block
-  - New function and logic to End a level and start another one
-    - A new level was created (level_1.txt) and loaded into levelData[] to illustrate this effect
-    - New global variables for the currentLevel number and a boolean for whether the level is completed. This indicates when the next level needs to be loaded
-    - loadNextLevel() function clears allObjects[] and allBlocks[], increments the level count, and loads the next level if it exists
-  - Changed player color to Orange, rather than yellow
-  - Level will now be "centered on screen", whether it is centered tall or wide
-  - Constant variables for movement keys were created to make 'if' statements more readable
-  - the 'A' and 'D' keys can now be used instead of the Left and Right Arrow keys (either can be used based on Player preference)
-  - The visual style has been dramatically changed
-    - All blocks, including the player, no longer have borders. This gives a very smooth, blocky look as adjacent blocks blend together
-    - The background was made much darker (almost pure black) to contrast the mostly white blocks
-  - Player Movement has been adjusted
-    - Jump speed has been slightly increased
-    - Traction has been doubled
-    - When on the ground and moving in a direction, then moving in the opposite direction will also apply traction to make the player stop much quicker
-    - If player collides with End Block, isLevelComplete boolean will be set to true
-  - A new "ideas" comment section has been created. This includes things I could implement, but aren't required
-  
+  - The program's first Level begins at level 1 instead of 0 (skips the test level)
+  - Modified level_1.txt slightly and with End Blocks to test what occurs when a level is completed and there's no next level
+  - Notated more ideas
   
   Ideas:
   - When the level is built, have rows and groups of blocks be "merged" to become one larger rectangle. This will improve performance as less blocks would need to be compared.
+  - Add mroe block types, like:
+    - Blue bounce blocks, bounce the player in a direction based on collision side
+  - Upgrades for the player, like
+    - Midair Dash
+    - Double Jump
+    These upgrades ar etemporary per-level and change the color of the player to indicate they are in affect and are usable (change color when used)
   
 */
 
@@ -66,7 +55,9 @@ function setup() {
         
   //buildLevel1();
   
-  buildLevel(0);
+  //buildLevel(0);
+  
+  loadNextLevel();
 }
 
 function draw() {
@@ -151,8 +142,8 @@ function buildLevel(levelNum)
   let testHeight = height/rows;
   
   let blockWidth;
-  let startX = 0;
-  let startY = 0;
+  let startX = 0.0;
+  let startY = 0.0;
   
   if (testWidth < testHeight) {
     blockWidth = testWidth;
@@ -183,6 +174,7 @@ function buildLevel(levelNum)
             allBlocks.push(b);
             
             b.setStrokeWeight(0);
+            b.setStrokeColor(color(255, 255, 255)); //white stroke
           }
         else if (c == 'P') // player
           {
