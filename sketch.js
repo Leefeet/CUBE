@@ -1,11 +1,21 @@
 /*
-  Platformer 1.56
+  Platformer 1.58
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 3-11-2021
+  Edited: 3-12-2021
   
   Changes Made:
-  - Added idea for a dynamic scaling for the sketch size
+  - Added <style> to index.html that adjusts a few things about the <canvas> tag that the game uses
+    - The scroll bars that may appear on the right and bottom of the game will never appear
+    - The Canvas window will always float in the middle, whether horizontally or vertically
+  - Added variables ratioW and ratioH for the desired aspect ratio, which is 4:3
+  - progScale, sketchWidth, and sketchHeight are no longer constant variables since they are changed. They will never be changed outside of setup() though
+    - added constant variables baseSketchWidth and baseSketchHeight to represent the original pixel size the game was designed for. This allows progScale to be easily calculated
+  - setup() now calculates sketchWidth, sketchHeight, and progScale
+    - The canvas's given size (like in an iframe) is obtained and setup() determines how best a 4:3 game can fit within this space
+  - The game now scales itself to fit within a given space provided by the HTML
+  - These changes were tested in a test sketch, "windowWidth, windowHeight Fit aspect Ratio", which is found at the link: https://editor.p5js.org/Leefeet/sketches/kiB8h2cVt
+  
   
   
   Ideas:
@@ -49,6 +59,9 @@
     
     information on saving data:
 https://stackoverflow.com/questions/58490119/save-read-cookies-in-js
+
+    information on removing scroll-bars on side: https://discourse.processing.org/t/solved-when-maximized-the-background-is-slightly-too-large/6602
+    Centering game within Canvas/iframe: https://stackoverflow.com/questions/5127937/how-to-center-canvas-in-html5
     
     Problems to Fix:
     - Player sometimes gets stuck on the corner between two blocks. This is uncommon but affects gameplay. This could be fixed with an update to the collision detection and/or how blocks are placed.
@@ -146,7 +159,24 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(sketchWidth, sketchHeight);
+  
+  //determining canvas width and height, fitting within the aspect ratio we want
+  //figure out whether the width or height fills the screen
+  let testWidth = sketchWidth / ratioW; //
+  let testHeight = sketchHeight / ratioH; //
+  let startW = sketchWidth;
+  let startH = sketchHeight;
+  
+  if (testWidth > testHeight) { //actualH stays
+    sketchWidth = sketchHeight * (ratioW/ratioH);
+    progScale = sketchWidth/baseSketchWidth;
+  } else { //actualW stays
+    sketchHeight = sketchWidth * (ratioH/ratioW);
+    progScale = sketchHeight/baseSketchHeight;
+  }
+  //progScale = 1/2;
+  print(progScale); // this value should be roughly 1/2 in the P5.js editor
+  createCanvas(sketchWidth, sketchHeight); //creating canvas display
 
   frameRate(60);
   smooth();
@@ -164,11 +194,11 @@ function setup() {
   gameTimer = new Timer(0, 0, 0, 0);
   
   //creating gameObjects for main menu
-  //buildMainMenu();
+  buildMainMenu();
 
   //DEBUG, load project starting with specific level. Or load a specific screen
   //buildLevel("number of level - 1", "Level Set");
-  buildLevel(0, easyLevels);
+  //buildLevel(0, easyLevels);
   //buildTutorialScreen();
   //buildPauseMenu();
 }

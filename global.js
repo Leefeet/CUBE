@@ -4,10 +4,15 @@
 */
 
 //Sketch Size
-const progScale = 1/2; //Scales sketch size. Also scales objects the same
 //Expected Aspect Ratio is 4:3
-const sketchWidth = 1280 * progScale; //Width of the sketch Canvas
-const sketchHeight = 960 * progScale; //Height of the sketch Canvas
+let ratioW = 4; //Aspect ratio width
+let ratioH = 3; //Aspect ratio height
+// These variables are set in setup()
+let progScale = null; //Scales sketch size. Also scales objects the same
+let sketchWidth = window.innerWidth; //Width of the sketch Canvas, filling the available screen
+let sketchHeight = window.innerHeight; //Height of the sketch Canvas, filling the available screen
+const baseSketchWidth = 1280; //Width of Canvas the game was designed for
+const baseSketchHeight = 960; //Height of Canvas the game was designed for
 
 let backgroundColor; //the current color of the background
 
