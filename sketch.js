@@ -2,15 +2,14 @@
   Platformer 1.56
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 3-8-2021
+  Edited: 3-11-2021
   
   Changes Made:
-  - Added keyPressed(), keyReleased(), and keyTyped() functions that return "false" to prevent default behavior from the web browser, such as scrolling with the space bar
-    - Scrolling with the arrow keys still works though. Need to fix this
-  - Added some plain JavaScript to prevent arrow keys from scrolling the web page
+  - Added idea for a dynamic scaling for the sketch size
   
   
   Ideas:
+  - Allow the game to scale to fit in a specific space. As-in, if I'm loading this sketch into an iframe, have the game automatically adjust width, height, and progScale to best fir the iframe. If this is possible, this would be a good addition
   - Create Easy Levels
   - Create Hard Levels
   - in a local session, store the player's best times and least deaths. Show this maybe on a screen before a game starts
@@ -165,11 +164,11 @@ function setup() {
   gameTimer = new Timer(0, 0, 0, 0);
   
   //creating gameObjects for main menu
-  buildMainMenu();
+  //buildMainMenu();
 
   //DEBUG, load project starting with specific level. Or load a specific screen
   //buildLevel("number of level - 1", "Level Set");
-  //buildLevel(11, tutorialLevels);
+  buildLevel(0, easyLevels);
   //buildTutorialScreen();
   //buildPauseMenu();
 }
