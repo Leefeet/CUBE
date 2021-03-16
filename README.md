@@ -7,8 +7,8 @@ Most, if not all, pushes and updates to this repository will not be dated proper
 
 The very first version of this project was created February 4, 2021
 
-P5.JS is a JavaScript library that adds a lot of uesful functions for the canvas HTML element, making drawing to the screen easy (visit <https://p5js.org/> for more info). 
+P5.JS is a JavaScript library that adds a lot of useful functions for the canvas HTML element, making drawing to the screen easy (visit <https://p5js.org/> for more info). 
 
 I like Platformers, so I wanted to create a small project that would allow me to start developing some platformer concepts from a programming standpoint. The game looks simple, but it plays well. I had a great time implementing the game system, such as AABB collision, player movement, and pausing.
 
-The game is still in development whenever I get around to coding more of it. It all depends on whether I have some break time during work. At least 99% of this code was written suring breaks, and I want to keep it that way.
+The game is still in development whenever I get around to coding more of it. It all depends on whether I have some break time during work. At least 99% of this code was written during breaks, and I want to keep it that way.

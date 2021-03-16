@@ -1,25 +1,26 @@
 /*
-  Platformer 1.58
+  Platformer 1.59
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 3-12-2021
+  Edited: 3-13-2021
   
   Changes Made:
-  - Added <style> to index.html that adjusts a few things about the <canvas> tag that the game uses
-    - The scroll bars that may appear on the right and bottom of the game will never appear
-    - The Canvas window will always float in the middle, whether horizontally or vertically
-  - Added variables ratioW and ratioH for the desired aspect ratio, which is 4:3
-  - progScale, sketchWidth, and sketchHeight are no longer constant variables since they are changed. They will never be changed outside of setup() though
-    - added constant variables baseSketchWidth and baseSketchHeight to represent the original pixel size the game was designed for. This allows progScale to be easily calculated
-  - setup() now calculates sketchWidth, sketchHeight, and progScale
-    - The canvas's given size (like in an iframe) is obtained and setup() determines how best a 4:3 game can fit within this space
-  - The game now scales itself to fit within a given space provided by the HTML
-  - These changes were tested in a test sketch, "windowWidth, windowHeight Fit aspect Ratio", which is found at the link: https://editor.p5js.org/Leefeet/sketches/kiB8h2cVt
-  
+  - Implementing a pre-game screen that shows previous records before starting a game
+  - Removed the completedHard boolean since the variables for best times and least deaths can be used to determine if a levelSet was beaten
+    - If the levelSet best time and least death count are set to null, that means the player hasn't beaten them yet
+  - Added a PreGame Screen that appears before starting a game difficulty
+    - This shows the player their previous record time and least number of deaths
+    - This display reuses the pause menu functionality since it works in this context
+      - When pressing the "start Game" button, the game is unpauseGame() to prevent the game from starting in a paused state
+    - if there are no records for time and death count, then the data displayed for those will be blank
+ - Buttons for Easy, Normal, Hard, and Master on Main Menu now load buildPreGameMenu() instead of directly loading the level
+  - The button on the PreGame screen now loads the level
+  - Button for Easy game is temporarily enabled for testing this
+ - Full-working implementation will be added in next update
+      
   
   
   Ideas:
-  - Allow the game to scale to fit in a specific space. As-in, if I'm loading this sketch into an iframe, have the game automatically adjust width, height, and progScale to best fir the iframe. If this is possible, this would be a good addition
   - Create Easy Levels
   - Create Hard Levels
   - in a local session, store the player's best times and least deaths. Show this maybe on a screen before a game starts
@@ -82,8 +83,6 @@ let normalLevels;
 let hardLevels;
 let masterLevels;
 let testLevels;
-
-let completedHard = false;
 
 let currentLevelSet;
 let currentLevelSetName = "Null";
@@ -175,7 +174,7 @@ function setup() {
     progScale = sketchHeight/baseSketchHeight;
   }
   //progScale = 1/2;
-  print(progScale); // this value should be roughly 1/2 in the P5.js editor
+  //print(progScale); // this value should be roughly 1/2 in the P5.js editor
   createCanvas(sketchWidth, sketchHeight); //creating canvas display
 
   frameRate(60);
@@ -201,6 +200,7 @@ function setup() {
   //buildLevel(0, easyLevels);
   //buildTutorialScreen();
   //buildPauseMenu();
+  buildPreGameMenu(easyLevels, "Easy", color(0, 255, 0), bestTimeEasy, bestDeathEasy);
 }
 
 function draw() {
@@ -402,44 +402,34 @@ function buildMainMenu() {
   h = 100 * progScale;
   x = (width / 2) - w - (buffer * progScale);
   y = 450 * progScale;
+  let c = color(0, 255, 0); //green
   let startEasyGame = function() {
-    clearGameObjects(); //clearing menu
-    currentLevelSet = easyLevels; //setting set of levels to load
-    currentLevelSetName = "Easy"; //setting name of level set
-    currentLevel = 1; //for display
-    currentLevelIndex = 0; //for level indexing
-    gameTimer.reset(); //reseting current time on timer
-    buildLevel(currentLevelIndex, currentLevelSet); //starting level
+    buildPreGameMenu(easyLevels, "Easy", c, bestTimeEasy, bestDeathEasy);
   };
   let btnEasy = new Button(x, y, w, h, startEasyGame);
   btnEasy.displayText = "Start Easy Game";
   btnEasy.strokeWeight = 0;
-  btnEasy.fillColor = color(0, 255, 0); //green
+  btnEasy.fillColor = c; //green
   btnEasy.hoverColor = color(0, 255 / 2, 0); //darker
   btnEasy.textSize = fontSize;
   btnEasy.textColor = color(0, 0, 0); //black
   btnEasy.textHoverColor = color(255, 255, 255); //white
   allObjects.push(btnEasy);
-  btnEasy.isDisabled = true; //Disabled button, cannot be used
+  btnEasy.isDisabled = false; //Disabled button, cannot be used
 
   //Normal Game button
   w = 475 * progScale;
   h = 100 * progScale;
   x = (width / 2) + (buffer * progScale);
   y = 450 * progScale;
+  c = color(255, 255, 0); //Yellow
   let startNormalGame = function() {
-    clearGameObjects(); //clearing menu
-    currentLevelSet = normalLevels; //setting set of levels to load
-    currentLevelSetName = "Normal"; //setting name of level set
-    currentLevel = 1; //for display
-    currentLevelIndex = 0; //for level indexing
-    gameTimer.reset(); //reseting current time on timer
-    buildLevel(currentLevelIndex, currentLevelSet); //starting level
+    buildPreGameMenu(normalLevels, "Normal", c, bestTimeNormal, bestDeathNormal);
   };
   let btnNormal = new Button(x, y, w, h, startNormalGame);
   btnNormal.displayText = "Start Normal Game";
   btnNormal.strokeWeight = 0;
-  btnNormal.fillColor = color(255, 255, 0); //Yellow
+  btnNormal.fillColor = c; //Yellow
   btnNormal.hoverColor = color(255 / 2, 255 / 2, 0); //darker
   btnNormal.textSize = fontSize;
   btnNormal.textColor = color(0, 0, 0); //black
@@ -451,19 +441,14 @@ function buildMainMenu() {
   h = 100 * progScale;
   x = (width / 2) - w - (buffer * progScale);
   y = 600 * progScale;
+  c = color(255, 100, 100); //Red
   let startHardGame = function() {
-    clearGameObjects(); //clearing menu
-    currentLevelSet = hardLevels; //setting set of levels to load
-    currentLevelSetName = "Hard"; //setting name of level set
-    currentLevel = 1; //for display
-    currentLevelIndex = 0; //for level indexing
-    gameTimer.reset(); //reseting current time on timer
-    buildLevel(currentLevelIndex, currentLevelSet); //starting level
+    buildPreGameMenu(hardLevels, "Hard", c, bestTimeHard, bestDeathHard);
   };
   let btnHard = new Button(x, y, w, h, startHardGame);
   btnHard.displayText = "Start Hard Game";
   btnHard.strokeWeight = 0;
-  btnHard.fillColor = color(255, 100, 100); //Red
+  btnHard.fillColor = c; //Red
   btnHard.hoverColor = color(255 / 2, 100 / 2, 100 / 2); //darker
   btnHard.textSize = fontSize;
   btnHard.textColor = color(0, 0, 0); //black
@@ -476,19 +461,14 @@ function buildMainMenu() {
   h = 100 * progScale;
   x = (width / 2) + (buffer * progScale);
   y = 600 * progScale;
+  c = color(255, 0, 255); //Purple
   let startMasterGame = function() {
-    clearGameObjects(); //clearing menu
-    currentLevelSet = masterLevels; //setting set of levels to load
-    currentLevelSetName = "Master"; //setting name of level set
-    currentLevel = 1; //for display
-    currentLevelIndex = 0; //for level indexing
-    gameTimer.reset(); //reseting current time on timer
-    buildLevel(currentLevelIndex, currentLevelSet); //starting level
+    buildPreGameMenu(masterLevels, "Master", c, bestTimeMaster, bestDeathMaster);
   };
   let btnMaster = new Button(x, y, w, h, startMasterGame);
   btnMaster.displayText = "Start Master Game";
   btnMaster.strokeWeight = 0;
-  btnMaster.fillColor = color(255, 0, 255); //Purple
+  btnMaster.fillColor = c; //Purple
   btnMaster.hoverColor = color(255 / 2, 0, 255 / 2); //darker
   btnMaster.textSize = fontSize;
   btnMaster.textColor = color(0, 0, 0); //black
@@ -793,6 +773,127 @@ function buildPauseMenu() {
   allPauseObjects.push(btnResumeGame);
 }
 
+//Duisplays level stats before starting. Acts like a pause menu 
+function buildPreGameMenu(levelSet, levelSetName, levelColor, bestTime, bestDeaths) {
+  //setting isPaused to true
+  isPaused = true;
+  
+  //background
+  //using a Block since it will have the same effect
+  let bac = new Block(0, 0, width, height);
+  allPauseObjects.push(bac);
+  bac.setStrokeWeight(0);
+  let a = 255 / 1.15; // some transparency dulls out level
+  let c = color(red(backgroundColor), green(backgroundColor), blue(backgroundColor), a); //same as background color, but with transparency
+  bac.setFillColor(c);
+
+  //Level Set title
+  let x = width / 2;
+  let y = 100 * progScale;
+  let s = levelSetName + " Level Set";
+  let title = new DisplayText(x, y, 0, 0, s);
+  title.textSize = 100 * progScale;
+  title.textColor = levelColor;
+  allPauseObjects.push(title);
+
+  //Records Display
+  x = width / 2;
+  y = 300 * progScale;
+  s = "Records:";
+  let textRecords = new DisplayText(x, y, 0, 0, s);
+  textRecords.textSize = 60 * progScale;
+  allPauseObjects.push(textRecords);
+
+  //determing if records exists
+  if (bestTime != null && bestDeaths != null) { //if a record exists = player has cleared this level set before
+    //pull data from records
+    
+    //Time Data
+    x = width / 2;
+    y = 450 * progScale;
+    let t = new Timer(0, 0, 0, 0);
+    t.milliseconds = bestTime; //bestTime is in milliseconds
+    t.update(); //this will update the display for the timer
+    s = "Time: " + t.displayText;
+    let dataTime = new DisplayText(x, y, 0, 0, s);
+    dataTime.textSize = 50 * progScale;
+    allPauseObjects.push(dataTime);
+
+    //Death Data
+    x = width / 2;
+    y = 525 * progScale;
+    s = "Deaths: " + bestDeaths;
+    dataDeaths = new DisplayText(x, y, 0, 0, s);
+    dataDeaths.textSize = 50 * progScale;
+    allPauseObjects.push(dataDeaths);
+  } else { //no record exists = player hasn't cleared this level set
+    //showing blank data
+    
+    //Time Data
+    x = width / 2;
+    y = 450 * progScale;
+    s = "Time: --:--:---";
+    let dataTime = new DisplayText(x, y, 0, 0, s);
+    dataTime.textSize = 50 * progScale;
+    allPauseObjects.push(dataTime);
+
+    //Death Data
+    x = width / 2;
+    y = 525 * progScale;
+    s = "Deaths: --";
+    dataDeaths = new DisplayText(x, y, 0, 0, s);
+    dataDeaths.textSize = 50 * progScale;
+    allPauseObjects.push(dataDeaths);
+  }
+  
+  //Buttons
+  let buffer = 100 * progScale;
+
+  //Go Back button
+  w = 400 * progScale;
+  h = 75 * progScale;
+  x = (width / 2) - w - buffer;
+  y = 800 * progScale;
+  let goBack = function() {
+    //simply unpause the game
+    unpauseGame();
+  };
+  let btnGoBack = new Button(x, y, w, h, goBack);
+  btnGoBack.displayText = "Go Back";
+  btnGoBack.strokeWeight = 0;
+  btnGoBack.fillColor = color(255, 0, 0); //red
+  btnGoBack.hoverColor = color(255 / 2, 0, 0); //darker
+  btnGoBack.textSize = 45 * progScale;
+  btnGoBack.textColor = color(0, 0, 0);
+  allPauseObjects.push(btnGoBack);
+
+  //Start Game button
+  w = 400 * progScale;
+  h = 75 * progScale;
+  x = (width / 2) + buffer;
+  y = 800 * progScale;
+  let startGame = function() {
+    //unpause the game
+    unpauseGame();
+    //start the game with the given levelSet
+    clearGameObjects(); //clearing menu
+    currentLevelSet = levelSet; //setting set of levels to load
+    currentLevelSetName = levelSetName; //setting name of level set
+    currentLevel = 1; //for display
+    currentLevelIndex = 0; //for level indexing
+    gameTimer.reset(); //reseting current time on timer
+    buildLevel(currentLevelIndex, currentLevelSet); //starting level
+  };
+  let btnStartGame = new Button(x, y, w, h, startGame);
+  btnStartGame.displayText = "Start Game";
+  btnStartGame.strokeWeight = 0;
+  btnStartGame.fillColor = color(0, 255, 0); //green
+  btnStartGame.hoverColor = color(0, 255 / 2, 0); //darker
+  btnStartGame.textSize = 45 * progScale;
+  btnStartGame.textColor = color(0, 0, 0);
+  allPauseObjects.push(btnStartGame);
+}
+
 //draws the main menu to the screen
 function buildResultsScreen() {
   //creating congratulations message
@@ -1074,9 +1175,8 @@ function mergeBlocks() {
   // THis funciton still needs to be implemented if I ever get to it/need it
 }
 
-
-function keyPressed() //activates 1 frame when a keyboard key is pressed down
-{
+//activates 1 frame when a keyboard key is pressed down
+function keyPressed() {
   if (keyCode === 32) {
     spaceWasPressed = true;
   }
