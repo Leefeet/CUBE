@@ -376,7 +376,7 @@ function Particle(x, y, w, h, c, scale, dir) {
   let scaler = scale; //helps adjust movement-variables for different screen sizes
   let direction = dir; //this can determine the general direction this particle will fly
 
-  this.fillColor = color(red(c), green(c), blue(c), alpha(c));
+  this.fillColor = color(color(c.levels));
   this.blockType = BlockType.particle; //defaults to particle
 
   this.velocity = createVector(0, 0); //starts blank, will be set below
@@ -1160,4 +1160,14 @@ function Timer(x, y, w, h) {
     this.isCounting = false;
   }
 
+}
+
+// A group of variables that track a levelSet's best time and least deaths, among other useful variables
+function LevelSet() {
+  let levelSet;
+  let levelSetName;
+  let playerBestTime;
+  let playerBestDeath;
+  let developerBestTime;
+  let developerBestDeath;
 }

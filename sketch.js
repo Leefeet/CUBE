@@ -1,26 +1,24 @@
 /*
-  Platformer 1.59
+  Platformer 1.60
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 3-13-2021
+  Edited: 3-16-2021
   
   Changes Made:
-  - Implementing a pre-game screen that shows previous records before starting a game
-  - Removed the completedHard boolean since the variables for best times and least deaths can be used to determine if a levelSet was beaten
-    - If the levelSet best time and least death count are set to null, that means the player hasn't beaten them yet
-  - Added a PreGame Screen that appears before starting a game difficulty
-    - This shows the player their previous record time and least number of deaths
-    - This display reuses the pause menu functionality since it works in this context
-      - When pressing the "start Game" button, the game is unpauseGame() to prevent the game from starting in a paused state
-    - if there are no records for time and death count, then the data displayed for those will be blank
- - Buttons for Easy, Normal, Hard, and Master on Main Menu now load buildPreGameMenu() instead of directly loading the level
-  - The button on the PreGame screen now loads the level
-  - Button for Easy game is temporarily enabled for testing this
- - Full-working implementation will be added in next update
+  - Fixed issue where color of PreGameScreen text will inherit the last button created
+    - This is because when creating the onClick() functions, the variable c was being rewritten, and thus all previous uses of it would update to the last color it was set to
+    - Solved by creating separate color variables for each button (cEasy, cNormal, cHard, cMaster)
+  - Implemented much more succinct method of deep copying a P5.color object, using the member levels array in the color() function
+    - This replaced everywhere a color was copied
+  - In preload(), variables for player's best times and least deaths are gathered from LocalStorage
+  - Began on showing the player's previous records on the resultsScreen
+  - Created the start of a LevelSet object, still needs to be implemented
+  
       
   
   
   Ideas:
+  - Create a LevelSet object that stores a levelSet's data, the player's best time and least deaths, the level's name, and other variables within a single object. This will allow it to be "passed by reference", which could help make it easier to work with than having multiple other variables.
   - Create Easy Levels
   - Create Hard Levels
   - in a local session, store the player's best times and least deaths. Show this maybe on a screen before a game starts
@@ -64,6 +62,8 @@ https://stackoverflow.com/questions/58490119/save-read-cookies-in-js
     information on removing scroll-bars on side: https://discourse.processing.org/t/solved-when-maximized-the-background-is-slightly-too-large/6602
     Centering game within Canvas/iframe: https://stackoverflow.com/questions/5127937/how-to-center-canvas-in-html5
     
+    How to deep copy a P5.color object: https://discourse.processing.org/t/copying-a-color/12312
+    
     Problems to Fix:
     - Player sometimes gets stuck on the corner between two blocks. This is uncommon but affects gameplay. This could be fixed with an update to the collision detection and/or how blocks are placed.
     - When finishing a level set and returning to the main menu, the game will crash claiming that "allObjects[i] is undefined" in update loops.
@@ -104,7 +104,7 @@ let bestDeathNormal = null;
 let bestDeathHard = null;
 let bestDeathMaster = null;
 
-//runs actions that may be required before anything it setup() or draw()
+//runs actions that may be required before anything in setup() or draw()
 function preload() {
   //establishing level sets as arrays
   tutorialLevels = []; //an array of all the Tutorial Levels
@@ -155,6 +155,19 @@ function preload() {
   //loading fonts
   fontRegular = loadFont('assets/pixelmix.ttf');
   fontBold = loadFont('assets/pixelmix_bold.ttf');
+  
+  //loading records from LocalStorage
+    //If any of these don't exist, they will become "null", which is expected
+  //Best Times
+  bestTimeEasy = getItem('bestTimeEasy');
+  bestTimeNormal = getItem('bestTimeNormal');
+  bestTimeHard = getItem('bestTimeHard');
+  bestTimeMaster = getItem('bestTimeMaster');
+  //least deaths
+  bestDeathEasy = getItem('bestDeathEasy');
+  bestDeathNormal = getItem('bestDeathNormal');
+  bestDeathHard = getItem('bestDeathHard');
+  bestDeathMaster = getItem('bestDeathMaster');
 }
 
 function setup() {
@@ -200,7 +213,7 @@ function setup() {
   //buildLevel(0, easyLevels);
   //buildTutorialScreen();
   //buildPauseMenu();
-  buildPreGameMenu(easyLevels, "Easy", color(0, 255, 0), bestTimeEasy, bestDeathEasy);
+  //buildPreGameMenu(easyLevels, "Easy", color(0, 255, 0), bestTimeEasy, bestDeathEasy);
 }
 
 function draw() {
@@ -402,34 +415,34 @@ function buildMainMenu() {
   h = 100 * progScale;
   x = (width / 2) - w - (buffer * progScale);
   y = 450 * progScale;
-  let c = color(0, 255, 0); //green
+  let cEasy = color(0, 255, 0); //green
   let startEasyGame = function() {
-    buildPreGameMenu(easyLevels, "Easy", c, bestTimeEasy, bestDeathEasy);
+    buildPreGameMenu(easyLevels, "Easy", cEasy, bestTimeEasy, bestDeathEasy);
   };
   let btnEasy = new Button(x, y, w, h, startEasyGame);
   btnEasy.displayText = "Start Easy Game";
   btnEasy.strokeWeight = 0;
-  btnEasy.fillColor = c; //green
+  btnEasy.fillColor = cEasy; //green
   btnEasy.hoverColor = color(0, 255 / 2, 0); //darker
   btnEasy.textSize = fontSize;
   btnEasy.textColor = color(0, 0, 0); //black
   btnEasy.textHoverColor = color(255, 255, 255); //white
   allObjects.push(btnEasy);
-  btnEasy.isDisabled = false; //Disabled button, cannot be used
+  btnEasy.isDisabled = true; //Disabled button, cannot be used
 
   //Normal Game button
   w = 475 * progScale;
   h = 100 * progScale;
   x = (width / 2) + (buffer * progScale);
   y = 450 * progScale;
-  c = color(255, 255, 0); //Yellow
+  cNormal = color(255, 255, 0); //Yellow
   let startNormalGame = function() {
-    buildPreGameMenu(normalLevels, "Normal", c, bestTimeNormal, bestDeathNormal);
+    buildPreGameMenu(normalLevels, "Normal", cNormal, bestTimeNormal, bestDeathNormal);
   };
   let btnNormal = new Button(x, y, w, h, startNormalGame);
   btnNormal.displayText = "Start Normal Game";
   btnNormal.strokeWeight = 0;
-  btnNormal.fillColor = c; //Yellow
+  btnNormal.fillColor = cNormal; //Yellow
   btnNormal.hoverColor = color(255 / 2, 255 / 2, 0); //darker
   btnNormal.textSize = fontSize;
   btnNormal.textColor = color(0, 0, 0); //black
@@ -441,14 +454,14 @@ function buildMainMenu() {
   h = 100 * progScale;
   x = (width / 2) - w - (buffer * progScale);
   y = 600 * progScale;
-  c = color(255, 100, 100); //Red
+  cHard = color(255, 100, 100); //Red
   let startHardGame = function() {
-    buildPreGameMenu(hardLevels, "Hard", c, bestTimeHard, bestDeathHard);
+    buildPreGameMenu(hardLevels, "Hard", cHard, bestTimeHard, bestDeathHard);
   };
   let btnHard = new Button(x, y, w, h, startHardGame);
   btnHard.displayText = "Start Hard Game";
   btnHard.strokeWeight = 0;
-  btnHard.fillColor = c; //Red
+  btnHard.fillColor = cHard; //Red
   btnHard.hoverColor = color(255 / 2, 100 / 2, 100 / 2); //darker
   btnHard.textSize = fontSize;
   btnHard.textColor = color(0, 0, 0); //black
@@ -461,14 +474,14 @@ function buildMainMenu() {
   h = 100 * progScale;
   x = (width / 2) + (buffer * progScale);
   y = 600 * progScale;
-  c = color(255, 0, 255); //Purple
+  cMaster = color(255, 0, 255); //Purple
   let startMasterGame = function() {
-    buildPreGameMenu(masterLevels, "Master", c, bestTimeMaster, bestDeathMaster);
+    buildPreGameMenu(masterLevels, "Master", cMaster, bestTimeMaster, bestDeathMaster);
   };
   let btnMaster = new Button(x, y, w, h, startMasterGame);
   btnMaster.displayText = "Start Master Game";
   btnMaster.strokeWeight = 0;
-  btnMaster.fillColor = c; //Purple
+  btnMaster.fillColor = cMaster; //Purple
   btnMaster.hoverColor = color(255 / 2, 0, 255 / 2); //darker
   btnMaster.textSize = fontSize;
   btnMaster.textColor = color(0, 0, 0); //black
@@ -667,7 +680,8 @@ function buildPauseMenu() {
   allPauseObjects.push(bac);
   bac.setStrokeWeight(0);
   let a = 255 / 1.15; // some transparency dulls out level
-  let c = color(red(backgroundColor), green(backgroundColor), blue(backgroundColor), a); //same as background color, but with transparency
+  let c = color(backgroundColor.levels); //same as background color...
+  c.setAlpha(a); //...but with transparency
   bac.setFillColor(c);
 
   //Pause Title
@@ -784,7 +798,8 @@ function buildPreGameMenu(levelSet, levelSetName, levelColor, bestTime, bestDeat
   allPauseObjects.push(bac);
   bac.setStrokeWeight(0);
   let a = 255 / 1.15; // some transparency dulls out level
-  let c = color(red(backgroundColor), green(backgroundColor), blue(backgroundColor), a); //same as background color, but with transparency
+  let c = color(backgroundColor.levels); //same as background color...
+  c.setAlpha(a); //...but with transparency
   bac.setFillColor(c);
 
   //Level Set title
@@ -944,6 +959,13 @@ function buildResultsScreen() {
   numDeaths.textAlignH = LEFT;
   numDeaths.textSize = 50 * progScale;
   allObjects.push(numDeaths);
+  
+  //Previous Records, STILL NEEDS TO BE IMPLEMENTED!
+  let hasPrevious = false;
+  let prevTime = null;
+  let prevDeath = null;
+  let newTime = false;
+  let newDeath = false;
 
   //Main Menu button
   w = 475 * progScale;
