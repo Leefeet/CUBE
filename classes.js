@@ -1168,8 +1168,16 @@ function LevelSet() {
   this.numLevels = 0;
   this.levelSetName = null; //the name of the level set
   this.playerBestTime = null; //in milliseconds
+  this.playerBestTimeStorageKey = null; //the key used to get the best time from Local Storage
   this.playerBestDeath = null; //least number of deaths for a clear
+  this.playerBestDeathStorageKey = null; //the key used to get the best deaths from Local Storage
   this.developerBestTime = null; //in milliseconds
   this.developerBestDeath = null; 
   this.allowRecords = true; //Whether this LevelSet tracks best times or least deaths
+  
+  //updates the data in LocalStorage for this LevelSet
+  this.updateLocalStorage = function() {
+    storeItem(this.playerBestTimeStorageKey, this.playerBestTime);
+    storeItem(this.playerBestDeathStorageKey, this.playerBestDeath);
+  }
 }

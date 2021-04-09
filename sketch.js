@@ -1,16 +1,22 @@
 /*
-  Platformer 1.63
+  Platformer 1.64
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 3-19-2021
+  Edited: 3-20-2021
   
   Changes Made:
   - Continuing full integration of the LevelSet object
-    - Fixed issue inside LevelSet declaration where member variables were being set as "let v" instead of "this.v", which won't save anything during an object's creation
-  - Adjusted layout of Results Screen to accommodate the display for previous records and developer records
-   - If the player has records, the results screen will display them to the screen
-   - If there are developer records, the results screen will display them to the screen
-  - buildResultsScreen() now takes in a LevelSet as a parameter
+    - LevelSet object is now implemented. Will likely be modified later
+  - Results Screen now displays "New Record" text underneath the record time and deaths if they have been beaten
+  - Results Screen now updates record time and deaths in the LevelSet object if they have been beaten
+    - These updated records will show up on the preGame screen and on the results screen if the LevelSet is beaten again
+  - LevelSet object now stores the bestTime and bestDeaths LocalStorage key names.
+    - This allows each instance of LevelSet to know which key it needs to use to update a record
+    - In preload(), Local Storage keys are now stored into variables so they can also be saved into each LevelSet. LevelSets receive these keys in preload()
+  - LevelSet objects now has a updateLocalStorage() function. This will update Local Storage for both the record time and death count for that LevelSet
+    - Problem is, I want to store times even after a browser session is over. Cookies may help this
+  - Results screen now shows special message if the player's time or death record are better than the developer records
+    - This will show if the plyer just earned a record better than the developer, or if their previous record is better than the developer.
 
   LevelSet() needs to:
   Save records
@@ -26,6 +32,7 @@
   - in a local session, store the player's best times and least deaths. Show this maybe on a screen before a game starts
   - Store and display my best times/deaths on a screen before a game start, as something like "Developer Times"
   - Store player's records/progress. Maybe through password or browser memory (cookies?) if possible
+    - Find a way to store player data outside of a single browser session. Like the records persist regardless of what URL and session is being used
   - Particle effects for specific interactions
     - Wall-Sliding
   - Add some sort of level-clear animation (timer would be temporarily stopped)
@@ -66,6 +73,8 @@ https://stackoverflow.com/questions/58490119/save-read-cookies-in-js
     
     How to deep copy a P5.color object: https://discourse.processing.org/t/copying-a-color/12312
     
+    How to use Cookies: https://www.w3schools.com/js/js_cookies.asp
+    
     Problems to Fix:
     - Player sometimes gets stuck on the corner between two blocks. This is uncommon but affects gameplay. This could be fixed with an update to the collision detection and/or how blocks are placed.
     - When finishing a level set and returning to the main menu, the game will crash claiming that "allObjects[i] is undefined" in update loops.
@@ -95,12 +104,12 @@ let isPaused = false; //whether the game is paused, and thus Update() will be sk
 
 //record variables for developer times and death counts
 //best times (in milliseconds)
-const developerTimeEasy = null;
+const developerTimeEasy = 1111;
 const developerTimeNormal = null;
 const developerTimeHard = null;
 const developerTimeMaster = 222650; // 3 min, 42 sec, 650 milli
 //least deaths
-const developerDeathEasy = null;
+const developerDeathEasy = 1;
 const developerDeathNormal = null;
 const developerDeathHard = null;
 const developerDeathMaster = 127;
@@ -159,16 +168,35 @@ function preload() {
   
   //loading records from LocalStorage
     //If any of these don't exist, they will become "null", which is expected
+  let easyTimeKey = "bestTimeEasy";
+  let easyDeathKey = "bestDeathEasy";
+  let normalTimeKey = "bestTimeNormal";
+  let normalDeathKey = "bestDeathNormal";
+  let hardTimeKey = "bestTimeHard";
+  let hardDeathKey = "bestDeathHard";
+  let masterTimeKey = "bestTimeMaster";
+  let masterDeathKey = "bestDeathMaster";
+  
+  //save keys to LevelSet objects
+  easyLevels.playerBestTimeStorageKey = easyTimeKey;
+  easyLevels.playerBestDeathStorageKey = easyDeathKey;
+  normalLevels.playerBestTimeStorageKey = normalTimeKey;
+  normalLevels.playerBestDeathStorageKey = normalDeathKey;
+  hardLevels.playerBestTimeStorageKey = hardTimeKey;
+  hardLevels.playerBestDeathStorageKey = hardDeathKey;
+  masterLevels.playerBestTimeStorageKey = masterTimeKey;
+  masterLevels.playerBestDeathStorageKey = masterDeathKey;
+  
   //Best Times (in milliseconds)
-  easyLevels.playerBestTime = getItem('bestTimeEasy');
-  normalLevels.playerBestTime = getItem('bestTimeNormal');
-  hardLevels.playerBestTime = getItem('bestTimeHard');
-  masterLevels.playerBestTime = getItem('bestTimeMaster');
+  easyLevels.playerBestTime = getItem(easyTimeKey);
+  normalLevels.playerBestTime = getItem(normalTimeKey);
+  hardLevels.playerBestTime = getItem(hardTimeKey);
+  masterLevels.playerBestTime = getItem(masterTimeKey);
   //least deaths
-  easyLevels.playerBestDeath = getItem('bestDeathEasy');
-  normalLevels.playerBestDeath = getItem('bestDeathNormal');
-  hardLevels.playerBestDeath = getItem('bestDeathHard');
-  masterLevels.playerBestDeath = getItem('bestDeathMaster');
+  easyLevels.playerBestDeath = getItem(easyDeathKey);
+  normalLevels.playerBestDeath = getItem(normalDeathKey);
+  hardLevels.playerBestDeath = getItem(hardDeathKey);
+  masterLevels.playerBestDeath = getItem(masterDeathKey);
   //these level sets don't have/store records
   tutorialLevels.allowRecords = false;
   testLevels.allowRecords = false;
@@ -238,6 +266,14 @@ function setup() {
   //buildTutorialScreen();
   //buildPauseMenu();
   //buildPreGameMenu(easyLevels, "Easy", color(0, 255, 0), bestTimeEasy, bestDeathEasy);
+  
+  
+  gameTimer.milliseconds = 111111;
+  numberOfDeaths = 5;
+  masterLevels.playerBestTime = 111110;
+  masterLevels.playerBestDeath = 4;
+  
+  
   buildResultsScreen(masterLevels);
 }
 
@@ -453,7 +489,7 @@ function buildMainMenu() {
   btnEasy.textColor = color(0, 0, 0); //black
   btnEasy.textHoverColor = color(255, 255, 255); //white
   allObjects.push(btnEasy);
-  btnEasy.isDisabled = true; //Disabled button, cannot be used
+  btnEasy.isDisabled = false; //Disabled button, cannot be used
 
   //Normal Game button
   w = 475 * progScale;
@@ -1081,8 +1117,74 @@ function buildResultsScreen(levelSet) {
       allObjects.push(dataDeaths);
     }
 
-    //Checking if current recrod is better than previous
-    if (gameTimer.milliseconds < )
+    //Checking if current record is better than previous
+    let recordWasSet = false;
+    //if a record is null, then make this a new record
+    // Record Time
+    if (levelSet.playerBestTime == null || gameTimer.milliseconds < levelSet.playerBestTime) { //new record
+      recordWasSet = true;
+      //set the levelSet's time record to this new record
+      levelSet.playerBestTime = gameTimer.milliseconds;
+      
+      //display "new Record" text
+      x = width / 4;
+      y = 690 * progScale;
+      s = "New Record!";
+      recordTimeText = new DisplayText(x, y, 0, 0, s);
+      recordTimeText.textSize = fontSize/1.2 * progScale;
+      recordTimeText.textFont = fontBold;
+      recordTimeText.textColor = color(255, 0, 0); //red
+      allObjects.push(recordTimeText);
+    }
+    // Record Least Deaths
+    if (levelSet.playerBestDeath == null || numberOfDeaths < levelSet.playerBestDeath) { //new record
+      recordWasSet = true;
+      //set the levelSet's death record to this new record
+      levelSet.playerBestDeath = numberOfDeaths;
+      
+      //display "new Record" text
+      x = width / 4;
+      y = 790 * progScale;
+      s = "New Record!";
+      recordDeathText = new DisplayText(x, y, 0, 0, s);
+      recordDeathText.textSize = fontSize/1.2 * progScale;
+      recordDeathText.textFont = fontBold;
+      recordDeathText.textColor = color(255, 0, 0); //red
+      allObjects.push(recordDeathText);
+    }
+    
+    //If current record is better than developer record, show special message
+    // Record Time
+    if (levelSet.playerBestTime < levelSet.developerBestTime) { //beat developer
+      //display "Wow, You Beat It!" text
+      x = (width / 2) + (width / 4);
+      y = 690 * progScale;
+      s = "Wow, You Beat It!";
+      devTimeText = new DisplayText(x, y, 0, 0, s);
+      devTimeText.textSize = fontSize/1.2 * progScale;
+      devTimeText.textFont = fontBold;
+      devTimeText.textColor = color(255, 0, 0); //red
+      allObjects.push(devTimeText);
+    }
+    // Record Least Deaths
+    if (levelSet.playerBestDeath < levelSet.developerBestDeath) { //beat developer
+      //display "Wow, You Beat It!" text
+      x = (width / 2) + (width / 4);
+      y = 790 * progScale;
+      s = "Wow, You Beat It!";
+      devDeathText = new DisplayText(x, y, 0, 0, s);
+      devDeathText.textSize = fontSize/1.2 * progScale;
+      devDeathText.textFont = fontBold;
+      devDeathText.textColor = color(255, 0, 0); //red
+      allObjects.push(devDeathText);
+    }
+    
+    //updating records in Local Storage
+      //Even if only one record was set, this shouldn't affect any other records that stayed the same
+    if (recordWasSet)
+      {
+        levelSet.updateLocalStorage();
+      }
 
   }
 
