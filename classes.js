@@ -1163,11 +1163,13 @@ function Timer(x, y, w, h) {
 }
 
 // A group of variables that track a levelSet's best time and least deaths, among other useful variables
-function LevelSet() {
-  let levelSet;
-  let levelSetName;
-  let playerBestTime;
-  let playerBestDeath;
-  let developerBestTime;
-  let developerBestDeath;
+function LevelSet(data) {
+  let levelData = data; //array for each level, each containing a 2D array of the level's layout
+  let numLevels;
+  let levelSetName; //the name of the level set
+  let playerBestTime; //in milliseconds
+  let playerBestDeath; //least number of deaths for a clear
+  let developerBestTime; //in milliseconds
+  let developerBestDeath; 
+  let allowRecords = true; //Whether this LevelSet tracks best times or least deaths
 }

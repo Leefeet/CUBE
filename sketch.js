@@ -1,23 +1,32 @@
 /*
-  Platformer 1.60
+  Platformer 1.61
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 3-16-2021
+  Edited: 3-17-2021
   
   Changes Made:
-  - Fixed issue where color of PreGameScreen text will inherit the last button created
-    - This is because when creating the onClick() functions, the variable c was being rewritten, and thus all previous uses of it would update to the last color it was set to
-    - Solved by creating separate color variables for each button (cEasy, cNormal, cHard, cMaster)
-  - Implemented much more succinct method of deep copying a P5.color object, using the member levels array in the color() function
-    - This replaced everywhere a color was copied
-  - In preload(), variables for player's best times and least deaths are gathered from LocalStorage
-  - Began on showing the player's previous records on the resultsScreen
-  - Created the start of a LevelSet object, still needs to be implemented
-  
-      
+  - Implemented the LevelSet object
+    - Stores the levelSet data, levelData, each level in the LevelSet and its 2D block layout
+    - Stores number of levels in the LevelSet
+    - Stores the name of the levelSet
+    - Stores player records for time and deaths, as well as developer records
+    - Has toggle, allowRecords, that indicates whether this LevelSet cares about storing and displaying record times and deaths
+  - Variables for bestTime and bestDeath for all difficulties are now stored within a LevelSet object 
+    - They have been replaced with constant "developer" variables that store the developer's best time and least deaths
+  - The arrays for levelSets, including tutorialLevels, easyLevels, normalLevels, hardLevels, masterLevels, and testLevels, are now LevelSet objects
+    - This also allows them to store data on player records
+    - In the future, implementations for specific level features, like new controls (directional jump) or rules (bounce height)
+  - currentLevelSet now stores a LevelSet object rather than an array of level data
+  - currentLevelSetName has been replaced with the levelSetName member variable of the LevelSet object
+    - levelSetNames are set in setup()
+    - Everywhere the referred to levelSetName now called the memeber function in LevelSet object
+  - on the Main Menu and Tutorial Screen, all buttons that start levelSets now pass on the appropriate LevelSet Objects
+  - buildPreGameMenu() now just accepts a LevelSet object and a color
+  - More work needed to fully implement the new LevelSet object. Project not functional until implemented fully
   
   
   Ideas:
+  - LevelSet object could store a levelSetColor that could be used for various things, like buttons or colored text. May not be intuitive, but maybe it could be. Could also help make function parameters simplier that want a LevelSet objects and a color.
   - Create a LevelSet object that stores a levelSet's data, the player's best time and least deaths, the level's name, and other variables within a single object. This will allow it to be "passed by reference", which could help make it easier to work with than having multiple other variables.
   - Create Easy Levels
   - Create Hard Levels
@@ -34,7 +43,7 @@
   - Change collision rules with certain blocks
     - Maybe acitvate Bounc Block when a certain overlap is acheived. Like, the player will bounce on a bounce block, that is inline with the ground, as soon as a single pixel of the player overlaps. This may be left intentionally
   - When the level is built, have rows and groups of blocks be "merged" to become one larger rectangle. This will improve performance as less blocks would need to be compared. It can also prevent poor collision when a player lands between two blocks, or on the corner of a bounce block
-  - Add mroe block types, like:
+  - Add more block types, like:
     - Checkpoint Block. When touched, explodes and becomes the new spawnpoint for the player. Color could be Pink
   - Upgrades for the player, like
     - Midair Dash (omni-directional)
@@ -91,65 +100,72 @@ let gameTimer;
 
 let isPaused = false; //whether the game is paused, and thus Update() will be skipped for some gameObjects
 
-//record variables for player times and death counts
-// records begin as "null" unless set by localStorage or by player
+//record variables for developer times and death counts
 //best times (in milliseconds)
-let bestTimeEasy = null;
-let bestTimeNormal = null;
-let bestTimeHard = null;
-let bestTimeMaster = null;
+const developerTimeEasy = null;
+const developerTimeNormal = null;
+const developerTimeHard = null;
+const developerTimeMaster = null;
 //least deaths
-let bestDeathEasy = null;
-let bestDeathNormal = null;
-let bestDeathHard = null;
-let bestDeathMaster = null;
+const developerDeathEasy = null;
+const developerDeathNormal = null;
+const developerDeathHard = null;
+const developerDeathMaster = null;
 
 //runs actions that may be required before anything in setup() or draw()
 function preload() {
-  //establishing level sets as arrays
-  tutorialLevels = []; //an array of all the Tutorial Levels
-  easyLevels = []; //an array of all the easy Levels
-  normalLevels = []; //an array of all the normal Levels
-  hardLevels = []; //an array of all the hard Levels
-  masterLevels = []; //an array of all the master Levels
-  testLevels = []; //an array of all testing Levels
+  //establishing level sets as LevelSet objects
+  tutorialLevels = new LevelSet(); //contains an array of all the Tutorial Levels
+  easyLevels = new LevelSet(); //contains an array of all the easy Levels
+  normalLevels = new LevelSet(); //contains an array of all the normal Levels
+  hardLevels = new LevelSet(); //contains an array of all the hard Levels
+  masterLevels = new LevelSet(); //contains an array of all the master Levels
+  testLevels = new LevelSet(); //contains an array of all testing Levels
 
+  //initializing arrays (this should be done in the construction of the LevelSet object but isn't working for some reason)
+  tutorialLevels.levelData = [];
+  easyLevels.levelData = [];
+  normalLevels.levelData = [];
+  hardLevels.levelData = [];
+  masterLevels.levelData = [];
+  testLevels.levelData = [];
+  
   //Loading Level Files:
 
   //Tutorial Levels
-  let numLevels = 12; //number of level files to load
-  for (let i = 0; i < numLevels; i++) {
-    tutorialLevels.push(loadStrings('assets/TutorialLevel_' + (i + 1) + '.txt'));
+  tutorialLevels.numLevels = 12; //number of level files to load
+  for (let i = 0; i < tutorialLevels.numLevels; i++) {
+    tutorialLevels.levelData.push(loadStrings('assets/TutorialLevel_' + (i + 1) + '.txt'));
   }
 
   //Easy Levels
-  numLevels = 1; //number of level files to load
-  for (let i = 0; i < numLevels; i++) {
-    easyLevels.push(loadStrings('assets/EasyLevel_' + (i + 1) + '.txt'));
+  easyLevels.numLevels = 1; //number of level files to load
+  for (let i = 0; i < easyLevels.numLevels; i++) {
+    easyLevels.levelData.push(loadStrings('assets/EasyLevel_' + (i + 1) + '.txt'));
   }
 
   //Normal Levels
-  numLevels = 10; //number of level files to load
-  for (let i = 0; i < numLevels; i++) {
-    normalLevels.push(loadStrings('assets/NormalLevel_' + (i + 1) + '.txt'));
+  normalLevels.numLevels = 10; //number of level files to load
+  for (let i = 0; i < normalLevels.numLevels; i++) {
+    normalLevels.levelData.push(loadStrings('assets/NormalLevel_' + (i + 1) + '.txt'));
   }
 
   //Hard Levels
-  numLevels = 1; //number of level files to load
-  for (let i = 0; i < numLevels; i++) {
-    hardLevels.push(loadStrings('assets/HardLevel_' + (i + 1) + '.txt'));
+  hardLevels.numLevels = 1; //number of level files to load
+  for (let i = 0; i < hardLevels.numLevels; i++) {
+    hardLevels.levelData.push(loadStrings('assets/HardLevel_' + (i + 1) + '.txt'));
   }
 
   //Master Levels
-  numLevels = 3; //number of level files to load
-  for (let i = 0; i < numLevels; i++) {
-    masterLevels.push(loadStrings('assets/MasterLevel_' + (i + 1) + '.txt'));
+  masterLevels.numLevels = 3; //number of level files to load
+  for (let i = 0; i < masterLevels.numLevels; i++) {
+    masterLevels.levelData.push(loadStrings('assets/MasterLevel_' + (i + 1) + '.txt'));
   }
 
   //Test Levels
-  numLevels = 5; //number of level files to load
-  for (let i = 0; i < numLevels; i++) {
-    testLevels.push(loadStrings('assets/TestLevel_' + (i + 1) + '.txt'));
+  testLevels.numLevels = 5; //number of level files to load
+  for (let i = 0; i < testLevels.numLevels; i++) {
+    testLevels.levelData.push(loadStrings('assets/TestLevel_' + (i + 1) + '.txt'));
   }
 
   //loading fonts
@@ -158,20 +174,22 @@ function preload() {
   
   //loading records from LocalStorage
     //If any of these don't exist, they will become "null", which is expected
-  //Best Times
-  bestTimeEasy = getItem('bestTimeEasy');
-  bestTimeNormal = getItem('bestTimeNormal');
-  bestTimeHard = getItem('bestTimeHard');
-  bestTimeMaster = getItem('bestTimeMaster');
+  //Best Times (in milliseconds)
+  easyLevels.playerBestTime = getItem('bestTimeEasy');
+  normalLevels.playerBestTime = getItem('bestTimeNormal');
+  hardLevels.playerBestTime = getItem('bestTimeHard');
+  masterLevels.playerBestTime = getItem('bestTimeMaster');
   //least deaths
-  bestDeathEasy = getItem('bestDeathEasy');
-  bestDeathNormal = getItem('bestDeathNormal');
-  bestDeathHard = getItem('bestDeathHard');
-  bestDeathMaster = getItem('bestDeathMaster');
+  easyLevels.playerBestDeath = getItem('bestDeathEasy');
+  normalLevels.playerBestDeath = getItem('bestDeathNormal');
+  hardLevels.playerBestDeath = getItem('bestDeathHard');
+  masterLevels.playerBestDeath = getItem('bestDeathMaster');
+  //these level sets don't have/store records
+  tutorialLevels.allowRecords = false;
+  testLevels.allowRecords = false;
 }
 
 function setup() {
-  
   //determining canvas width and height, fitting within the aspect ratio we want
   //figure out whether the width or height fills the screen
   let testWidth = sketchWidth / ratioW; //
@@ -201,6 +219,27 @@ function setup() {
   allParticles = [];
   allPauseObjects = [];
   backgroundColor = color(50, 50, 50, 255);
+  
+  //setting LevelSet names
+  tutorialLevels.levelSetName = "Tutorial";
+  easyLevels.levelSetName = "Easy";
+  normalLevels.levelSetName = "Normal";
+  hardLevels.levelSetName = "Hard";
+  masterLevels.levelSetName = "Master";
+  testLevels.levelSetName = "Test";
+  
+  //setting developer records for LevelSets
+  //Best Times (in milliseconds)
+  easyLevels.developerBestTime = developerTimeEasy;
+  normalLevels.developerBestTime = developerTimeNormal;
+  hardLevels.developerBestTime = developerTimeHard;
+  masterLevels.developerBestTime = developerTimeMaster;
+  //least deaths
+  easyLevels.developerBestDeath = developerDeathEasy;
+  normalLevels.developerBestDeath = developerDeathNormal;
+  hardLevels.developerBestDeath = developerDeathHard;
+  masterLevels.developerBestDeath = developerDeathMaster;
+  //these level sets don't have/store records
 
   //creating timer for timing levels
   gameTimer = new Timer(0, 0, 0, 0);
@@ -417,7 +456,7 @@ function buildMainMenu() {
   y = 450 * progScale;
   let cEasy = color(0, 255, 0); //green
   let startEasyGame = function() {
-    buildPreGameMenu(easyLevels, "Easy", cEasy, bestTimeEasy, bestDeathEasy);
+    buildPreGameMenu(easyLevels, cEasy);
   };
   let btnEasy = new Button(x, y, w, h, startEasyGame);
   btnEasy.displayText = "Start Easy Game";
@@ -437,7 +476,7 @@ function buildMainMenu() {
   y = 450 * progScale;
   cNormal = color(255, 255, 0); //Yellow
   let startNormalGame = function() {
-    buildPreGameMenu(normalLevels, "Normal", cNormal, bestTimeNormal, bestDeathNormal);
+    buildPreGameMenu(normalLevels, cNormal);
   };
   let btnNormal = new Button(x, y, w, h, startNormalGame);
   btnNormal.displayText = "Start Normal Game";
@@ -456,7 +495,7 @@ function buildMainMenu() {
   y = 600 * progScale;
   cHard = color(255, 100, 100); //Red
   let startHardGame = function() {
-    buildPreGameMenu(hardLevels, "Hard", cHard, bestTimeHard, bestDeathHard);
+    buildPreGameMenu(hardLevels, cHard);
   };
   let btnHard = new Button(x, y, w, h, startHardGame);
   btnHard.displayText = "Start Hard Game";
@@ -476,7 +515,7 @@ function buildMainMenu() {
   y = 600 * progScale;
   cMaster = color(255, 0, 255); //Purple
   let startMasterGame = function() {
-    buildPreGameMenu(masterLevels, "Master", cMaster, bestTimeMaster, bestDeathMaster);
+    buildPreGameMenu(masterLevels, cMaster);
   };
   let btnMaster = new Button(x, y, w, h, startMasterGame);
   btnMaster.displayText = "Start Master Game";
@@ -497,7 +536,6 @@ function buildMainMenu() {
   let startTestLevels = function() {
     clearGameObjects(); //clearing menu
     currentLevelSet = testLevels; //setting set of levels to load
-    currentLevelSetName = "Testing"; //setting name of level set
     currentLevel = 1; //for display
     currentLevelIndex = 0; //for level indexing
     gameTimer.reset(); //reseting current time on timer
@@ -633,7 +671,6 @@ function buildTutorialScreen() {
   let startTutorial = function() {
     clearGameObjects(); //clearing menu
     currentLevelSet = tutorialLevels; //setting set of levels to load
-    currentLevelSetName = "Tutorial"; //setting name of level set
     currentLevel = 1; //for display
     currentLevelIndex = 0; //for level indexing
     numberOfDeaths = 0; //so practice deaths don't count
@@ -695,7 +732,7 @@ function buildPauseMenu() {
   //level information
   x = width / 2;
   y = 300 * progScale;
-  s = "" + currentLevelSetName + " — Level " + currentLevel;
+  s = "" + currentLevelSet.levelSetName + " — Level " + currentLevel;
   let levelInfo = new DisplayText(x, y, 0, 0, s);
   levelInfo.textSize = 60 * progScale;
   allPauseObjects.push(levelInfo);
@@ -787,8 +824,8 @@ function buildPauseMenu() {
   allPauseObjects.push(btnResumeGame);
 }
 
-//Duisplays level stats before starting. Acts like a pause menu 
-function buildPreGameMenu(levelSet, levelSetName, levelColor, bestTime, bestDeaths) {
+//Displays level stats before starting. Acts like a pause menu 
+function buildPreGameMenu(levelSet, levelColor) {
   //setting isPaused to true
   isPaused = true;
   
@@ -805,7 +842,7 @@ function buildPreGameMenu(levelSet, levelSetName, levelColor, bestTime, bestDeat
   //Level Set title
   let x = width / 2;
   let y = 100 * progScale;
-  let s = levelSetName + " Level Set";
+  let s = levelSet.levelSetName + " Level Set";
   let title = new DisplayText(x, y, 0, 0, s);
   title.textSize = 100 * progScale;
   title.textColor = levelColor;
@@ -820,14 +857,14 @@ function buildPreGameMenu(levelSet, levelSetName, levelColor, bestTime, bestDeat
   allPauseObjects.push(textRecords);
 
   //determing if records exists
-  if (bestTime != null && bestDeaths != null) { //if a record exists = player has cleared this level set before
+  if (levelSet.playerBestTime != null && levelSet.playerBestDeath != null) { //if a record exists = player has cleared this level set before
     //pull data from records
     
     //Time Data
     x = width / 2;
     y = 450 * progScale;
     let t = new Timer(0, 0, 0, 0);
-    t.milliseconds = bestTime; //bestTime is in milliseconds
+    t.milliseconds = levelSet.playerBestTime; //bestTime is in milliseconds
     t.update(); //this will update the display for the timer
     s = "Time: " + t.displayText;
     let dataTime = new DisplayText(x, y, 0, 0, s);
@@ -837,7 +874,7 @@ function buildPreGameMenu(levelSet, levelSetName, levelColor, bestTime, bestDeat
     //Death Data
     x = width / 2;
     y = 525 * progScale;
-    s = "Deaths: " + bestDeaths;
+    s = "Deaths: " + levelSet.playerBestDeath;
     dataDeaths = new DisplayText(x, y, 0, 0, s);
     dataDeaths.textSize = 50 * progScale;
     allPauseObjects.push(dataDeaths);
@@ -893,7 +930,6 @@ function buildPreGameMenu(levelSet, levelSetName, levelColor, bestTime, bestDeat
     //start the game with the given levelSet
     clearGameObjects(); //clearing menu
     currentLevelSet = levelSet; //setting set of levels to load
-    currentLevelSetName = levelSetName; //setting name of level set
     currentLevel = 1; //for display
     currentLevelIndex = 0; //for level indexing
     gameTimer.reset(); //reseting current time on timer
@@ -1020,7 +1056,7 @@ function loadNextLevel(levelSet) {
 
 //builds a specific level from a provided data[] array of levels
 function buildLevel(levelIndex, levelSet) {
-  let level = levelSet[levelIndex];
+  let level = levelSet.levelData[levelIndex];
 
   //DEBUG: prints contents of level to console
   //print(level);
@@ -1149,10 +1185,10 @@ function buildLevel(levelIndex, levelSet) {
   mergeBlocks();
 
   //building UI
-  buildLevelUI(levelIndex, uiHeight);
+  buildLevelUI(levelIndex, levelSet, uiHeight);
 }
 
-function buildLevelUI(levelIndex, uiHeight) {
+function buildLevelUI(levelIndex, levelSet, uiHeight) {
   //Pause message
   let x = uiHeight / 7;
   let y = uiHeight / 2;
@@ -1174,7 +1210,7 @@ function buildLevelUI(levelIndex, uiHeight) {
   //Level Set Name
   x = width / 1.9;
   y = uiHeight / 2;
-  s = currentLevelSetName;
+  s = levelSet.levelSetName;
   let setName = new DisplayText(x, y, 0, 0, s);
   setName.textSize = 40 * progScale;
   setName.textAlignH = CENTER;
