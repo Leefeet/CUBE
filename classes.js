@@ -1180,4 +1180,16 @@ function LevelSet() {
     storeItem(this.playerBestTimeStorageKey, this.playerBestTime);
     storeItem(this.playerBestDeathStorageKey, this.playerBestDeath);
   }
+  
+  //gathers data from LocalStorage for this LevelSet
+  this.readLocalStorage = function() {
+    this.playerBestTime = getItem(this.playerBestTimeStorageKey);
+    this.playerBestDeath = getItem(this.playerBestDeathStorageKey);
+  }
+  
+  //removes data from LocalStorage for this LevelSet
+  this.deleteLocalStorage = function() {
+    removeItem(this.playerBestTimeStorageKey);
+    removeItem(this.playerBestDeathStorageKey);
+  }
 }

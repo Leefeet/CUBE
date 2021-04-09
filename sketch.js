@@ -1,21 +1,24 @@
 /*
-  Platformer 1.65
+  Platformer 1.66
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 3-21-2021
+  Edited: 4-3-2021
   
   Changes Made:
-  - 
+  - A note on Local Storage:
+    - As long as same URL/Domain is used to display the game (like through iframes) the player's records should be consistent throughout. Using local Storage as it is now it the best option
+  - LevelSet object now has readLocalStorage() function, which sets the record variables within the LevelSet object.
+    - Updating records from LocalStorage no longer occurs directly in preload()
+    - preload() now directly sets the LocalStorage keys into the LevelSet objects and doesn't save them to variables, since LevelSet() does the rest internally
+  - currentLevelSetName was removed since LevelSet object contains its own name
+  - Added deleteLocalStorage() function to LevelSet object, which deletes any records stored in LocalStorage for that LevelSet
   
   
   Ideas:
   - LevelSet object could store a levelSetColor that could be used for various things, like buttons or colored text. May not be intuitive, but maybe it could be. Could also help make function parameters simplier that want a LevelSet objects and a color.
   - Create Easy Levels
   - Create Hard Levels
-  - in a local session, store the player's best times and least deaths. Show this maybe on a screen before a game starts
   - Store and display my best times/deaths on a screen before a game start, as something like "Developer Times"
-  - Store player's records/progress. Maybe through password or browser memory (cookies?) if possible
-    - Find a way to store player data outside of a single browser session. Like the records persist regardless of what URL and session is being used
   - Particle effects for specific interactions
     - Wall-Sliding
   - Add some sort of level-clear animation (timer would be temporarily stopped)
@@ -81,7 +84,6 @@ let masterLevels;
 let testLevels;
 
 let currentLevelSet;
-let currentLevelSetName = "Null";
 
 let gameTimer;
 
@@ -152,36 +154,23 @@ function preload() {
   fontBold = loadFont('assets/pixelmix_bold.ttf');
   
   //loading records from LocalStorage
+  //saving keys to LevelSet objects
+  easyLevels.playerBestTimeStorageKey = "bestTimeEasy";
+  easyLevels.playerBestDeathStorageKey = "bestDeathEasy";
+  normalLevels.playerBestTimeStorageKey = "bestTimeNormal";
+  normalLevels.playerBestDeathStorageKey = "bestDeathNormal";
+  hardLevels.playerBestTimeStorageKey = "bestTimeHard";
+  hardLevels.playerBestDeathStorageKey = "bestDeathHard";
+  masterLevels.playerBestTimeStorageKey = "bestTimeMaster";
+  masterLevels.playerBestDeathStorageKey = "bestDeathMaster";
+  
+  //loading LocalStorage data (best times and least deaths)
     //If any of these don't exist, they will become "null", which is expected
-  let easyTimeKey = "bestTimeEasy";
-  let easyDeathKey = "bestDeathEasy";
-  let normalTimeKey = "bestTimeNormal";
-  let normalDeathKey = "bestDeathNormal";
-  let hardTimeKey = "bestTimeHard";
-  let hardDeathKey = "bestDeathHard";
-  let masterTimeKey = "bestTimeMaster";
-  let masterDeathKey = "bestDeathMaster";
+  easyLevels.readLocalStorage();
+  normalLevels.readLocalStorage();
+  hardLevels.readLocalStorage();
+  masterLevels.readLocalStorage();
   
-  //save keys to LevelSet objects
-  easyLevels.playerBestTimeStorageKey = easyTimeKey;
-  easyLevels.playerBestDeathStorageKey = easyDeathKey;
-  normalLevels.playerBestTimeStorageKey = normalTimeKey;
-  normalLevels.playerBestDeathStorageKey = normalDeathKey;
-  hardLevels.playerBestTimeStorageKey = hardTimeKey;
-  hardLevels.playerBestDeathStorageKey = hardDeathKey;
-  masterLevels.playerBestTimeStorageKey = masterTimeKey;
-  masterLevels.playerBestDeathStorageKey = masterDeathKey;
-  
-  //Best Times (in milliseconds)
-  easyLevels.playerBestTime = getItem(easyTimeKey);
-  normalLevels.playerBestTime = getItem(normalTimeKey);
-  hardLevels.playerBestTime = getItem(hardTimeKey);
-  masterLevels.playerBestTime = getItem(masterTimeKey);
-  //least deaths
-  easyLevels.playerBestDeath = getItem(easyDeathKey);
-  normalLevels.playerBestDeath = getItem(normalDeathKey);
-  hardLevels.playerBestDeath = getItem(hardDeathKey);
-  masterLevels.playerBestDeath = getItem(masterDeathKey);
   //these level sets don't have/store records
   tutorialLevels.allowRecords = false;
   testLevels.allowRecords = false;
@@ -242,7 +231,7 @@ function setup() {
   gameTimer = new Timer(0, 0, 0, 0);
   
   //creating gameObjects for main menu
-  //buildMainMenu();
+  buildMainMenu();
 
   //DEBUG, load project starting with specific level. Or load a specific screen
   //buildLevel("number of level - 1", "Level Set");
@@ -258,7 +247,7 @@ function setup() {
   //masterLevels.playerBestDeath = 4;
   
   
-  buildResultsScreen(masterLevels);
+  //buildResultsScreen(masterLevels);
 }
 
 function draw() {
@@ -1054,7 +1043,7 @@ function buildResultsScreen(levelSet) {
       allObjects.push(dataDeaths);
     }
     
-    //Develop;er records
+    //Developer records
     x = (width / 2) + (width / 4);
     y = 600 * progScale;
     s = "Creator record:";
