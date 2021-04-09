@@ -1,18 +1,15 @@
 /*
-  Platformer 1.69
+  Platformer 1.70
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 4-8-2021
   
   Changes Made:
-  - DisplayText now has an isVisible member boolean, which determines whether the text is drawn to the screen
-  - buildClearRecordsWarning() now shows two buttons
-    - The "Yes" button will delete all records and return to the info screen
-      - The Clear Data button on the Info/Options menu will also be disabled, and some text confirming the Clear Data will be visible
-    - The "No" button will simply return to the Info/Options screen
-  - Record Clearing function now works
-  - on Info/Options Screen, moved the Clear Records text and button up, as clicking on the "Info/Options" button on the main menu was also clicking on the "Clear Records" as the user entered the Info/Options screen, which would bring up the Clear Records screen unintentionally
-  - on Info/Options screen, increased the width of the portfolio website button as it didn't fully include the entire link
+  - clearRecords() function now makes each LevelSet run readLocalStorage() so their records are set to null after the clear.
+    - This fixed an issue where the records in LocalStorage would be cleared, but the LevelSet objects would still hold the records until refreshing the webpage.
+  - On Info/Options screen, moved "Records Cleared!" text up to match the new position of the button.
+  - Cleared any developer records that were placeholders
+  - Temporarily disabled the Easy Game button on the Main Menu
     
   
   Ideas:
@@ -66,6 +63,7 @@ https://stackoverflow.com/questions/58490119/save-read-cookies-in-js
     more on Local Storage: https://javascript.plainenglish.io/everything-you-need-to-know-about-html5-local-storage-and-session-storage-479c63415c0a
     
     Problems to Fix:
+    - After clearing Records from the Info/Options menu, the confirmation prompt for clearing records will appear again when re-entering the Info/Options menu
     - Player sometimes gets stuck on the corner between two blocks. This is uncommon but affects gameplay. This could be fixed with an update to the collision detection and/or how blocks are placed.
     - When finishing a level set and returning to the main menu, the game will crash claiming that "allObjects[i] is undefined" in update loops.
     - When changing progScale to make game larger, wall sliding on the left-side of blocks doesn't work properly. Something must not be implementing it properly.
@@ -93,12 +91,12 @@ let isPaused = false; //whether the game is paused, and thus Update() will be sk
 
 //record variables for developer times and death counts
 //best times (in milliseconds)
-const developerTimeEasy = 1111;
+const developerTimeEasy = null;
 const developerTimeNormal = null;
 const developerTimeHard = null;
 const developerTimeMaster = 222650; // 3 min, 42 sec, 650 milli
 //least deaths
-const developerDeathEasy = 1;
+const developerDeathEasy = null;
 const developerDeathNormal = null;
 const developerDeathHard = null;
 const developerDeathMaster = 127;
@@ -996,7 +994,7 @@ function buildPreGameMenu(levelSet, levelColor) {
     
     //If current record is better than developer record, show special message
     // Record Time
-    if (levelSet.playerBestTime < levelSet.developerBestTime) { //beat developer
+    if (levelSet.playerBestTime < levelSet.developerBestTime && levelSet.playerBestTime != null) { //beat developer
       //display "Wow, You Beat It!" text
       x = (width / 2) + (width / 4);
       y = 660 * progScale;
@@ -1008,7 +1006,7 @@ function buildPreGameMenu(levelSet, levelColor) {
       allPauseObjects.push(devTimeText);
     }
     // Record Least Deaths
-    if (levelSet.playerBestDeath < levelSet.developerBestDeath) { //beat developer
+    if (levelSet.playerBestDeath < levelSet.developerBestDeath && levelSet.playerBestDeath != null) { //beat developer
       //display "Wow, You Beat It!" text
       x = (width / 2) + (width / 4);
       y = 760 * progScale;
@@ -1398,7 +1396,7 @@ function buildInfoScreen() {
   //// Hidden Text underneath clear button
   // When records are cleared, show clear confirmation and disable the clear button
   x = (width / 2) - (width / 5);
-  y = 930 * progScale;
+  y = 900 * progScale;
   s = "Records Cleared!";
   let textRecordsCleared = new DisplayText(x, y, 0, 0, s);
   textRecordsCleared.textSize = 30 * progScale;
@@ -1517,6 +1515,12 @@ function clearRecords() {
   normalLevels.deleteLocalStorage();
   hardLevels.deleteLocalStorage();
   masterLevels.deleteLocalStorage();
+  
+  //refreshing records
+  easyLevels.readLocalStorage();
+  normalLevels.readLocalStorage();
+  hardLevels.readLocalStorage();
+  masterLevels.readLocalStorage();
 }
 
 function clearGameObjects() {
