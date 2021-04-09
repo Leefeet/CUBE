@@ -1,17 +1,18 @@
 /*
-  Platformer 1.66
+  Platformer 1.67
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 4-3-2021
   
   Changes Made:
-  - A note on Local Storage:
-    - As long as same URL/Domain is used to display the game (like through iframes) the player's records should be consistent throughout. Using local Storage as it is now it the best option
-  - LevelSet object now has readLocalStorage() function, which sets the record variables within the LevelSet object.
-    - Updating records from LocalStorage no longer occurs directly in preload()
-    - preload() now directly sets the LocalStorage keys into the LevelSet objects and doesn't save them to variables, since LevelSet() does the rest internally
-  - currentLevelSetName was removed since LevelSet object contains its own name
-  - Added deleteLocalStorage() function to LevelSet object, which deletes any records stored in LocalStorage for that LevelSet
+  - Changed layout and added more information to buildPreGameMenu()
+    - The number of levels in the LevelSet are displayed
+    - The records display now mimics the display on buildResultsScreen()
+      - Player records are displayed on the bottom left if they exist
+      - Developer records are displayed on the bottom right if they exist
+        - If player record is better than developer record, special congratulation text is displayed underneath the developer record
+      - a "Completed!" text is displayed under the LevelSet title if the player has previously beaten the level set (i.e. has a previous record)
+    - No records are shown if the current LevelSet has allowRecords = false
   
   
   Ideas:
@@ -238,7 +239,7 @@ function setup() {
   //buildLevel(0, easyLevels);
   //buildTutorialScreen();
   //buildPauseMenu();
-  //buildPreGameMenu(easyLevels, "Easy", color(0, 255, 0), bestTimeEasy, bestDeathEasy);
+  buildPreGameMenu(easyLevels, color(0, 255, 0));
   
   
   //gameTimer.milliseconds = 111111;
@@ -842,56 +843,161 @@ function buildPreGameMenu(levelSet, levelColor) {
   title.textSize = 100 * progScale;
   title.textColor = levelColor;
   allPauseObjects.push(title);
+  
+      //completed or not
+  if (levelSet.playerBestTime != null && levelSet.playerBestDeath != null) {
+    x = (width / 2) + (width / 4);
+    y = 185 * progScale;
+    s = "Completed!";
+    let textCompleted = new DisplayText(x, y, 0, 0, s);
+    textCompleted.textSize = 45 * progScale;
+    textCompleted.textColor = color(255, 0, 0);
+    textCompleted.textFont = fontBold;
+    allPauseObjects.push(textCompleted);
+  }
+  
+  //Number of Levels
+  x = width / 2;
+  y = 250 * progScale;
+  s = "Number of Levels: " + levelSet.numLevels;
+  let textNumLevels = new DisplayText(x, y, 0, 0, s);
+  textNumLevels.textSize = 45 * progScale;
+  allPauseObjects.push(textNumLevels);
 
   //Records Display
   x = width / 2;
-  y = 300 * progScale;
+  y = 480 * progScale;
   s = "Records:";
   let textRecords = new DisplayText(x, y, 0, 0, s);
   textRecords.textSize = 60 * progScale;
   allPauseObjects.push(textRecords);
+  
 
-  //determing if records exists
-  if (levelSet.playerBestTime != null && levelSet.playerBestDeath != null) { //if a record exists = player has cleared this level set before
-    //pull data from records
+  //displaying previous records, but only if they are enabled
+  if (levelSet.allowRecords)
+  {
+    let fontSize = 40;
+
+    //player records
+    x = width / 4;
+    y = 560 * progScale;
+    s = "Your record:";
+    previousText = new DisplayText(x, y, 0, 0, s);
+    previousText.textSize = fontSize * progScale;
+    previousText.textFont = fontBold
+    allPauseObjects.push(previousText);
+
+    //determing if records exists
+    if (levelSet.playerBestTime != null && levelSet.playerBestDeath != null) { //if a record exists = player has cleared this level set before
+      //pull data from records
+
+      //Time Data
+      y = 620 * progScale;
+      let t = new Timer(0, 0, 0, 0);
+      t.milliseconds = levelSet.playerBestTime; //bestTime is in milliseconds
+      t.update(); //this will update the display for the timer
+      s = "Best Time: " + t.displayText;
+      let dataTime = new DisplayText(x, y, 0, 0, s);
+      dataTime.textSize = fontSize * progScale;
+      allPauseObjects.push(dataTime);
+
+      //Death Data
+      y = 720 * progScale;
+      s = "Best Deaths: " + levelSet.playerBestDeath;
+      dataDeaths = new DisplayText(x, y, 0, 0, s);
+      dataDeaths.textSize = fontSize * progScale;
+      allPauseObjects.push(dataDeaths);
+    } else { //no record exists = player hasn't cleared this level set
+      //showing blank data
+
+      //Time Data
+      y = 620 * progScale;
+      s = "Best Time: --:--:---";
+      let dataTime = new DisplayText(x, y, 0, 0, s);
+      dataTime.textSize = fontSize * progScale;
+      allPauseObjects.push(dataTime);
+
+      //Death Data
+      y = 720 * progScale;
+      s = "Best Deaths: --";
+      dataDeaths = new DisplayText(x, y, 0, 0, s);
+      dataDeaths.textSize = fontSize * progScale;
+      allPauseObjects.push(dataDeaths);
+    }
     
-    //Time Data
-    x = width / 2;
-    y = 450 * progScale;
-    let t = new Timer(0, 0, 0, 0);
-    t.milliseconds = levelSet.playerBestTime; //bestTime is in milliseconds
-    t.update(); //this will update the display for the timer
-    s = "Time: " + t.displayText;
-    let dataTime = new DisplayText(x, y, 0, 0, s);
-    dataTime.textSize = 50 * progScale;
-    allPauseObjects.push(dataTime);
+    //Developer records
+    x = (width / 2) + (width / 4);
+    y = 560 * progScale;
+    s = "Creator record:";
+    developerText = new DisplayText(x, y, 0, 0, s);
+    developerText.textSize = fontSize * progScale;
+    developerText.textFont = fontBold
+    allPauseObjects.push(developerText);
 
-    //Death Data
-    x = width / 2;
-    y = 525 * progScale;
-    s = "Deaths: " + levelSet.playerBestDeath;
-    dataDeaths = new DisplayText(x, y, 0, 0, s);
-    dataDeaths.textSize = 50 * progScale;
-    allPauseObjects.push(dataDeaths);
-  } else { //no record exists = player hasn't cleared this level set
-    //showing blank data
+    //determing if records exists
+    if (levelSet.developerBestTime != null && levelSet.developerBestDeath != null) { //if a record exists = player has cleared this level set before
+      //pull data from records
+
+      //Time Data
+      y = 620 * progScale;
+      let t = new Timer(0, 0, 0, 0);
+      t.milliseconds = levelSet.developerBestTime; //bestTime is in milliseconds
+      t.update(); //this will update the display for the timer
+      s = "Best Time: " + t.displayText;
+      let dataTime = new DisplayText(x, y, 0, 0, s);
+      dataTime.textSize = fontSize * progScale;
+      allPauseObjects.push(dataTime);
+
+      //Death Data
+      y = 720 * progScale;
+      s = "Best Deaths: " + levelSet.developerBestDeath;
+      dataDeaths = new DisplayText(x, y, 0, 0, s);
+      dataDeaths.textSize = fontSize * progScale;
+      allPauseObjects.push(dataDeaths);
+    } else { //no record exists = player hasn't cleared this level set
+      //showing blank data
+
+      //Time Data
+      y = 620 * progScale;
+      s = "Best Time: --:--:---";
+      let dataTime = new DisplayText(x, y, 0, 0, s);
+      dataTime.textSize = fontSize * progScale;
+      allPauseObjects.push(dataTime);
+
+      //Death Data
+      y = 720 * progScale;
+      s = "Best Deaths: --";
+      dataDeaths = new DisplayText(x, y, 0, 0, s);
+      dataDeaths.textSize = fontSize * progScale;
+      allPauseObjects.push(dataDeaths);
+    }
     
-    //Time Data
-    x = width / 2;
-    y = 450 * progScale;
-    s = "Time: --:--:---";
-    let dataTime = new DisplayText(x, y, 0, 0, s);
-    dataTime.textSize = 50 * progScale;
-    allPauseObjects.push(dataTime);
-
-    //Death Data
-    x = width / 2;
-    y = 525 * progScale;
-    s = "Deaths: --";
-    dataDeaths = new DisplayText(x, y, 0, 0, s);
-    dataDeaths.textSize = 50 * progScale;
-    allPauseObjects.push(dataDeaths);
-  }
+    //If current record is better than developer record, show special message
+    // Record Time
+    if (levelSet.playerBestTime < levelSet.developerBestTime) { //beat developer
+      //display "Wow, You Beat It!" text
+      x = (width / 2) + (width / 4);
+      y = 660 * progScale;
+      s = "Wow, You Beat It!";
+      devTimeText = new DisplayText(x, y, 0, 0, s);
+      devTimeText.textSize = fontSize/1.2 * progScale;
+      devTimeText.textFont = fontBold;
+      devTimeText.textColor = color(255, 0, 0); //red
+      allPauseObjects.push(devTimeText);
+    }
+    // Record Least Deaths
+    if (levelSet.playerBestDeath < levelSet.developerBestDeath) { //beat developer
+      //display "Wow, You Beat It!" text
+      x = (width / 2) + (width / 4);
+      y = 760 * progScale;
+      s = "Wow, You Beat It!";
+      devDeathText = new DisplayText(x, y, 0, 0, s);
+      devDeathText.textSize = fontSize/1.2 * progScale;
+      devDeathText.textFont = fontBold;
+      devDeathText.textColor = color(255, 0, 0); //red
+      allPauseObjects.push(devDeathText);
+    }
+  } //end of record displays
   
   //Buttons
   let buffer = 100 * progScale;
