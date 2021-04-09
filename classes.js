@@ -1059,26 +1059,31 @@ function DisplayText(x, y, w, h, s) {
   this.textAlignH = CENTER; //Horizontal align to coordinate
   this.textAlignV = CENTER; //Vertical align to coordinate
   this.textFont = fontRegular; //the font
+  this.isVisible = true; //Whether the text is drawn to the screen
 
   this.update = function() {} //nothing to update
 
   this.draw = function() {
-    //stroke
-    if (this.strokeWeight <= 0) {
-      noStroke();
-    } else {
-      stroke(this.strokeColor);
-      strokeWeight(this.strokeWeight);
-    }
+    //if visible, draw
+    if (this.isVisible)
+    {
+      //stroke
+      if (this.strokeWeight <= 0) {
+        noStroke();
+      } else {
+        stroke(this.strokeColor);
+        strokeWeight(this.strokeWeight);
+      }
 
-    fill(this.textColor);
-    noStroke();
-    textAlign(this.textAlignH, this.textAlignV);
-    textSize(this.textSize);
-    textFont(this.textFont);
-    var textX = this.getX() + this.getWidth() / 2;
-    var textY = this.getY() + this.getHeight() / 2;
-    text(this.displayText, textX, textY);
+      fill(this.textColor);
+      noStroke();
+      textAlign(this.textAlignH, this.textAlignV);
+      textSize(this.textSize);
+      textFont(this.textFont);
+      var textX = this.getX() + this.getWidth() / 2;
+      var textY = this.getY() + this.getHeight() / 2;
+      text(this.displayText, textX, textY);
+    }
   }
 }
 

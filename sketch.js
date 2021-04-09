@@ -1,21 +1,18 @@
 /*
-  Platformer 1.68
+  Platformer 1.69
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 4-3-2021
+  Edited: 4-8-2021
   
   Changes Made:
-  - Added Info/Options button to the Main Menu. This loads the Info/Options screen
-  - Info/Options screen displays information about the game and a couple options
-    - Shows text briefly describing the game, its creation, and purpose
-    - A clickable link to my portfolio page for this project
-    - A clickable link to the GitHub page for this project
-      - Both links open their respective web pages in new tabs
-    - A button that clears all player's LevelSet records (upon accepting)
-  - Clicking on the button "Clear Records" brings up a confirmation screen from buildClearRecordsWarning(). This ensures if the player actually wants to clear their data
-    - Selecting "Yes" will call clearRecords(), which clears all LocalStorage data
-    - Selecting "No" will return the player back to the Info/Options screen
-  - The clearing records screen still needs to be fully implemented 
+  - DisplayText now has an isVisible member boolean, which determines whether the text is drawn to the screen
+  - buildClearRecordsWarning() now shows two buttons
+    - The "Yes" button will delete all records and return to the info screen
+      - The Clear Data button on the Info/Options menu will also be disabled, and some text confirming the Clear Data will be visible
+    - The "No" button will simply return to the Info/Options screen
+  - Record Clearing function now works
+  - on Info/Options Screen, moved the Clear Records text and button up, as clicking on the "Info/Options" button on the main menu was also clicking on the "Clear Records" as the user entered the Info/Options screen, which would bring up the Clear Records screen unintentionally
+  - on Info/Options screen, increased the width of the portfolio website button as it didn't fully include the entire link
     
   
   Ideas:
@@ -236,7 +233,7 @@ function setup() {
   gameTimer = new Timer(0, 0, 0, 0);
   
   //creating gameObjects for main menu
-  //buildMainMenu();
+  buildMainMenu();
 
   //DEBUG, load project starting with specific level. Or load a specific screen
   //buildLevel("number of level - 1", "Level Set");
@@ -254,7 +251,7 @@ function setup() {
   
   //buildResultsScreen(masterLevels);
   
-  buildInfoScreen();
+  //buildInfoScreen();
 }
 
 function draw() {
@@ -1343,7 +1340,7 @@ function buildInfoScreen() {
   allObjects.push(textWebsiteNote);
   
   //website link (button)
-  w = 800 * progScale;
+  w = 900 * progScale;
   h = 60 * progScale;
   x = (width / 2) - w / 2;
   y = 380 * progScale;
@@ -1392,21 +1389,34 @@ function buildInfoScreen() {
   
   //Clearing record information
   x = (width / 2) - (width / 5);
-  y = 750 * progScale;
+  y = 700 * progScale;
   s = "This game uses LocalStorage to save your\nlevel records and progress. If you want\nto clear and reset your records and\nprogress, click the button below:";
   let textDeleteRecords = new DisplayText(x, y, 0, 0, s);
   textDeleteRecords.textSize = 25 * progScale;
   allObjects.push(textDeleteRecords);
   
+  //// Hidden Text underneath clear button
+  // When records are cleared, show clear confirmation and disable the clear button
+  x = (width / 2) - (width / 5);
+  y = 930 * progScale;
+  s = "Records Cleared!";
+  let textRecordsCleared = new DisplayText(x, y, 0, 0, s);
+  textRecordsCleared.textSize = 30 * progScale;
+  textRecordsCleared.textColor = color(255, 0, 0);
+  textRecordsCleared.textFont = fontBold;
+  textRecordsCleared.isVisible = false;
+  allObjects.push(textRecordsCleared);
+  
   //Clear Records Button
   w = 350 * progScale;
   h = 60 * progScale;
   x = (width / 2) - (width / 5) - w / 2;
-  y = 850 * progScale;
+  y = 800 * progScale;
+  let btnClearRecords; //declaring now so it can be included in function
   let clearRecords = function() {
-    buildClearRecordsWarning(); //Showing confirmation screen
+    buildClearRecordsWarning(btnClearRecords, textRecordsCleared); //Showing confirmation screen
   };
-  let btnClearRecords = new Button(x, y, w, h, clearRecords);
+  btnClearRecords = new Button(x, y, w, h, clearRecords);
   btnClearRecords.displayText = "Clear Records";
   btnClearRecords.strokeWeight = 0;
   btnClearRecords.fillColor = color(255, 0, 0);
@@ -1414,10 +1424,6 @@ function buildInfoScreen() {
   btnClearRecords.textSize = 35 * progScale;
   btnClearRecords.textColor = color(0, 0, 0);
   allObjects.push(btnClearRecords);
-  
-  //// HIDDEN TEXT UNDERNEATH
-  // When records are cleared, show clear confirmation and disable the clear button
-  
   
   //Main Menu button
   w = 450 * progScale;
@@ -1440,7 +1446,7 @@ function buildInfoScreen() {
 }
 
 //shows a screen that confirms if the player really wants to clear their data. Functions like a pause screen
-function buildClearRecordsWarning() {
+function buildClearRecordsWarning(btnClear, textClear) {
   //setting isPaused to true
   isPaused = true;
   
@@ -1462,6 +1468,47 @@ function buildClearRecordsWarning() {
   message.textSize = 45 * progScale;
   message.textColor = color(255, 255, 255);
   allPauseObjects.push(message);
+  
+  //Yes Button - delete records and show feedback
+  //Clear Records Button
+  let w = 525 * progScale;
+  let h = 60 * progScale;
+  x = (width / 2) - (width / 4) - w / 2;
+  y = 600 * progScale;
+  let yesClear = function() {
+    unpauseGame(); //unpausing, so this menu is removed
+    clearRecords(); //clearing all stored records
+    btnClear.isDisabled = true;//disabling button
+    textClear.isVisible = true;//showing text
+  };
+  let btnYesClear = new Button(x, y, w, h, yesClear);
+  btnYesClear.displayText = "Yes - Clear Them";
+  btnYesClear.strokeWeight = 0;
+  btnYesClear.fillColor = color(255, 0, 0);
+  btnYesClear.hoverColor = color(255/2, 0, 0);
+  btnYesClear.textSize = 40 * progScale;
+  btnYesClear.textColor = color(0, 0, 0);
+  btnYesClear.textFont = fontBold;
+  allPauseObjects.push(btnYesClear);
+  
+  //No Button - Don't delete data and return to previous screen
+  //Clear Records Button
+  w = 525 * progScale;
+  h = 60 * progScale;
+  x = (width / 2) + (width / 4) - w / 2;
+  y = 600 * progScale;
+  let noClear = function() {
+    unpauseGame(); //unpausing game and returning to previous menu
+  };
+  let btnNoClear = new Button(x, y, w, h, noClear);
+  btnNoClear.displayText = "No - Save Them";
+  btnNoClear.strokeWeight = 0;
+  btnNoClear.fillColor = color(0, 255, 0);
+  btnNoClear.hoverColor = color(0, 255/2, 0);
+  btnNoClear.textSize = 40 * progScale;
+  btnNoClear.textColor = color(0, 0, 0);
+  btnNoClear.textFont = fontBold;
+  allPauseObjects.push(btnNoClear);
 }
 
 //clears all records/data of the player
