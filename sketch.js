@@ -1,25 +1,29 @@
 /*
-  Platformer 1.67
+  Platformer 1.68
   Created By: Lee Thibodeau
   Started: 2-4-2021
   Edited: 4-3-2021
   
   Changes Made:
-  - Changed layout and added more information to buildPreGameMenu()
-    - The number of levels in the LevelSet are displayed
-    - The records display now mimics the display on buildResultsScreen()
-      - Player records are displayed on the bottom left if they exist
-      - Developer records are displayed on the bottom right if they exist
-        - If player record is better than developer record, special congratulation text is displayed underneath the developer record
-      - a "Completed!" text is displayed under the LevelSet title if the player has previously beaten the level set (i.e. has a previous record)
-    - No records are shown if the current LevelSet has allowRecords = false
-  
+  - Added Info/Options button to the Main Menu. This loads the Info/Options screen
+  - Info/Options screen displays information about the game and a couple options
+    - Shows text briefly describing the game, its creation, and purpose
+    - A clickable link to my portfolio page for this project
+    - A clickable link to the GitHub page for this project
+      - Both links open their respective web pages in new tabs
+    - A button that clears all player's LevelSet records (upon accepting)
+  - Clicking on the button "Clear Records" brings up a confirmation screen from buildClearRecordsWarning(). This ensures if the player actually wants to clear their data
+    - Selecting "Yes" will call clearRecords(), which clears all LocalStorage data
+    - Selecting "No" will return the player back to the Info/Options screen
+  - The clearing records screen still needs to be fully implemented 
+    
   
   Ideas:
+  - Make DisplayText object allow text wrapping within a specific box size.
+    - Also make debug option to show rectangle for the invisible bounding box
   - LevelSet object could store a levelSetColor that could be used for various things, like buttons or colored text. May not be intuitive, but maybe it could be. Could also help make function parameters simplier that want a LevelSet objects and a color.
   - Create Easy Levels
   - Create Hard Levels
-  - Store and display my best times/deaths on a screen before a game start, as something like "Developer Times"
   - Particle effects for specific interactions
     - Wall-Sliding
   - Add some sort of level-clear animation (timer would be temporarily stopped)
@@ -232,14 +236,14 @@ function setup() {
   gameTimer = new Timer(0, 0, 0, 0);
   
   //creating gameObjects for main menu
-  buildMainMenu();
+  //buildMainMenu();
 
   //DEBUG, load project starting with specific level. Or load a specific screen
   //buildLevel("number of level - 1", "Level Set");
   //buildLevel(0, easyLevels);
   //buildTutorialScreen();
   //buildPauseMenu();
-  buildPreGameMenu(easyLevels, color(0, 255, 0));
+  //buildPreGameMenu(easyLevels, color(0, 255, 0));
   
   
   //gameTimer.milliseconds = 111111;
@@ -249,6 +253,8 @@ function setup() {
   
   
   //buildResultsScreen(masterLevels);
+  
+  buildInfoScreen();
 }
 
 function draw() {
@@ -546,6 +552,25 @@ function buildMainMenu() {
   btnTest.textColor = color(0, 0, 0, 0); //transparent
   btnTest.textHoverColor = color(0, 0, 0);
   allObjects.push(btnTest);
+  
+  //Info/Options Button
+  w = 260 * progScale;
+  h = 50 * progScale;
+  x = 25 * progScale;
+  y = 875 * progScale;
+  let setupinfo = function() {
+    clearGameObjects(); //clearing menu
+    buildInfoScreen(); //building info/options menu
+  };
+  let btnInfo = new Button(x, y, w, h, setupinfo);
+  btnInfo.displayText = "Info/Options";
+  btnInfo.strokeWeight = 0;
+  btnInfo.fillColor = color(255); //White
+  btnInfo.hoverColor = color(255/2); //Grey
+  btnInfo.textSize = 30 * progScale;
+  btnInfo.textColor = color(0); //Black
+  btnInfo.textHoverColor = color(255);
+  allObjects.push(btnInfo);
   
   //Created By message
   x = width / 2;
@@ -1287,6 +1312,164 @@ function buildResultsScreen(levelSet) {
   btnMenu.textSize = 50 * progScale;
   btnMenu.textColor = color(0, 0, 0);
   allObjects.push(btnMenu);
+}
+
+//displays some extra information and options
+function buildInfoScreen() {
+
+  //Explaining what this game is
+  x = width / 2;
+  y = 150 * progScale;
+  s = "     is a platformer created by Lee Thibodeau (myself).\nIt was programmed in JavaScript using the P5.js library \nto help display visuals. I created this game to\n entertain myself with a project and my friends with\n varying degrees of challenge.";
+  let textDescription = new DisplayText(x, y, 0, 0, s);
+  textDescription.textSize = 30 * progScale;
+  allObjects.push(textDescription);
+  
+  //Bolded "CUBE"
+  x = 100 * progScale;
+  y = 75 * progScale;
+  s = "CUBE";
+  let textCubeBold = new DisplayText(x, y, 0, 0, s);
+  textCubeBold.textSize = 30 * progScale;
+  textCubeBold.textFont = fontBold;
+  allObjects.push(textCubeBold);
+  
+  //Website Note
+  x = width / 2;
+  y = 350 * progScale;
+  s = "View the project's creation process on my website:";
+  let textWebsiteNote = new DisplayText(x, y, 0, 0, s);
+  textWebsiteNote.textSize = 30 * progScale;
+  allObjects.push(textWebsiteNote);
+  
+  //website link (button)
+  w = 800 * progScale;
+  h = 60 * progScale;
+  x = (width / 2) - w / 2;
+  y = 380 * progScale;
+  let url = "https://www.leethibodeau.com/cube";
+  let goToWebsite = function() {
+    window.open(url, "_blank") //open webpage in new tab
+  };
+  let btnWebsite = new Button(x, y, w, h, goToWebsite);
+  btnWebsite.displayText = url;
+  btnWebsite.strokeWeight = 0;
+  btnWebsite.fillColor = color(0, 0, 0, 0); //transparent
+  btnWebsite.hoverColor = color(0, 0, 0, 0); //transparent
+  btnWebsite.textSize = 35 * progScale;
+  btnWebsite.textColor = color(0, 0, 255);
+  btnWebsite.textHoverColor = color(255, 0, 255); //transparent
+  btnWebsite.textFont = fontBold;
+  allObjects.push(btnWebsite);
+  
+  //GitHub Note
+  x = width / 2;
+  y = 500 * progScale;
+  s = "View the project's code and development history on GitHub:";
+  let textGitHubNote = new DisplayText(x, y, 0, 0, s);
+  textGitHubNote.textSize = 30 * progScale;
+  allObjects.push(textGitHubNote);
+  
+  //GitHub link (button)
+  w = 800 * progScale;
+  h = 60 * progScale;
+  x = (width / 2) - w / 2;
+  y = 530 * progScale;
+  url = "https://github.com/Leefeet/CUBE"
+  let goToGitHub = function() {
+    window.open(url, "_blank") //open webpage in new tab
+  };
+  let btnGitHub = new Button(x, y, w, h, goToGitHub);
+  btnGitHub.displayText = url;
+  btnGitHub.strokeWeight = 0;
+  btnGitHub.fillColor = color(0, 0, 0, 0); //transparent
+  btnGitHub.hoverColor = color(0, 0, 0, 0); //transparent
+  btnGitHub.textSize = 35 * progScale;
+  btnGitHub.textColor = color(0, 0, 255);
+  btnGitHub.textHoverColor = color(255, 0, 255); //transparent
+  btnGitHub.textFont = fontBold;
+  allObjects.push(btnGitHub);
+  
+  //Clearing record information
+  x = (width / 2) - (width / 5);
+  y = 750 * progScale;
+  s = "This game uses LocalStorage to save your\nlevel records and progress. If you want\nto clear and reset your records and\nprogress, click the button below:";
+  let textDeleteRecords = new DisplayText(x, y, 0, 0, s);
+  textDeleteRecords.textSize = 25 * progScale;
+  allObjects.push(textDeleteRecords);
+  
+  //Clear Records Button
+  w = 350 * progScale;
+  h = 60 * progScale;
+  x = (width / 2) - (width / 5) - w / 2;
+  y = 850 * progScale;
+  let clearRecords = function() {
+    buildClearRecordsWarning(); //Showing confirmation screen
+  };
+  let btnClearRecords = new Button(x, y, w, h, clearRecords);
+  btnClearRecords.displayText = "Clear Records";
+  btnClearRecords.strokeWeight = 0;
+  btnClearRecords.fillColor = color(255, 0, 0);
+  btnClearRecords.hoverColor = color(255/2, 0, 0);
+  btnClearRecords.textSize = 35 * progScale;
+  btnClearRecords.textColor = color(0, 0, 0);
+  allObjects.push(btnClearRecords);
+  
+  //// HIDDEN TEXT UNDERNEATH
+  // When records are cleared, show clear confirmation and disable the clear button
+  
+  
+  //Main Menu button
+  w = 450 * progScale;
+  h = 60 * progScale;
+  x = (width / 2) + (width / 4) - w / 2;
+  y = 850 * progScale;
+  let backToMenu = function() {
+    clearGameObjects(); //clearing menu
+    buildMainMenu(); //building the main menu
+  };
+  let btnMenu = new Button(x, y, w, h, backToMenu);
+  btnMenu.displayText = "Back to Main Menu";
+  btnMenu.strokeWeight = 0;
+  btnMenu.fillColor = color(0, 255, 0);
+  btnMenu.hoverColor = color(0, 255/2, 0);
+  btnMenu.textSize = 35 * progScale;
+  btnMenu.textColor = color(0, 0, 0);
+  allObjects.push(btnMenu);
+  
+}
+
+//shows a screen that confirms if the player really wants to clear their data. Functions like a pause screen
+function buildClearRecordsWarning() {
+  //setting isPaused to true
+  isPaused = true;
+  
+  //background
+  //using a Block since it will have the same effect
+  let bac = new Block(0, 0, width, height);
+  allPauseObjects.push(bac);
+  bac.setStrokeWeight(0);
+  let a = 255 / 1.15; // some transparency dulls out level
+  let c = color(backgroundColor.levels); //same as background color...
+  c.setAlpha(a); //...but with transparency
+  bac.setFillColor(c);
+
+  //Message confirming with player if they really want to delete their data
+  let x = width / 2;
+  let y = 400 * progScale;
+  let s = "Are you absolutely sure you want to\ndelete all your records and progress?";
+  let message = new DisplayText(x, y, 0, 0, s);
+  message.textSize = 45 * progScale;
+  message.textColor = color(255, 255, 255);
+  allPauseObjects.push(message);
+}
+
+//clears all records/data of the player
+function clearRecords() {
+  easyLevels.deleteLocalStorage();
+  normalLevels.deleteLocalStorage();
+  hardLevels.deleteLocalStorage();
+  masterLevels.deleteLocalStorage();
 }
 
 function clearGameObjects() {
