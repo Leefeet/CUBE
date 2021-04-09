@@ -1,29 +1,19 @@
 /*
-  Platformer 1.61
+  Platformer 1.62
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 3-17-2021
+  Edited: 3-18-2021
   
   Changes Made:
-  - Implemented the LevelSet object
-    - Stores the levelSet data, levelData, each level in the LevelSet and its 2D block layout
-    - Stores number of levels in the LevelSet
-    - Stores the name of the levelSet
-    - Stores player records for time and deaths, as well as developer records
-    - Has toggle, allowRecords, that indicates whether this LevelSet cares about storing and displaying record times and deaths
-  - Variables for bestTime and bestDeath for all difficulties are now stored within a LevelSet object 
-    - They have been replaced with constant "developer" variables that store the developer's best time and least deaths
-  - The arrays for levelSets, including tutorialLevels, easyLevels, normalLevels, hardLevels, masterLevels, and testLevels, are now LevelSet objects
-    - This also allows them to store data on player records
-    - In the future, implementations for specific level features, like new controls (directional jump) or rules (bounce height)
-  - currentLevelSet now stores a LevelSet object rather than an array of level data
-  - currentLevelSetName has been replaced with the levelSetName member variable of the LevelSet object
-    - levelSetNames are set in setup()
-    - Everywhere the referred to levelSetName now called the memeber function in LevelSet object
-  - on the Main Menu and Tutorial Screen, all buttons that start levelSets now pass on the appropriate LevelSet Objects
-  - buildPreGameMenu() now just accepts a LevelSet object and a color
-  - More work needed to fully implement the new LevelSet object. Project not functional until implemented fully
+  - Working on integrating the LevelSet object fully
+    - After finishing a level, the next level is now properly loaded
+    - 
+  - Added developer time and least deaths to Master level (222,650 milliseconds and 127 deaths)
   
+  Save records
+  Load records
+  show developer records
+  confirm if previous record was beaten
   
   Ideas:
   - LevelSet object could store a levelSetColor that could be used for various things, like buttons or colored text. May not be intuitive, but maybe it could be. Could also help make function parameters simplier that want a LevelSet objects and a color.
@@ -105,12 +95,12 @@ let isPaused = false; //whether the game is paused, and thus Update() will be sk
 const developerTimeEasy = null;
 const developerTimeNormal = null;
 const developerTimeHard = null;
-const developerTimeMaster = null;
+const developerTimeMaster = 222650; // 3 min, 42 sec, 650 milli
 //least deaths
 const developerDeathEasy = null;
 const developerDeathNormal = null;
 const developerDeathHard = null;
-const developerDeathMaster = null;
+const developerDeathMaster = 127;
 
 //runs actions that may be required before anything in setup() or draw()
 function preload() {
@@ -1044,7 +1034,7 @@ function loadNextLevel(levelSet) {
   currentLevelIndex++;
 
   //load next level if it exists
-  if (currentLevelIndex < levelSet.length) {
+  if (currentLevelIndex < levelSet.numLevels) {
     //load next level
     buildLevel(currentLevelIndex, levelSet);
     return true;
