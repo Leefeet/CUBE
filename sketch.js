@@ -1,32 +1,15 @@
 /*
-  Platformer 1.64
+  Platformer 1.65
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 3-20-2021
+  Edited: 3-21-2021
   
   Changes Made:
-  - Continuing full integration of the LevelSet object
-    - LevelSet object is now implemented. Will likely be modified later
-  - Results Screen now displays "New Record" text underneath the record time and deaths if they have been beaten
-  - Results Screen now updates record time and deaths in the LevelSet object if they have been beaten
-    - These updated records will show up on the preGame screen and on the results screen if the LevelSet is beaten again
-  - LevelSet object now stores the bestTime and bestDeaths LocalStorage key names.
-    - This allows each instance of LevelSet to know which key it needs to use to update a record
-    - In preload(), Local Storage keys are now stored into variables so they can also be saved into each LevelSet. LevelSets receive these keys in preload()
-  - LevelSet objects now has a updateLocalStorage() function. This will update Local Storage for both the record time and death count for that LevelSet
-    - Problem is, I want to store times even after a browser session is over. Cookies may help this
-  - Results screen now shows special message if the player's time or death record are better than the developer records
-    - This will show if the plyer just earned a record better than the developer, or if their previous record is better than the developer.
-
-  LevelSet() needs to:
-  Save records
-  Load records
-  show developer records
-  confirm if previous record was beaten
+  - 
+  
   
   Ideas:
   - LevelSet object could store a levelSetColor that could be used for various things, like buttons or colored text. May not be intuitive, but maybe it could be. Could also help make function parameters simplier that want a LevelSet objects and a color.
-  - Create a LevelSet object that stores a levelSet's data, the player's best time and least deaths, the level's name, and other variables within a single object. This will allow it to be "passed by reference", which could help make it easier to work with than having multiple other variables.
   - Create Easy Levels
   - Create Hard Levels
   - in a local session, store the player's best times and least deaths. Show this maybe on a screen before a game starts
@@ -74,6 +57,8 @@ https://stackoverflow.com/questions/58490119/save-read-cookies-in-js
     How to deep copy a P5.color object: https://discourse.processing.org/t/copying-a-color/12312
     
     How to use Cookies: https://www.w3schools.com/js/js_cookies.asp
+    
+    more on Local Storage: https://javascript.plainenglish.io/everything-you-need-to-know-about-html5-local-storage-and-session-storage-479c63415c0a
     
     Problems to Fix:
     - Player sometimes gets stuck on the corner between two blocks. This is uncommon but affects gameplay. This could be fixed with an update to the collision detection and/or how blocks are placed.
@@ -252,7 +237,6 @@ function setup() {
   normalLevels.developerBestDeath = developerDeathNormal;
   hardLevels.developerBestDeath = developerDeathHard;
   masterLevels.developerBestDeath = developerDeathMaster;
-  //these level sets don't have/store records
 
   //creating timer for timing levels
   gameTimer = new Timer(0, 0, 0, 0);
@@ -268,10 +252,10 @@ function setup() {
   //buildPreGameMenu(easyLevels, "Easy", color(0, 255, 0), bestTimeEasy, bestDeathEasy);
   
   
-  gameTimer.milliseconds = 111111;
-  numberOfDeaths = 5;
-  masterLevels.playerBestTime = 111110;
-  masterLevels.playerBestDeath = 4;
+  //gameTimer.milliseconds = 111111;
+  //numberOfDeaths = 5;
+  //masterLevels.playerBestTime = 111110;
+  //masterLevels.playerBestDeath = 4;
   
   
   buildResultsScreen(masterLevels);
