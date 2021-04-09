@@ -1,15 +1,18 @@
 /*
-  Platformer 1.62
+  Platformer 1.63
   Created By: Lee Thibodeau
   Started: 2-4-2021
-  Edited: 3-18-2021
+  Edited: 3-19-2021
   
   Changes Made:
-  - Working on integrating the LevelSet object fully
-    - After finishing a level, the next level is now properly loaded
-    - 
-  - Added developer time and least deaths to Master level (222,650 milliseconds and 127 deaths)
-  
+  - Continuing full integration of the LevelSet object
+    - Fixed issue inside LevelSet declaration where member variables were being set as "let v" instead of "this.v", which won't save anything during an object's creation
+  - Adjusted layout of Results Screen to accommodate the display for previous records and developer records
+   - If the player has records, the results screen will display them to the screen
+   - If there are developer records, the results screen will display them to the screen
+  - buildResultsScreen() now takes in a LevelSet as a parameter
+
+  LevelSet() needs to:
   Save records
   Load records
   show developer records
@@ -111,14 +114,6 @@ function preload() {
   hardLevels = new LevelSet(); //contains an array of all the hard Levels
   masterLevels = new LevelSet(); //contains an array of all the master Levels
   testLevels = new LevelSet(); //contains an array of all testing Levels
-
-  //initializing arrays (this should be done in the construction of the LevelSet object but isn't working for some reason)
-  tutorialLevels.levelData = [];
-  easyLevels.levelData = [];
-  normalLevels.levelData = [];
-  hardLevels.levelData = [];
-  masterLevels.levelData = [];
-  testLevels.levelData = [];
   
   //Loading Level Files:
 
@@ -235,7 +230,7 @@ function setup() {
   gameTimer = new Timer(0, 0, 0, 0);
   
   //creating gameObjects for main menu
-  buildMainMenu();
+  //buildMainMenu();
 
   //DEBUG, load project starting with specific level. Or load a specific screen
   //buildLevel("number of level - 1", "Level Set");
@@ -243,6 +238,7 @@ function setup() {
   //buildTutorialScreen();
   //buildPauseMenu();
   //buildPreGameMenu(easyLevels, "Easy", color(0, 255, 0), bestTimeEasy, bestDeathEasy);
+  buildResultsScreen(masterLevels);
 }
 
 function draw() {
@@ -271,8 +267,8 @@ function draw() {
       //freeze timer, since we're done
       gameTimer.stop();
 
-      //back to main menu
-      buildResultsScreen()
+      //show player results
+      buildResultsScreen(currentLevelSet)
     }
   }
 
@@ -936,7 +932,7 @@ function buildPreGameMenu(levelSet, levelColor) {
 }
 
 //draws the main menu to the screen
-function buildResultsScreen() {
+function buildResultsScreen(levelSet) {
   //creating congratulations message
   let x = width / 2;
   let y = 100 * progScale;
@@ -948,7 +944,7 @@ function buildResultsScreen() {
   //creating specific message on level
   x = width / 2;
   y = 250 * progScale;
-  s = "You completed the\n" + currentLevelSetName + " levels";
+  s = "You completed the\n" + levelSet.levelSetName + " levels";
   let message = new DisplayText(x, y, 0, 0, s);
   message.textSize = 60 * progScale;
   allObjects.push(message);
@@ -957,7 +953,7 @@ function buildResultsScreen() {
 
   //time display  
   x = (width / 2) - gap;
-  y = 450 * progScale;
+  y = 400 * progScale;
   s = "Your Time:";
   let yourTime = new DisplayText(x, y, 0, 0, s);
   yourTime.textAlignH = RIGHT;
@@ -972,7 +968,7 @@ function buildResultsScreen() {
 
   //Death display  
   x = (width / 2) - gap;
-  y = 550 * progScale;
+  y = 475 * progScale;
   s = "Deaths:";
   let yourDeaths = new DisplayText(x, y, 0, 0, s);
   yourDeaths.textAlignH = RIGHT;
@@ -986,18 +982,115 @@ function buildResultsScreen() {
   numDeaths.textSize = 50 * progScale;
   allObjects.push(numDeaths);
   
-  //Previous Records, STILL NEEDS TO BE IMPLEMENTED!
-  let hasPrevious = false;
-  let prevTime = null;
-  let prevDeath = null;
-  let newTime = false;
-  let newDeath = false;
+  //displaying previous records, but only if they are enabled
+  if (levelSet.allowRecords)
+  {
+    let fontSize = 40;
+
+    //player records
+    x = width / 4;
+    y = 600 * progScale;
+    s = "Your record:";
+    previousText = new DisplayText(x, y, 0, 0, s);
+    previousText.textSize = fontSize * progScale;
+    previousText.textFont = fontBold
+    allObjects.push(previousText);
+
+    //determing if records exists
+    if (levelSet.playerBestTime != null && levelSet.playerBestDeath != null) { //if a record exists = player has cleared this level set before
+      //pull data from records
+
+      //Time Data
+      y = 650 * progScale;
+      let t = new Timer(0, 0, 0, 0);
+      t.milliseconds = levelSet.playerBestTime; //bestTime is in milliseconds
+      t.update(); //this will update the display for the timer
+      s = "Best Time: " + t.displayText;
+      let dataTime = new DisplayText(x, y, 0, 0, s);
+      dataTime.textSize = fontSize * progScale;
+      allObjects.push(dataTime);
+
+      //Death Data
+      y = 750 * progScale;
+      s = "Best Deaths: " + levelSet.playerBestDeath;
+      dataDeaths = new DisplayText(x, y, 0, 0, s);
+      dataDeaths.textSize = fontSize * progScale;
+      allObjects.push(dataDeaths);
+    } else { //no record exists = player hasn't cleared this level set
+      //showing blank data
+
+      //Time Data
+      y = 650 * progScale;
+      s = "Best Time: --:--:---";
+      let dataTime = new DisplayText(x, y, 0, 0, s);
+      dataTime.textSize = fontSize * progScale;
+      allObjects.push(dataTime);
+
+      //Death Data
+      y = 750 * progScale;
+      s = "Best Deaths: --";
+      dataDeaths = new DisplayText(x, y, 0, 0, s);
+      dataDeaths.textSize = fontSize * progScale;
+      allObjects.push(dataDeaths);
+    }
+    
+    //Develop;er records
+    x = (width / 2) + (width / 4);
+    y = 600 * progScale;
+    s = "Creator record:";
+    developerText = new DisplayText(x, y, 0, 0, s);
+    developerText.textSize = fontSize * progScale;
+    developerText.textFont = fontBold
+    allObjects.push(developerText);
+
+    //determing if records exists
+    if (levelSet.developerBestTime != null && levelSet.developerBestDeath != null) { //if a record exists = player has cleared this level set before
+      //pull data from records
+
+      //Time Data
+      y = 650 * progScale;
+      let t = new Timer(0, 0, 0, 0);
+      t.milliseconds = levelSet.developerBestTime; //bestTime is in milliseconds
+      t.update(); //this will update the display for the timer
+      s = "Best Time: " + t.displayText;
+      let dataTime = new DisplayText(x, y, 0, 0, s);
+      dataTime.textSize = fontSize * progScale;
+      allObjects.push(dataTime);
+
+      //Death Data
+      y = 750 * progScale;
+      s = "Best Deaths: " + levelSet.developerBestDeath;
+      dataDeaths = new DisplayText(x, y, 0, 0, s);
+      dataDeaths.textSize = fontSize * progScale;
+      allObjects.push(dataDeaths);
+    } else { //no record exists = player hasn't cleared this level set
+      //showing blank data
+
+      //Time Data
+      y = 650 * progScale;
+      s = "Best Time: --:--:---";
+      let dataTime = new DisplayText(x, y, 0, 0, s);
+      dataTime.textSize = fontSize * progScale;
+      allObjects.push(dataTime);
+
+      //Death Data
+      y = 750 * progScale;
+      s = "Best Deaths: --";
+      dataDeaths = new DisplayText(x, y, 0, 0, s);
+      dataDeaths.textSize = fontSize * progScale;
+      allObjects.push(dataDeaths);
+    }
+
+    //Checking if current recrod is better than previous
+    if (gameTimer.milliseconds < )
+
+  }
 
   //Main Menu button
-  w = 475 * progScale;
-  h = 100 * progScale;
+  w = 375 * progScale;
+  h = 85 * progScale;
   x = (width / 2) - w / 2;
-  y = 800 * progScale;
+  y = 850 * progScale;
   let backToMenu = function() {
     clearGameObjects(); //clearing menu
     gameTimer.reset(); //reseting current time on timer
@@ -1010,7 +1103,7 @@ function buildResultsScreen() {
   btnMenu.strokeWeight = 0;
   btnMenu.fillColor = color(255, 255, 0);
   btnMenu.hoverColor = color(0, 255, 0);
-  btnMenu.textSize = 60 * progScale;
+  btnMenu.textSize = 50 * progScale;
   btnMenu.textColor = color(0, 0, 0);
   allObjects.push(btnMenu);
 }
